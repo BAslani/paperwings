@@ -1,0 +1,128 @@
+using UnityEngine;
+using PaperWings.Flight;
+
+namespace PaperWings.Gameplay
+{
+    /// <summary>
+    /// Hand-launch and reset loop:
+    ///   Held:  steer to aim, hold Throw to wind up (the plane pulls back), release to throw.
+    ///   Flying: press Reset any time to go back to the hand.
+    ///   Down:  automatically back in hand after a short delay.
+    /// </summary>
+    public class LaunchAndReset : MonoBehaviour
+    {
+        [SerializeField] PlaneController plane;
+        [SerializeField] PlaneInput input;
+        [Tooltip("Where the plane is held before throwing. Its forward (blue arrow) is the throw direction.")]
+        [SerializeField] Transform spawnPoint;
+
+        [Header("Aiming while held")]
+        [SerializeField] float aimYawRate = 60f;
+        [SerializeField] float aimMaxYaw = 45f;
+        [SerializeField] float aimMaxPitch = 20f;
+
+        [Header("Wind-up feel")]
+        [Tooltip("How far the plane pulls back at full charge.")]
+        [SerializeField] float windUpPullback = 0.8f;
+        [Tooltip("Nose-up tilt at full charge (deg).")]
+        [SerializeField] float windUpTilt = 10f;
+
+        [Header("Auto reset")]
+        [SerializeField] float resetDelayAfterCrash = 1.2f;
+        [SerializeField] float resetDelayAfterTouchdown = 2.0f;
+
+        public float Charge01 { get; private set; }
+        public bool IsCharging { get; private set; }
+
+        float aimYaw, aimPitch;
+        float downTimer;
+
+        void Start()
+        {
+            if (spawnPoint == null)
+            {
+                // Fall back to wherever the plane starts in the scene.
+                spawnPoint = new GameObject("SpawnPoint (auto)").transform;
+                spawnPoint.SetPositionAndRotation(plane.transform.position, plane.transform.rotation);
+            }
+            ResetToStart();
+        }
+
+        public void ResetToStart()
+        {
+            aimYaw = aimPitch = 0f;
+            Charge01 = 0f;
+            IsCharging = false;
+            downTimer = 0f;
+            plane.Hold(spawnPoint.position, spawnPoint.rotation);
+        }
+
+        void Update()
+        {
+            if (input != null && input.ResetPressed)
+            {
+                ResetToStart();
+                return;
+            }
+
+            switch (plane.State)
+            {
+                case PlaneState.Held:   UpdateHeld();   break;
+                case PlaneState.Down:   UpdateDown();   break;
+            }
+        }
+
+        void UpdateHeld()
+        {
+            FlightSettings s = plane.Settings;
+            Vector2 stick = input != null ? input.Steer : Vector2.zero;
+
+            // Aim: left/right turns, up/down tilts (same pitch convention as flight).
+            float pitchIn = s.invertPitch ? stick.y : -stick.y;
+            aimYaw = Mathf.Clamp(aimYaw + stick.x * aimYawRate * Time.deltaTime, -aimMaxYaw, aimMaxYaw);
+            aimPitch = Mathf.Clamp(aimPitch + pitchIn * aimYawRate * Time.deltaTime, -aimMaxPitch, aimMaxPitch);
+
+            bool held = input != null && input.ThrowHeld;
+            if (held)
+            {
+                IsCharging = true;
+                Charge01 = Mathf.MoveTowards(Charge01, 1f, Time.deltaTime / Mathf.Max(0.01f, s.throwChargeTime));
+            }
+            else if (IsCharging)
+            {
+                Throw();
+                return;
+            }
+
+            // Ease-out curve makes the wind-up feel like a pulled-back arm.
+            float pull = 1f - (1f - Charge01) * (1f - Charge01);
+            Quaternion aim = spawnPoint.rotation * Quaternion.Euler(-aimPitch - windUpTilt * pull, aimYaw, 0f);
+            // Tiny idle bob so the plane feels alive in hand.
+            Vector3 bob = Vector3.up * Mathf.Sin(Time.time * 2f) * 0.03f;
+            Vector3 pos = spawnPoint.position - aim * Vector3.forward * (windUpPullback * pull) + bob;
+            plane.Hold(pos, aim);
+        }
+
+        void Throw()
+        {
+            FlightSettings s = plane.Settings;
+            float throwSpeed = Mathf.Lerp(s.throwSpeedMin, s.throwSpeedMax, Charge01);
+            // Undo the wind-up tilt so the throw goes where you aimed, then add the kick.
+            plane.transform.rotation = spawnPoint.rotation * Quaternion.Euler(-aimPitch, aimYaw, 0f);
+            plane.Launch(throwSpeed, s.throwPitchKick);
+
+            var wobble = plane.GetComponent<PaperWobble>();
+            if (wobble) wobble.Kick(4f + 4f * Charge01);
+
+            IsCharging = false;
+            Charge01 = 0f;
+        }
+
+        void UpdateDown()
+        {
+            downTimer += Time.deltaTime;
+            float delay = plane.LastDownWasCrash ? resetDelayAfterCrash : resetDelayAfterTouchdown;
+            if (downTimer >= delay) ResetToStart();
+        }
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "version": 1,
+    "name": "PaperWings",
+    "maps": [
+        {
+            "name": "Flight",
+            "id": "a1000000-0000-4000-8000-000000000001",
+            "actions": [
+                {
+                    "name": "Steer",
+                    "type": "Value",
+                    "id": "a1000000-0000-4000-8000-000000000010",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Boost",
+                    "type": "Button",
+                    "id": "a1000000-0000-4000-8000-000000000011",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Throw",
+                    "type": "Button",
+                    "id": "a1000000-0000-4000-8000-000000000012",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Reset",
+                    "type": "Button",
+                    "id": "a1000000-0000-4000-8000-000000000013",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                { "name": "WASD", "id": "a1000000-0000-4000-8000-000000000100", "path": "2DVector", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": true, "isPartOfComposite": false },
+                { "name": "up", "id": "a1000000-0000-4000-8000-000000000101", "path": "<Keyboard>/w", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": true },
+                { "name": "down", "id": "a1000000-0000-4000-8000-000000000102", "path": "<Keyboard>/s", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": true },
+                { "name": "left", "id": "a1000000-0000-4000-8000-000000000103", "path": "<Keyboard>/a", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": true },
+                { "name": "right", "id": "a1000000-0000-4000-8000-000000000104", "path": "<Keyboard>/d", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": true },
+
+                { "name": "Arrows", "id": "a1000000-0000-4000-8000-000000000110", "path": "2DVector", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": true, "isPartOfComposite": false },
+                { "name": "up", "id": "a1000000-0000-4000-8000-000000000111", "path": "<Keyboard>/upArrow", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": true },
+                { "name": "down", "id": "a1000000-0000-4000-8000-000000000112", "path": "<Keyboard>/downArrow", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": true },
+                { "name": "left", "id": "a1000000-0000-4000-8000-000000000113", "path": "<Keyboard>/leftArrow", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": true },
+                { "name": "right", "id": "a1000000-0000-4000-8000-000000000114", "path": "<Keyboard>/rightArrow", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": true },
+
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000120", "path": "<Gamepad>/leftStick", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000121", "path": "<Gamepad>/dpad", "interactions": "", "processors": "", "groups": "", "action": "Steer", "isComposite": false, "isPartOfComposite": false },
+
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000200", "path": "<Keyboard>/space", "interactions": "", "processors": "", "groups": "", "action": "Boost", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000201", "path": "<Keyboard>/leftShift", "interactions": "", "processors": "", "groups": "", "action": "Boost", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000202", "path": "<Gamepad>/buttonSouth", "interactions": "", "processors": "", "groups": "", "action": "Boost", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000203", "path": "<Gamepad>/rightTrigger", "interactions": "", "processors": "", "groups": "", "action": "Boost", "isComposite": false, "isPartOfComposite": false },
+
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000300", "path": "<Keyboard>/space", "interactions": "", "processors": "", "groups": "", "action": "Throw", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000301", "path": "<Gamepad>/buttonSouth", "interactions": "", "processors": "", "groups": "", "action": "Throw", "isComposite": false, "isPartOfComposite": false },
+
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000400", "path": "<Keyboard>/r", "interactions": "", "processors": "", "groups": "", "action": "Reset", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000401", "path": "<Gamepad>/select", "interactions": "", "processors": "", "groups": "", "action": "Reset", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000402", "path": "<Gamepad>/buttonNorth", "interactions": "", "processors": "", "groups": "", "action": "Reset", "isComposite": false, "isPartOfComposite": false }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

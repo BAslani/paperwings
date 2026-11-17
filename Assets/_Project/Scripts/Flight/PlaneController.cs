@@ -1,0 +1,334 @@
+using System;
+using UnityEngine;
+
+namespace PaperWings.Flight
+{
+    public enum PlaneState
+    {
+        Held,    // in the player's hand, waiting to be thrown (kinematic, no physics)
+        Flying,  // the flight model is in control
+        Down     // landed or crashed; plain physics takes over until reset
+    }
+
+    /// <summary>
+    /// Arcade glider flight model.
+    ///
+    /// HOW IT WORKS (read this first):
+    ///  1. The plane's orientation is three plain angles: heading (yaw), pitch and bank.
+    ///     Player input changes pitch and bank directly. Bank automatically turns the
+    ///     heading, so steering only ever needs one stick.
+    ///  2. "Speed" is the plane's energy. Pointing down adds speed, pointing up spends it.
+    ///     That single rule is the whole "altitude is fuel" loop.
+    ///  3. Each physics tick we build a desired velocity: along the nose at 'speed',
+    ///     plus a small constant sink (gliding loses height), plus any wind.
+    ///     The Rigidbody's velocity eases toward it (airGrip), which gives a slightly
+    ///     floaty, papery slide instead of rails.
+    ///  4. Forgiveness: no input = nose eases to a gentle glide and wings level out.
+    ///     Too slow = soft stall: nose drops on its own, speed comes back, control returns.
+    ///
+    /// UNITY NOTE: The Rigidbody is still used. It moves the plane, handles collisions and
+    /// interpolates rendering. We just don't let it simulate aerodynamics or gravity;
+    /// we set its velocity and rotation ourselves every FixedUpdate (the physics tick,
+    /// 50 times/sec by default, independent of frame rate).
+    /// </summary>
+    [RequireComponent(typeof(Rigidbody))]
+    public class PlaneController : MonoBehaviour
+    {
+        [SerializeField] FlightSettings settings;
+        [SerializeField] PlaneInput input;
+
+        // ---- Public read-only state (used by HUD, camera, wobble, etc.) ----
+        public FlightSettings Settings => settings;
+        public PlaneState State { get; private set; } = PlaneState.Held;
+        public float Speed => speed;
+        public Vector3 Velocity => rb.linearVelocity;
+        public float PitchAngle => pitch;
+        public float BankAngle => bank;
+        public bool IsStalling { get; private set; }
+        /// <summary>0..1, smoothed. Use for visuals/warnings.</summary>
+        public float StallAmount => stallBlend;
+        public float BoostCooldownRemaining => Mathf.Max(0f, boostReadyTime - Time.time);
+        public bool LastDownWasCrash { get; private set; }
+
+        /// <summary>Fired when the plane stops flying. Argument: true = crash, false = gentle touchdown.</summary>
+        public event Action<bool> Downed;
+        /// <summary>Fired when a boost fires (for effects).</summary>
+        public event Action Boosted;
+
+        /// <summary>
+        /// Velocity of the air around the plane (wind). Stage 2's air field will feed this.
+        /// It is simply added to the plane's motion, so wind pushes you around and
+        /// rising air lifts you.
+        /// </summary>
+        public Vector3 AirVelocity { get; set; }
+
+        Rigidbody rb;
+
+        // The three angles that define orientation (degrees).
+        float yaw;    // heading, around world up
+        float pitch;  // nose up (+) / down (-)
+        float bank;   // right wing down (+) / left wing down (-)
+
+        float speed;          // airspeed along the nose
+        float stallBlend;     // 0 = flying normally, 1 = fully stalled (smoothed)
+        float boostReadyTime; // Time.time when the next boost is allowed
+
+        void Awake()
+        {
+            rb = GetComponent<Rigidbody>();
+            if (input == null) input = GetComponent<PlaneInput>();
+        }
+
+        // ------------------------------------------------------------------
+        // Public control API (used by LaunchAndReset and, later, the landing zone)
+        // ------------------------------------------------------------------
+
+        /// <summary>Puts the plane in the player's hand at a pose. Physics is off while held.</summary>
+        public void Hold(Vector3 position, Quaternion rotation)
+        {
+            if (State != PlaneState.Held)
+            {
+                State = PlaneState.Held;
+                rb.isKinematic = true;   // kinematic = moved by code only, ignores forces
+                rb.useGravity = false;
+            }
+            // Teleport (both rb and transform, so interpolation doesn't smear the move).
+            rb.position = position;
+            rb.rotation = rotation;
+            transform.SetPositionAndRotation(position, rotation);
+        }
+
+        /// <summary>Throws the plane from its current held pose.</summary>
+        public void Launch(float throwSpeed, float pitchKick)
+        {
+            Vector3 euler = transform.rotation.eulerAngles;
+            yaw = euler.y;
+            pitch = Mathf.Clamp(-NormalizeAngle(euler.x) + pitchKick, -settings.maxPitchDown, settings.maxPitchUp);
+            bank = 0f;
+
+            speed = throwSpeed;
+            stallBlend = 0f;
+            IsStalling = false;
+            boostReadyTime = Time.time;
+            AirVelocity = Vector3.zero;
+
+            rb.isKinematic = false;
+            rb.useGravity = false;      // our flight model handles "gravity" via sink + dive gain
+            rb.freezeRotation = true;   // collisions must not spin us; we own rotation
+            rb.linearDamping = 0f;
+            rb.angularDamping = 0.05f;
+
+            Quaternion rot = CurrentRotation();
+            rb.rotation = rot;
+            rb.linearVelocity = rot * Vector3.forward * speed;
+            rb.angularVelocity = Vector3.zero;
+
+            State = PlaneState.Flying;
+        }
+
+        // ------------------------------------------------------------------
+        // The flight model
+        // ------------------------------------------------------------------
+
+        void FixedUpdate()
+        {
+            // Always consume a queued boost press, so a press made while held
+            // doesn't fire the instant we're thrown.
+            bool boostRequested = input != null && input.ConsumeBoost();
+
+            if (State != PlaneState.Flying) return;
+
+            float dt = Time.fixedDeltaTime;
+            Vector2 stick = input != null ? input.Steer : Vector2.zero;
+
+            // Stick forward (+y) = nose DOWN by default, like a real flight stick.
+            float pitchInput = settings.invertPitch ? stick.y : -stick.y;
+            float rollInput = stick.x;
+
+            // Slow planes respond sluggishly. 0..1 between stall speed and cruise speed.
+            float speed01 = Mathf.InverseLerp(settings.stallSpeed, settings.cruiseSpeed, speed);
+            float authority = Mathf.Lerp(settings.lowSpeedAuthority, 1f, speed01);
+
+            UpdateStall(dt);
+            UpdateBank(rollInput, dt);
+            UpdatePitch(pitchInput, authority, dt);
+
+            // Roll leads to yaw: the more you bank, the faster you turn.
+            yaw += settings.turnRate * (bank / settings.maxBank) * authority * dt;
+
+            Quaternion rotation = CurrentRotation();
+            rb.MoveRotation(rotation);
+
+            UpdateSpeed(rotation * Vector3.forward, dt);
+            if (boostRequested) TryBoost();
+
+            // ---- Build the velocity we want this tick ----
+            Vector3 forward = rotation * Vector3.forward;
+            Vector3 desiredVelocity = forward * speed
+                                    + Vector3.down * CurrentSinkRate(speed01)
+                                    + AirVelocity;
+
+            // Ease toward it. (1 - e^(-k*dt)) is a frame-rate-independent smoothing factor.
+            float grip = 1f - Mathf.Exp(-settings.airGrip * dt);
+            rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, desiredVelocity, grip);
+        }
+
+        void UpdateStall(float dt)
+        {
+            // Hysteresis: enter below stallSpeed, exit above stallRecoverSpeed.
+            if (!IsStalling && speed < settings.stallSpeed) IsStalling = true;
+            else if (IsStalling && speed > settings.stallRecoverSpeed) IsStalling = false;
+
+            // Smooth 0..1 so the nose drop and warning fade in/out over ~0.3s.
+            stallBlend = Mathf.MoveTowards(stallBlend, IsStalling ? 1f : 0f, dt / 0.3f);
+        }
+
+        void UpdateBank(float rollInput, float dt)
+        {
+            // Bank goes to a TARGET angle set by the stick, not a free roll rate.
+            // No barrel rolls, no inverted flight. Release the stick and wings level.
+            float targetBank = rollInput * settings.maxBank;
+            float response = Mathf.Abs(rollInput) > 0.01f ? settings.bankResponse : settings.rollAutoLevel;
+            bank = Mathf.Lerp(bank, targetBank, 1f - Mathf.Exp(-response * dt));
+        }
+
+        void UpdatePitch(float pitchInput, float authority, float dt)
+        {
+            if (Mathf.Abs(pitchInput) > 0.05f)
+            {
+                // During a stall, pulling up is ignored (you must let the nose drop).
+                if (pitchInput > 0f) pitchInput *= 1f - stallBlend;
+                pitch += pitchInput * settings.pitchRate * authority * dt;
+            }
+            else
+            {
+                // Hands off: ease the nose to a steady glide angle.
+                pitch = Mathf.Lerp(pitch, settings.glidePitch, 1f - Mathf.Exp(-settings.autoLevelStrength * dt));
+            }
+
+            // Soft stall: pull the nose down (but never pull it UP if the player is already diving harder).
+            if (stallBlend > 0f && pitch > settings.stallNosePitch)
+            {
+                float t = stallBlend * (1f - Mathf.Exp(-settings.stallRecoveryStrength * dt));
+                pitch = Mathf.Lerp(pitch, settings.stallNosePitch, t);
+            }
+
+            pitch = Mathf.Clamp(pitch, -settings.maxPitchDown, settings.maxPitchUp);
+        }
+
+        void UpdateSpeed(Vector3 forward, float dt)
+        {
+            // forward.y is the sine of the pitch angle: -1 straight down, +1 straight up.
+            float slope = forward.y;
+
+            if (slope < 0f) speed += settings.diveSpeedGain * -slope * dt;   // diving: height -> speed
+            else            speed -= settings.climbSpeedCost * slope * dt;   // climbing: speed -> height
+
+            if (speed > settings.cruiseSpeed)
+            {
+                // Extra speed slowly bleeds off, so dives are a resource, not permanent.
+                speed -= (speed - settings.cruiseSpeed) * settings.overspeedDrag * dt;
+            }
+            else if (slope <= 0f)
+            {
+                // Level or nose-down and slow: gently regain cruise speed (the sink pays for it).
+                speed += (settings.cruiseSpeed - speed) * settings.glideSpeedRecovery * dt;
+            }
+
+            speed = Mathf.Clamp(speed, 2f, settings.maxSpeed);
+        }
+
+        float CurrentSinkRate(float speed01)
+        {
+            float sink = settings.CruiseSinkRate;                              // base glide
+            sink += settings.slowSinkExtra * (1f - speed01);                   // mushy when slow
+            sink += settings.turnSinkExtra * Mathf.Abs(bank) / settings.maxBank; // turns cost height
+            sink += settings.stallExtraSink * stallBlend;                      // stalls drop you
+            return sink;
+        }
+
+        void TryBoost()
+        {
+            if (Time.time < boostReadyTime) return;
+            speed = Mathf.Min(speed + settings.boostSpeed, settings.maxSpeed);
+            boostReadyTime = Time.time + settings.boostCooldown;
+            Boosted?.Invoke();
+        }
+
+        // ------------------------------------------------------------------
+        // Collisions
+        // ------------------------------------------------------------------
+
+        void OnCollisionEnter(Collision collision)
+        {
+            if (State != PlaneState.Flying) return;
+
+            // Contact normal points away from the surface we hit, toward us.
+            Vector3 normal = collision.GetContact(0).normal;
+            float impactSpeed = Mathf.Abs(Vector3.Dot(collision.relativeVelocity, normal));
+            bool floorLike = normal.y > 0.6f;   // roughly upward-facing surface
+
+            if (floorLike)
+            {
+                bool tooHard = impactSpeed > settings.touchdownMaxImpact || speed > settings.touchdownMaxSpeed;
+                GoDown(crash: tooHard);
+            }
+            else if (impactSpeed < settings.bumpTolerance)
+            {
+                // Glancing hit on a wall: just scrub some speed and keep flying.
+                speed *= settings.bumpSpeedKeep;
+            }
+            else
+            {
+                GoDown(crash: true);
+            }
+        }
+
+        /// <summary>Stops the flight model and hands the plane to plain physics.</summary>
+        public void GoDown(bool crash)
+        {
+            if (State == PlaneState.Down) return;
+            State = PlaneState.Down;
+            LastDownWasCrash = crash;
+
+            rb.useGravity = true;
+            rb.freezeRotation = false;
+            rb.linearDamping = 0.5f;
+            rb.angularDamping = 0.5f;
+            if (crash)
+            {
+                // A little tumble so crashes read clearly.
+                rb.AddTorque(UnityEngine.Random.insideUnitSphere * 2f, ForceMode.VelocityChange);
+            }
+
+            Downed?.Invoke(crash);
+        }
+
+        // ------------------------------------------------------------------
+        // Helpers
+        // ------------------------------------------------------------------
+
+        Quaternion CurrentRotation()
+        {
+            // Unity's Euler: +X tilts the nose DOWN, so pitch is negated.
+            // +Z rolls left-wing-down, so bank is negated too.
+            return Quaternion.Euler(-pitch, yaw, -bank);
+        }
+
+        static float NormalizeAngle(float a)
+        {
+            a %= 360f;
+            if (a > 180f) a -= 360f;
+            if (a < -180f) a += 360f;
+            return a;
+        }
+
+        void OnDrawGizmos()
+        {
+            // Scene view: yellow line = actual velocity (1 second ahead).
+            if (rb == null) return;
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(transform.position, transform.position + rb.linearVelocity);
+        }
+    }
+}
