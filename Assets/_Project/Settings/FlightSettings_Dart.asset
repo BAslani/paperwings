@@ -29,7 +29,7 @@ MonoBehaviour:
   bankResponse: 5
   turnRate: 75
   lowSpeedAuthority: 0.4
-  invertPitch: 0
+  invertPitch: 1
   glidePitch: -4
   autoLevelStrength: 1.2
   rollAutoLevel: 3
@@ -44,6 +44,9 @@ MonoBehaviour:
   throwSpeedMax: 20
   throwChargeTime: 0.6
   throwPitchKick: 8
+  airInfluence: 1
+  airResponse: 4
+  tailwindSpeedGain: 0.5
   bumpTolerance: 6
   bumpSpeedKeep: 0.75
   touchdownMaxImpact: 6
@@ -52,3 +55,4 @@ MonoBehaviour:
   wobbleAmount: 2.5
   wobbleFrequency: 2.2
   stallShake: 8
+  turbulenceWobble: 0.25

@@ -42,6 +42,7 @@ namespace PaperWings.Flight
                 float speed01 = Mathf.InverseLerp(0f, s.maxSpeed, plane.Speed);
                 float amount = s.wobbleAmount * Mathf.Lerp(0.4f, 1.2f, speed01)
                              + s.stallShake * plane.StallAmount
+                             + s.turbulenceWobble * plane.AirVelocity.magnitude
                              + kick;
 
                 // Stall shake is faster and more nervous than normal flutter.

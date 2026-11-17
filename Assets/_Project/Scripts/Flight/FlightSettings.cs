@@ -125,6 +125,18 @@ namespace PaperWings.Flight
         [Tooltip("Nose-up angle added at release, for a nice arcing throw.")]
         public float throwPitchKick = 8f;
 
+        [Header("Air  (how wind, drafts and thermals affect this plane)")]
+        [Tooltip("Multiplier on all wind. 1 = as authored on the sources. Light planes might use >1.")]
+        [Range(0f, 3f)] public float airInfluence = 1f;
+
+        [Tooltip("How quickly the plane picks up a change in the air (per second). " +
+                 "Lower = smoother entry into zones, higher = snappier.")]
+        [Range(0.5f, 20f)] public float airResponse = 4f;
+
+        [Tooltip("Flying WITH the wind adds airspeed: fraction of the tailwind (along your nose) " +
+                 "added to speed per second. This is how drafts give you energy back.")]
+        [Range(0f, 2f)] public float tailwindSpeedGain = 0.5f;
+
         [Header("Collisions  (be forgiving)")]
         [Tooltip("Hitting a wall slower than this (along the wall's normal) is just a bump; you keep flying.")]
         public float bumpTolerance = 6f;
@@ -149,6 +161,9 @@ namespace PaperWings.Flight
 
         [Tooltip("Extra shake in degrees while stalling (doubles as a stall warning).")]
         [Range(0f, 20f)] public float stallShake = 8f;
+
+        [Tooltip("Extra flutter (degrees) per unit of wind speed. Makes being in moving air visible on the plane.")]
+        [Range(0f, 1f)] public float turbulenceWobble = 0.25f;
 
         // Convenience: sink rate at cruise speed, derived from the glide ratio.
         public float CruiseSinkRate => cruiseSpeed / glideRatio;

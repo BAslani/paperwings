@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using PaperWings.Air;
 
 namespace PaperWings.Flight
 {
@@ -56,11 +57,14 @@ namespace PaperWings.Flight
         public event Action Boosted;
 
         /// <summary>
-        /// Velocity of the air around the plane (wind). Stage 2's air field will feed this.
+        /// Smoothed velocity of the air around the plane, sampled from the AirField.
         /// It is simply added to the plane's motion, so wind pushes you around and
         /// rising air lifts you.
         /// </summary>
-        public Vector3 AirVelocity { get; set; }
+        public Vector3 AirVelocity { get; private set; }
+
+        /// <summary>Raw air sample from the last physics tick (for HUD/effects: in thermal? in draft?).</summary>
+        public AirSample Air { get; private set; }
 
         Rigidbody rb;
 
@@ -111,6 +115,7 @@ namespace PaperWings.Flight
             IsStalling = false;
             boostReadyTime = Time.time;
             AirVelocity = Vector3.zero;
+            Air = default;
 
             rb.isKinematic = false;
             rb.useGravity = false;      // our flight model handles "gravity" via sink + dive gain
@@ -149,6 +154,7 @@ namespace PaperWings.Flight
             float speed01 = Mathf.InverseLerp(settings.stallSpeed, settings.cruiseSpeed, speed);
             float authority = Mathf.Lerp(settings.lowSpeedAuthority, 1f, speed01);
 
+            UpdateAir(dt);
             UpdateStall(dt);
             UpdateBank(rollInput, dt);
             UpdatePitch(pitchInput, authority, dt);
@@ -171,6 +177,15 @@ namespace PaperWings.Flight
             // Ease toward it. (1 - e^(-k*dt)) is a frame-rate-independent smoothing factor.
             float grip = 1f - Mathf.Exp(-settings.airGrip * dt);
             rb.linearVelocity = Vector3.Lerp(rb.linearVelocity, desiredVelocity, grip);
+        }
+
+        void UpdateAir(float dt)
+        {
+            // Ask the air field what the air is doing here, then ease into it so
+            // entering a zone feels like a swell, not a wall.
+            Air = AirField.Sample(rb.position);
+            Vector3 targetAir = Air.wind * settings.airInfluence;
+            AirVelocity = Vector3.Lerp(AirVelocity, targetAir, 1f - Mathf.Exp(-settings.airResponse * dt));
         }
 
         void UpdateStall(float dt)
@@ -234,6 +249,10 @@ namespace PaperWings.Flight
                 // Level or nose-down and slow: gently regain cruise speed (the sink pays for it).
                 speed += (settings.cruiseSpeed - speed) * settings.glideSpeedRecovery * dt;
             }
+
+            // Riding WITH the air gives energy back (headwinds don't take it away; forgiving).
+            float tailwind = Vector3.Dot(AirVelocity, forward);
+            if (tailwind > 0f) speed += tailwind * settings.tailwindSpeedGain * dt;
 
             speed = Mathf.Clamp(speed, 2f, settings.maxSpeed);
         }

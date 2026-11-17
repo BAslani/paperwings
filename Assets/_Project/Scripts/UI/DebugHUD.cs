@@ -28,6 +28,17 @@ namespace PaperWings.UI
             return float.NaN;
         }
 
+        string AirText()
+        {
+            var air = plane.Air;
+            Vector3 w = plane.AirVelocity;
+            if (!air.InThermal && !air.InDraft) return $"calm ({w.magnitude:0.0})";
+            string s = "";
+            if (air.InThermal) s += "<color=#FFA040>THERMAL</color> ";
+            if (air.InDraft)   s += "<color=#60D8FF>DRAFT</color> ";
+            return s + $"{w.magnitude:0.0}  (up {w.y:+0.0;-0.0})";
+        }
+
         void OnGUI()
         {
             if (plane == null) return;
@@ -55,7 +66,7 @@ namespace PaperWings.UI
                 $"Vert speed: <color={vsColor}>{v.y:+0.0;-0.0}</color>\n" +
                 $"Pitch/Bank: {plane.PitchAngle:0}° / {plane.BankAngle:0}°\n" +
                 $"Boost:      {(boostCd <= 0f ? "<color=#7CFC00>READY</color>" : $"{boostCd:0.0}s")}\n" +
-                $"Air:        {plane.AirVelocity.magnitude:0.0} (no air sources yet)";
+                $"Air:        {AirText()}";
 
             GUI.Box(new Rect(10 * scale, 10 * scale, 430 * scale, 230 * scale), text, box);
 
@@ -74,6 +85,15 @@ namespace PaperWings.UI
                     break;
 
                 case PlaneState.Flying:
+                    // Zone banner just under the top of the screen, so you always know WHY you're climbing.
+                    var air = plane.Air;
+                    string zone = "";
+                    if (air.InThermal) zone += $"<color=#FFA040>^ THERMAL {Mathf.RoundToInt(air.thermal * 100)}%</color>   ";
+                    if (air.InDraft)   zone += $"<color=#60D8FF>>> DRAFT {Mathf.RoundToInt(air.draft * 100)}%</color>";
+                    if (zone.Length > 0)
+                        GUI.Label(new Rect(0, 12 * scale, Screen.width, 50 * scale),
+                                  $"<size={Mathf.RoundToInt(30 * scale)}>{zone}</size>", big);
+
                     if (plane.StallAmount > 0.01f)
                     {
                         // Flashing warning.
