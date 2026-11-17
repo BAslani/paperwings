@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/FlightTest.unity
     guid: fbbe68b33fd7fa74b9d8361684bcfb74
+  - enabled: 1
+    path: Assets/_Project/Scenes/DeskPrototype.unity
+    guid: cd1fc022270de294990286a8ccca654a
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

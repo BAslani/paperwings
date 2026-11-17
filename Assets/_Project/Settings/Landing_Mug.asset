@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fecb2b2889878de43877419952403985, type: 3}
+  m_Name: Landing_Mug
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Gameplay.LandingSettings
+  assistRadius: 16
+  assistHeight: 25
+  assistMaxAngle: 55
+  maxLandingSpeed: 22
+  maxImpactSpeed: 9
+  maxBank: 45
+  snapTime: 0.35
+  successMessages:
+  - MUG-NIFICENT!
+  - Perfect landing! Coffee's still warm.
+  - Touchdown on the java!
+  - The night shift salutes you.
+  - Smooth as a fresh ream.
+  - Bean there, landed that.

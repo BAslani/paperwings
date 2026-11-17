@@ -26,6 +26,9 @@ namespace PaperWings.Flight
         /// <summary>True while the throw button is held (for charging the launch).</summary>
         public bool ThrowHeld => throwAction != null && throwAction.IsPressed();
 
+        /// <summary>True on the frame the throw button was pressed.</summary>
+        public bool ThrowPressed => throwAction != null && throwAction.WasPressedThisFrame();
+
         /// <summary>True on the frame the reset button was pressed.</summary>
         public bool ResetPressed => reset != null && reset.WasPressedThisFrame();
 

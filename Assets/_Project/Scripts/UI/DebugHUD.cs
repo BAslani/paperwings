@@ -62,15 +62,18 @@ namespace PaperWings.UI
                 $"State:      {plane.State}\n" +
                 $"Airspeed:   {plane.Speed:0.0}   (cruise {s.cruiseSpeed:0}, stall {s.stallSpeed:0})\n" +
                 $"Ground spd: {v.magnitude:0.0}\n" +
-                $"Height:     {(float.IsNaN(h) ? "—" : h.ToString("0.0"))}\n" +
+                $"Height:     {(float.IsNaN(h) ? "—" : h.ToString("0.0"))} above surface   (altitude {plane.transform.position.y:0.0})\n" +
                 $"Vert speed: <color={vsColor}>{v.y:+0.0;-0.0}</color>\n" +
                 $"Pitch/Bank: {plane.PitchAngle:0}° / {plane.BankAngle:0}°\n" +
                 $"Boost:      {(boostCd <= 0f ? "<color=#7CFC00>READY</color>" : $"{boostCd:0.0}s")}\n" +
-                $"Air:        {AirText()}";
+                $"Air:        {AirText()}\n" +
+                $"Assist:     {(plane.LandingAssistStrength > 0.01f ? $"<color=#60FF80>landing {Mathf.RoundToInt(plane.LandingAssistStrength * 100)}%</color>" : "—")}\n" +
+                $"Flight:     {plane.FlightTime:0.0}s";
 
-            GUI.Box(new Rect(10 * scale, 10 * scale, 430 * scale, 230 * scale), text, box);
+            GUI.Box(new Rect(10 * scale, 10 * scale, 520 * scale, 280 * scale), text, box);
 
-            string controls = "W/S or stick: pitch (W dives)   A/D: bank & turn   SPACE/Shift/(A)/RT: boost   R/(Y)/Select: reset";
+            string pitchHint = s.invertPitch ? "W climbs" : "W dives";
+            string controls = $"W/S or stick: pitch ({pitchHint})   A/D: bank & turn   SPACE/Shift/(A)/RT: boost   R/(Y)/Select: reset";
             GUI.Label(new Rect(10 * scale, Screen.height - 34 * scale, Screen.width, 30 * scale),
                       $"<size={Mathf.RoundToInt(16 * scale)}>{controls}</size>", new GUIStyle(GUI.skin.label) { richText = true });
 
@@ -105,7 +108,16 @@ namespace PaperWings.UI
                     break;
 
                 case PlaneState.Down:
-                    GUI.Label(center, plane.LastDownWasCrash ? "<color=#FF6347>Crunch!</color>" : "<color=#7CFC00>Touchdown!</color>", big);
+                    string color = plane.LastDownWasCrash ? "#FF6347" : "#FFD24A";
+                    GUI.Label(center, $"<color={color}>{plane.LastResultMessage}</color>", big);
+                    break;
+
+                case PlaneState.Landed:
+                    // The payoff: big, happy, with a couple of stats to brag about.
+                    float pulse = 1f + 0.06f * Mathf.Sin(Time.time * 6f);
+                    GUI.Label(center, $"<size={Mathf.RoundToInt(56 * scale * pulse)}><color=#60FF80>{plane.LastResultMessage}</color></size>", big);
+                    Rect sub = new Rect(0, center.yMax + 10 * scale, Screen.width, 40 * scale);
+                    GUI.Label(sub, $"<size={Mathf.RoundToInt(24 * scale)}>Flight time {plane.FlightTime:0.0}s     —     SPACE / (A) to fly again</size>", big);
                     break;
             }
         }

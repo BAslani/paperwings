@@ -8,6 +8,7 @@ namespace PaperWings.Gameplay
     ///   Held:  steer to aim, hold Throw to wind up (the plane pulls back), release to throw.
     ///   Flying: press Reset any time to go back to the hand.
     ///   Down:  automatically back in hand after a short delay.
+    ///   Landed: celebrate, then back in hand (press Throw to skip the wait).
     /// </summary>
     public class LaunchAndReset : MonoBehaviour
     {
@@ -30,6 +31,8 @@ namespace PaperWings.Gameplay
         [Header("Auto reset")]
         [SerializeField] float resetDelayAfterCrash = 1.2f;
         [SerializeField] float resetDelayAfterTouchdown = 2.0f;
+        [Tooltip("After a successful landing, auto-reset after this long (or press Throw to go again sooner).")]
+        [SerializeField] float resetDelayAfterLanding = 6.0f;
 
         public float Charge01 { get; private set; }
         public bool IsCharging { get; private set; }
@@ -69,7 +72,16 @@ namespace PaperWings.Gameplay
             {
                 case PlaneState.Held:   UpdateHeld();   break;
                 case PlaneState.Down:   UpdateDown();   break;
+                case PlaneState.Landed: UpdateLanded(); break;
             }
+        }
+
+        void UpdateLanded()
+        {
+            // Let the success moment breathe, then go again (Throw skips the wait).
+            downTimer += Time.deltaTime;
+            bool skip = input != null && input.ThrowPressed && downTimer > 0.5f;
+            if (skip || downTimer >= resetDelayAfterLanding) ResetToStart();
         }
 
         void UpdateHeld()

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using PaperWings.Air;
+using PaperWings.Gameplay;
 
 namespace PaperWings.Flight
 {
@@ -8,7 +9,8 @@ namespace PaperWings.Flight
     {
         Held,    // in the player's hand, waiting to be thrown (kinematic, no physics)
         Flying,  // the flight model is in control
-        Down     // landed or crashed; plain physics takes over until reset
+        Down,    // crashed or touched down somewhere that isn't a target; plain physics until reset
+        Landed   // successfully landed on a target (e.g. the mug); resting in a snapped pose
     }
 
     /// <summary>
@@ -50,6 +52,12 @@ namespace PaperWings.Flight
         public float StallAmount => stallBlend;
         public float BoostCooldownRemaining => Mathf.Max(0f, boostReadyTime - Time.time);
         public bool LastDownWasCrash { get; private set; }
+        /// <summary>Human-readable reason for the last crash/touchdown/landing (for the HUD).</summary>
+        public string LastResultMessage { get; private set; }
+        /// <summary>Seconds in the air during the current (or last) flight.</summary>
+        public float FlightTime => State == PlaneState.Flying ? Time.time - launchTime : lastFlightTime;
+        /// <summary>0..1, how much a landing target is currently steering us.</summary>
+        public float LandingAssistStrength { get; private set; }
 
         /// <summary>Fired when the plane stops flying. Argument: true = crash, false = gentle touchdown.</summary>
         public event Action<bool> Downed;
@@ -76,6 +84,13 @@ namespace PaperWings.Flight
         float speed;          // airspeed along the nose
         float stallBlend;     // 0 = flying normally, 1 = fully stalled (smoothed)
         float boostReadyTime; // Time.time when the next boost is allowed
+
+        float launchTime, lastFlightTime;
+
+        // Landing snap (a short slide into the rest pose on a target).
+        Vector3 snapFromPos, snapToPos;
+        Quaternion snapFromRot, snapToRot;
+        float snapProgress, snapDuration;
 
         void Awake()
         {
@@ -114,8 +129,11 @@ namespace PaperWings.Flight
             stallBlend = 0f;
             IsStalling = false;
             boostReadyTime = Time.time;
+            launchTime = Time.time;
             AirVelocity = Vector3.zero;
             Air = default;
+            LandingAssistStrength = 0f;
+            LastResultMessage = null;
 
             rb.isKinematic = false;
             rb.useGravity = false;      // our flight model handles "gravity" via sink + dive gain
@@ -155,18 +173,27 @@ namespace PaperWings.Flight
             float authority = Mathf.Lerp(settings.lowSpeedAuthority, 1f, speed01);
 
             UpdateAir(dt);
+            LandingAssist assist = LandingZone.GetAssist(rb.position, yaw);
+            LandingAssistStrength = assist.strength;
+
             UpdateStall(dt);
             UpdateBank(rollInput, dt);
-            UpdatePitch(pitchInput, authority, dt);
+            UpdatePitch(pitchInput, authority, assist, dt);
 
             // Roll leads to yaw: the more you bank, the faster you turn.
             yaw += settings.turnRate * (bank / settings.maxBank) * authority * dt;
+            // Landing assist: gently swing the heading toward the target.
+            yaw += assist.yawError * settings.landingYawAssist * assist.strength * dt;
 
             Quaternion rotation = CurrentRotation();
             rb.MoveRotation(rotation);
 
             UpdateSpeed(rotation * Vector3.forward, dt);
             if (boostRequested) TryBoost();
+
+            // Final-approach air brake: near a landing target, excess speed bleeds off faster.
+            if (assist.strength > 0f && speed > settings.cruiseSpeed)
+                speed -= (speed - settings.cruiseSpeed) * settings.landingSpeedBrake * assist.strength * dt;
 
             // ---- Build the velocity we want this tick ----
             Vector3 forward = rotation * Vector3.forward;
@@ -207,7 +234,7 @@ namespace PaperWings.Flight
             bank = Mathf.Lerp(bank, targetBank, 1f - Mathf.Exp(-response * dt));
         }
 
-        void UpdatePitch(float pitchInput, float authority, float dt)
+        void UpdatePitch(float pitchInput, float authority, LandingAssist assist, float dt)
         {
             if (Mathf.Abs(pitchInput) > 0.05f)
             {
@@ -217,8 +244,12 @@ namespace PaperWings.Flight
             }
             else
             {
-                // Hands off: ease the nose to a steady glide angle.
-                pitch = Mathf.Lerp(pitch, settings.glidePitch, 1f - Mathf.Exp(-settings.autoLevelStrength * dt));
+                // Hands off: ease the nose to a steady glide angle...
+                // ...or, near a landing target, toward the angle that points at it.
+                float target = Mathf.Lerp(settings.glidePitch, assist.approachPitch,
+                                          assist.strength * settings.landingPitchAssist);
+                float strength = Mathf.Max(settings.autoLevelStrength, 2f * assist.strength * settings.landingPitchAssist);
+                pitch = Mathf.Lerp(pitch, target, 1f - Mathf.Exp(-strength * dt));
             }
 
             // Soft stall: pull the nose down (but never pull it UP if the player is already diving harder).
@@ -282,6 +313,10 @@ namespace PaperWings.Flight
         {
             if (State != PlaneState.Flying) return;
 
+            // Landing targets get first say (they judge touchdowns on their top surface).
+            var pad = collision.collider.GetComponentInParent<LandingZone>();
+            if (pad != null && pad.HandleTouchdown(this, collision)) return;
+
             // Contact normal points away from the surface we hit, toward us.
             Vector3 normal = collision.GetContact(0).normal;
             float impactSpeed = Mathf.Abs(Vector3.Dot(collision.relativeVelocity, normal));
@@ -290,7 +325,7 @@ namespace PaperWings.Flight
             if (floorLike)
             {
                 bool tooHard = impactSpeed > settings.touchdownMaxImpact || speed > settings.touchdownMaxSpeed;
-                GoDown(crash: tooHard);
+                GoDown(crash: tooHard, reason: tooHard ? "Crunch!" : "Touchdown... but not on the mug.");
             }
             else if (impactSpeed < settings.bumpTolerance)
             {
@@ -299,16 +334,18 @@ namespace PaperWings.Flight
             }
             else
             {
-                GoDown(crash: true);
+                GoDown(crash: true, reason: "Crunch!");
             }
         }
 
         /// <summary>Stops the flight model and hands the plane to plain physics.</summary>
-        public void GoDown(bool crash)
+        public void GoDown(bool crash, string reason = null)
         {
-            if (State == PlaneState.Down) return;
+            if (State == PlaneState.Down || State == PlaneState.Landed) return;
+            if (State == PlaneState.Flying) lastFlightTime = Time.time - launchTime;
             State = PlaneState.Down;
             LastDownWasCrash = crash;
+            LastResultMessage = reason ?? (crash ? "Crunch!" : "Touchdown!");
 
             rb.useGravity = true;
             rb.freezeRotation = false;
@@ -321,6 +358,39 @@ namespace PaperWings.Flight
             }
 
             Downed?.Invoke(crash);
+        }
+
+        /// <summary>
+        /// Successful landing on a target: freeze physics and slide into a neat rest pose
+        /// over 'snapTime' seconds (the "light snapping" that makes landings look clean).
+        /// </summary>
+        public void Land(Vector3 restPosition, Quaternion restRotation, float snapTime, string message)
+        {
+            if (State != PlaneState.Flying) return;
+            lastFlightTime = Time.time - launchTime;
+            State = PlaneState.Landed;
+            LastDownWasCrash = false;
+            LastResultMessage = message;
+
+            rb.isKinematic = true;
+            snapFromPos = transform.position;
+            snapFromRot = transform.rotation;
+            snapToPos = restPosition;
+            snapToRot = restRotation;
+            snapProgress = 0f;
+            snapDuration = Mathf.Max(0.01f, snapTime);
+        }
+
+        void Update()
+        {
+            if (State != PlaneState.Landed || snapProgress >= 1f) return;
+            snapProgress = Mathf.Min(1f, snapProgress + Time.deltaTime / snapDuration);
+            float t = 1f - (1f - snapProgress) * (1f - snapProgress);   // ease-out
+            Vector3 p = Vector3.Lerp(snapFromPos, snapToPos, t);
+            Quaternion r = Quaternion.Slerp(snapFromRot, snapToRot, t);
+            rb.position = p;
+            rb.rotation = r;
+            transform.SetPositionAndRotation(p, r);
         }
 
         // ------------------------------------------------------------------

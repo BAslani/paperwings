@@ -137,6 +137,17 @@ namespace PaperWings.Flight
                  "added to speed per second. This is how drafts give you energy back.")]
         [Range(0f, 2f)] public float tailwindSpeedGain = 0.5f;
 
+        [Header("Landing Assist  (how much landing targets help this plane)")]
+        [Tooltip("How strongly the heading swings toward a landing target (per second, at full assist). 0 = off.")]
+        [Range(0f, 5f)] public float landingYawAssist = 1.5f;
+
+        [Tooltip("With no pitch input near a target, how much the glide angle aims at it. 0 = off, 1 = full.")]
+        [Range(0f, 1f)] public float landingPitchAssist = 0.8f;
+
+        [Tooltip("Air brake on final approach: extra bleed of speed above cruise while assisted " +
+                 "(fraction per second, at full assist). Stops you arriving too fast to land.")]
+        [Range(0f, 5f)] public float landingSpeedBrake = 1.5f;
+
         [Header("Collisions  (be forgiving)")]
         [Tooltip("Hitting a wall slower than this (along the wall's normal) is just a bump; you keep flying.")]
         public float bumpTolerance = 6f;

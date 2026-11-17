@@ -178,7 +178,7 @@ namespace PaperWings.EditorTools
 
         // ------------------------------------------------------------------ helpers
 
-        static T LoadOrCreate<T>(string path) where T : ScriptableObject
+        internal static T LoadOrCreate<T>(string path) where T : ScriptableObject
         {
             var asset = AssetDatabase.LoadAssetAtPath<T>(path);
             if (asset != null) return asset;
@@ -188,7 +188,7 @@ namespace PaperWings.EditorTools
             return asset;
         }
 
-        static GameObject Prim(PrimitiveType type, string name, Transform parent, Vector3 localPos, Vector3 localEuler,
+        internal static GameObject Prim(PrimitiveType type, string name, Transform parent, Vector3 localPos, Vector3 localEuler,
                                Vector3 scale, Material mat, bool keepCollider = false)
         {
             var go = GameObject.CreatePrimitive(type);
@@ -202,7 +202,7 @@ namespace PaperWings.EditorTools
             return go;
         }
 
-        static ParticleSystem AddParticles(GameObject go, Material mat, bool stretched, float sizeMin, float sizeMax)
+        internal static ParticleSystem AddParticles(GameObject go, Material mat, bool stretched, float sizeMin, float sizeMax)
         {
             var ps = go.AddComponent<ParticleSystem>();
 
@@ -240,7 +240,7 @@ namespace PaperWings.EditorTools
             return ps;
         }
 
-        static Texture2D SoftDotTexture(string path)
+        internal static Texture2D SoftDotTexture(string path)
         {
             var existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (existing != null) return existing;
@@ -260,7 +260,7 @@ namespace PaperWings.EditorTools
             return tex;
         }
 
-        static Material ParticleMaterial(string name, Texture2D tex, bool additive)
+        internal static Material ParticleMaterial(string name, Texture2D tex, bool additive)
         {
             string path = $"{Root}/Art/{name}.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
