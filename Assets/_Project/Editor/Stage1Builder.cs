@@ -95,6 +95,7 @@ namespace PaperWings.EditorTools
             BuilderUtil.SetRef(controller, "input", input);
             BuilderUtil.SetRef(wobble, "plane", controller);
             BuilderUtil.SetRef(wobble, "visual", visual.transform);
+            PlaneFxBuilder.AddTrails(root);   // wingtip trails (Stage 4)
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             Object.DestroyImmediate(root);
@@ -159,18 +160,8 @@ namespace PaperWings.EditorTools
             BuilderUtil.SetRef(launcher, "input", input);
             BuilderUtil.SetRef(launcher, "spawnPoint", spawn);
 
-            // ---- Camera ----
-            var camGo = new GameObject("Main Camera");
-            camGo.tag = "MainCamera";
-            var cam = camGo.AddComponent<Camera>();
-            cam.nearClipPlane = 0.1f;
-            cam.farClipPlane = 2000f;
-            cam.clearFlags = CameraClearFlags.SolidColor;     // no skybox yet: plain sky colour
-            cam.backgroundColor = RenderSettings.fogColor;
-            camGo.AddComponent<AudioListener>();
-            camGo.transform.position = spawn.position + new Vector3(0f, 2.2f, -7f);
-            var chase = camGo.AddComponent<SimpleChaseCamera>();
-            BuilderUtil.SetRef(chase, "target", plane.GetComponent<Rigidbody>());
+            // ---- Camera (Cinemachine chase rig) ----
+            CameraRigBuilder.CreateChaseCamera(controller, spawn, farClip: 2000f);
 
             // ---- HUD ----
             var hud = new GameObject("DebugHUD").AddComponent<DebugHUD>();

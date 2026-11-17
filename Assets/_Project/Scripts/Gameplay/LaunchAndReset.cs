@@ -58,6 +58,8 @@ namespace PaperWings.Gameplay
             IsCharging = false;
             downTimer = 0f;
             plane.Hold(spawnPoint.position, spawnPoint.rotation);
+            var trails = plane.GetComponent<PlaneTrails>();
+            if (trails) trails.ClearTrails();
         }
 
         void Update()

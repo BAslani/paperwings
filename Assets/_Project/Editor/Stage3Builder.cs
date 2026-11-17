@@ -279,18 +279,7 @@ namespace PaperWings.EditorTools
             BuilderUtil.SetRef(launcher, "input", input);
             BuilderUtil.SetRef(launcher, "spawnPoint", spawn);
 
-            var camGo = new GameObject("Main Camera");
-            camGo.tag = "MainCamera";
-            var cam = camGo.AddComponent<Camera>();
-            cam.nearClipPlane = 0.1f;
-            cam.farClipPlane = 1000f;
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = RenderSettings.fogColor;
-            camGo.AddComponent<AudioListener>();
-            camGo.transform.position = spawn.position + spawn.rotation * new Vector3(0f, 2.2f, -7f);
-            camGo.transform.LookAt(spawn.position);
-            var chase = camGo.AddComponent<SimpleChaseCamera>();
-            BuilderUtil.SetRef(chase, "target", plane.GetComponent<Rigidbody>());
+            CameraRigBuilder.CreateChaseCamera(controller, spawn, farClip: 1000f);
 
             var hud = new GameObject("DebugHUD").AddComponent<DebugHUD>();
             BuilderUtil.SetRef(hud, "plane", controller);

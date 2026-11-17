@@ -16,6 +16,10 @@ namespace PaperWings.Flight
     [CreateAssetMenu(fileName = "FlightSettings", menuName = "PaperWings/Flight Settings")]
     public class FlightSettings : ScriptableObject
     {
+        [Header("Controls")]
+        [Tooltip("Flip pitch: OFF = flight-style (W/stick forward dives). ON = W/stick forward climbs.")]
+        public bool invertPitch = false;
+
         [Header("Speed & Energy  (altitude is fuel)")]
         [Tooltip("The speed the plane naturally settles at in a gentle glide.")]
         public float cruiseSpeed = 14f;
@@ -75,9 +79,6 @@ namespace PaperWings.Flight
 
         [Tooltip("Control authority when at stall speed (1 = full). Slow planes turn and climb sluggishly.")]
         [Range(0.1f, 1f)] public float lowSpeedAuthority = 0.4f;
-
-        [Tooltip("Flip pitch: OFF = flight-style (W/stick forward dives). ON = W/stick forward climbs.")]
-        public bool invertPitch = false;
 
         [Header("Auto-Level  (forgiveness when hands are off)")]
         [Tooltip("With no pitch input, the nose drifts to this angle. Slightly negative = steady glide.")]
@@ -175,6 +176,16 @@ namespace PaperWings.Flight
 
         [Tooltip("Extra flutter (degrees) per unit of wind speed. Makes being in moving air visible on the plane.")]
         [Range(0f, 1f)] public float turbulenceWobble = 0.25f;
+
+        [Header("Wing Trails  (visual only)")]
+        public bool trailsEnabled = true;
+        [Tooltip("Trails start fading in above this speed.")]
+        public float trailMinSpeed = 18f;
+        [Tooltip("Trails are fully visible at this speed.")]
+        public float trailFullSpeed = 35f;
+        [Tooltip("How long trails linger (seconds).")]
+        [Range(0.1f, 3f)] public float trailTime = 0.8f;
+        [Range(0.01f, 0.5f)] public float trailWidth = 0.1f;
 
         // Convenience: sink rate at cruise speed, derived from the glide ratio.
         public float CruiseSinkRate => cruiseSpeed / glideRatio;
