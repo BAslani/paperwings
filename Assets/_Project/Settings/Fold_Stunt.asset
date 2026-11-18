@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bfca431533df494fbc40804707fafc1, type: 3}
+  m_Name: Fold_Stunt
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PlaneFold
+  displayName: Stunt
+  description: Snappy delta for tight lines and big dives. Sinks fast, so keep the
+    speed up. Tough cardstock.
+  flight: {fileID: 11400000, guid: 5f701adfe574b114fba6e0c35a1c76c8, type: 2}
+  paper: {fileID: 11400000, guid: 87b0ed0d70318524db96ee210368dc35, type: 2}
+  mesh: {fileID: 4300000, guid: 93f06b31b819e7148a6e74226a5b2fb4, type: 2}
+  paperColor: {r: 1, g: 0.9, b: 0.82, a: 1}

@@ -49,19 +49,38 @@ namespace PaperWings.Flight
             integrity = settings != null ? settings.maxIntegrity : 100f;
             block = new MaterialPropertyBlock();
 
-            if (visualMesh != null && visualMesh.sharedMesh != null)
+            if (visualMesh != null)
             {
-                // Work on a private copy so we never modify the mesh asset on disk.
-                mesh = Instantiate(visualMesh.sharedMesh);
-                mesh.name = visualMesh.sharedMesh.name + " (crumpled)";
-                visualMesh.sharedMesh = mesh;
-                baseVertices = mesh.vertices;
-                workVertices = new Vector3[baseVertices.Length];
-
                 visualRenderer = visualMesh.GetComponent<Renderer>();
                 if (visualRenderer != null && visualRenderer.sharedMaterial != null && visualRenderer.sharedMaterial.HasProperty(BaseColorId))
                     paperColor = visualRenderer.sharedMaterial.GetColor(BaseColorId);
+                SetVisualMesh(visualMesh.sharedMesh);
             }
+        }
+
+        /// <summary>
+        /// Switches to another fold's paper: new settings, new mesh, new base colour. Resets to a fresh sheet.
+        /// </summary>
+        public void Configure(PaperSettings newSettings, Mesh sourceMesh, Color baseColor)
+        {
+            if (newSettings != null) settings = newSettings;
+            paperColor = baseColor;
+            SetVisualMesh(sourceMesh);
+            Repair();
+        }
+
+        void SetVisualMesh(Mesh source)
+        {
+            if (visualMesh == null || source == null) return;
+            if (mesh != null) Destroy(mesh);   // drop our previous runtime copy
+
+            // Work on a private copy so we never modify the mesh asset on disk.
+            mesh = Instantiate(source);
+            mesh.name = source.name + " (crumpled)";
+            visualMesh.sharedMesh = mesh;
+            baseVertices = mesh.vertices;
+            workVertices = new Vector3[baseVertices.Length];
+            shownCrumple = -1f;   // force a rebuild
         }
 
         void OnEnable()  { if (plane) plane.Bumped += OnBumped; }

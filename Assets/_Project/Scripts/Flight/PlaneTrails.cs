@@ -32,6 +32,15 @@ namespace PaperWings.Flight
             }
         }
 
+        /// <summary>Moves the trail emitters to new wingtips (local to the Visual child), e.g. after a fold change.</summary>
+        public void SetTipPositions(Vector3 leftTip, Vector3 rightTip)
+        {
+            if (trails == null || trails.Length < 2) return;
+            if (trails[0] != null) trails[0].transform.localPosition = leftTip;
+            if (trails[1] != null) trails[1].transform.localPosition = rightTip;
+            ClearTrails();
+        }
+
         /// <summary>Call on reset/teleport so trails don't streak across the level.</summary>
         public void ClearTrails()
         {

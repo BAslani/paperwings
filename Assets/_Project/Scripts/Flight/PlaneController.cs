@@ -110,6 +110,14 @@ namespace PaperWings.Flight
         // Public control API (used by LaunchAndReset and, later, the landing zone)
         // ------------------------------------------------------------------
 
+        /// <summary>Swaps the plane's handling (used when changing folds). Ignored mid-flight.</summary>
+        public bool SetSettings(FlightSettings newSettings)
+        {
+            if (newSettings == null || State == PlaneState.Flying) return false;
+            settings = newSettings;
+            return true;
+        }
+
         /// <summary>Puts the plane in the player's hand at a pose. Physics is off while held.</summary>
         public void Hold(Vector3 position, Quaternion rotation)
         {
@@ -170,11 +178,9 @@ namespace PaperWings.Flight
             if (State != PlaneState.Flying) return;
 
             float dt = Time.fixedDeltaTime;
-            Vector2 stick = input != null ? input.Steer : Vector2.zero;
-
-            // Stick forward (+y) = nose DOWN by default, like a real flight stick.
-            float pitchInput = settings.invertPitch ? stick.y : -stick.y;
-            float rollInput = stick.x;
+            // + pitch = nose up (PlaneInput applies the invert-pitch preference), + roll = bank right.
+            float pitchInput = input != null ? input.PitchInput : 0f;
+            float rollInput = input != null ? input.RollInput : 0f;
 
             // Slow planes respond sluggishly. 0..1 between stall speed and cruise speed.
             float speed01 = Mathf.InverseLerp(settings.stallSpeed, settings.cruiseSpeed, speed);

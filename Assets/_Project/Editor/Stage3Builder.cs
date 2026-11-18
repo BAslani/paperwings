@@ -278,6 +278,7 @@ namespace PaperWings.EditorTools
             BuilderUtil.SetRef(launcher, "plane", controller);
             BuilderUtil.SetRef(launcher, "input", input);
             BuilderUtil.SetRef(launcher, "spawnPoint", spawn);
+            Stage7Builder.AddFoldSelector(launcher.gameObject, controller, Stage7Builder.EnsureFoldAssets());   // fold picker (Stage 7)
 
             CameraRigBuilder.CreateChaseCamera(controller, spawn, farClip: 1000f);
 

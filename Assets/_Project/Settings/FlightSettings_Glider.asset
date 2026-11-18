@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8599d63f09e9f04bafde920515dd157, type: 3}
+  m_Name: FlightSettings_Glider
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.FlightSettings
+  cruiseSpeed: 11
+  maxSpeed: 34
+  diveSpeedGain: 14
+  climbSpeedCost: 16
+  overspeedDrag: 0.25
+  glideSpeedRecovery: 0.3
+  glideRatio: 14
+  slowSinkExtra: 1.8
+  turnSinkExtra: 0.8
+  airGrip: 3.5
+  pitchRate: 55
+  maxPitchUp: 60
+  maxPitchDown: 75
+  maxBank: 50
+  bankResponse: 3.5
+  turnRate: 60
+  lowSpeedAuthority: 0.4
+  glidePitch: -4
+  autoLevelStrength: 1.2
+  rollAutoLevel: 3
+  stallSpeed: 5.5
+  stallRecoverSpeed: 8
+  stallNosePitch: -40
+  stallRecoveryStrength: 2.5
+  stallExtraSink: 3
+  boostSpeed: 9
+  boostCooldown: 3
+  throwSpeedMin: 10
+  throwSpeedMax: 16
+  throwChargeTime: 0.6
+  throwPitchKick: 8
+  airInfluence: 1.35
+  airResponse: 4
+  tailwindSpeedGain: 0.7
+  landingYawAssist: 1.5
+  landingPitchAssist: 0.8
+  landingSpeedBrake: 1.5
+  bumpTolerance: 6
+  bumpSpeedKeep: 0.75
+  touchdownMaxImpact: 6
+  touchdownMaxSpeed: 18
+  wobbleEnabled: 1
+  wobbleAmount: 3.5
+  wobbleFrequency: 2.2
+  stallShake: 8
+  turbulenceWobble: 0.25
+  trailsEnabled: 1
+  trailMinSpeed: 14
+  trailFullSpeed: 28
+  trailTime: 0.8
+  trailWidth: 0.1

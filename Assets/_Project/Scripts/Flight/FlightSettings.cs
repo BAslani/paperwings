@@ -16,9 +16,8 @@ namespace PaperWings.Flight
     [CreateAssetMenu(fileName = "FlightSettings", menuName = "PaperWings/Flight Settings")]
     public class FlightSettings : ScriptableObject
     {
-        [Header("Controls")]
-        [Tooltip("Flip pitch: OFF = flight-style (W/stick forward dives). ON = W/stick forward climbs.")]
-        public bool invertPitch = false;
+        // NOTE: Invert Pitch moved to the global Controls asset (ControlSettings) in Stage 7,
+        // so it applies to every fold. PaperWings > Settings > Controls.
 
         [Header("Speed & Energy  (altitude is fuel)")]
         [Tooltip("The speed the plane naturally settles at in a gentle glide.")]

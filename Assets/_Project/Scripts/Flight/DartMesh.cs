@@ -36,7 +36,7 @@ namespace PaperWings.Flight
         }
 
         // Adds a triangle visible from both sides, with its own vertices for flat shading.
-        static void AddDoubleSided(List<Vector3> v, List<Vector3> n, List<int> t, Vector3 a, Vector3 b, Vector3 c)
+        public static void AddDoubleSided(List<Vector3> v, List<Vector3> n, List<int> t, Vector3 a, Vector3 b, Vector3 c)
         {
             Vector3 normal = Vector3.Cross(b - a, c - a).normalized;
 

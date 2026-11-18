@@ -91,6 +91,7 @@ namespace PaperWings.EditorTools
             var wobble = root.AddComponent<PaperWobble>();
 
             BuilderUtil.SetRef(input, "actions", actions);
+            BuilderUtil.SetRef(input, "controls", Stage7Builder.EnsureControls());   // global invert pitch (Stage 7)
             BuilderUtil.SetRef(controller, "settings", settings);
             BuilderUtil.SetRef(controller, "input", input);
             BuilderUtil.SetRef(wobble, "plane", controller);
@@ -160,6 +161,7 @@ namespace PaperWings.EditorTools
             BuilderUtil.SetRef(launcher, "plane", controller);
             BuilderUtil.SetRef(launcher, "input", input);
             BuilderUtil.SetRef(launcher, "spawnPoint", spawn);
+            Stage7Builder.AddFoldSelector(launcher.gameObject, controller, Stage7Builder.EnsureFoldAssets());   // fold picker (Stage 7)
 
             // ---- Camera (Cinemachine chase rig) ----
             CameraRigBuilder.CreateChaseCamera(controller, spawn, farClip: 2000f);

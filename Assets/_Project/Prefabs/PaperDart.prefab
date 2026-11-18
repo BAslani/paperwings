@@ -101,6 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PlaneInput
   actions: {fileID: -944628639613478452, guid: 65e2fa3bd4720f349820a4e718e6951b, type: 3}
+  controls: {fileID: 11400000, guid: e928716496b0b414e93e7fe8a36cc90c, type: 2}
 --- !u!114 &1085125706397382876
 MonoBehaviour:
   m_ObjectHideFlags: 0

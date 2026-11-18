@@ -29,6 +29,8 @@ namespace PaperWings.UI
         float ringFlash;   // >0 briefly after passing a ring
         LandingZone landingZone;
         PaperDamage paper;
+        PlaneInput planeInput;
+        FoldSelector folds;
         float damageFlash;      // >0 briefly after taking damage
         float lastDamage;
 
@@ -38,6 +40,8 @@ namespace PaperWings.UI
             if (route != null) route.RingPassed += _ => ringFlash = 1f;
 
             if (plane != null) paper = plane.GetComponent<PaperDamage>();
+            if (plane != null) planeInput = plane.GetComponent<PlaneInput>();
+            folds = FindAnyObjectByType<FoldSelector>();
             if (paper != null) paper.Damaged += amount => { damageFlash = 1f; lastDamage = amount; };
         }
 
@@ -93,7 +97,8 @@ namespace PaperWings.UI
                 : $"Rings  <b>{route.NextIndex} / {route.RingCount}</b>";
             Label(ref y, x, w, line, rings);
             Label(ref y, x, w, line, $"Time   <b>{plane.FlightTime:0.00}s</b>");
-            Label(ref y, x, w, line, route.BestTime > 0f ? $"Best   {route.BestTime:0.00}s" : "Best   —");
+            string foldTag = route.BestTimeFold.Length > 0 ? $"  <color=#999>({route.BestTimeFold})</color>" : "";
+            Label(ref y, x, w, line, (route.BestTime > 0f ? $"Best   {route.BestTime:0.00}s" : "Best   —") + foldTag);
 
             // "+RING" flash under the panel.
             if (ringFlash > 0f)
@@ -225,7 +230,7 @@ namespace PaperWings.UI
 
         void DrawControlsHint()
         {
-            string pitchHint = plane.Settings.invertPitch ? "W climbs" : "W dives";
+            string pitchHint = planeInput != null && planeInput.InvertPitch ? "W climbs" : "W dives";
             string controls = $"W/S or stick: pitch ({pitchHint})    A/D: bank & turn    SPACE / Shift / (A) / RT: boost    R / (Y) / Select: reset    F1: HUD";
             GUI.Label(new Rect(10 * scale, Screen.height - 32 * scale, Screen.width, 30 * scale), controls, small);
         }
@@ -249,6 +254,7 @@ namespace PaperWings.UI
                         Bar(ref y, (Screen.width - bw) * 0.5f, bw, launcher.Charge01,
                             Color.Lerp(Yellow, Green, launcher.Charge01), 0f, Color.clear, 0f, Color.clear, 14);
                     }
+                    if (folds != null && folds.Current != null && !charging) DrawFoldCard(folds.Current);
                     break;
                 }
 
@@ -308,6 +314,52 @@ namespace PaperWings.UI
                     break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Fold picker card (bottom-centre while the plane is in hand): name, blurb, and
+        /// stat bars so you can compare folds at a glance.
+        /// </summary>
+        void DrawFoldCard(PlaneFold fold)
+        {
+            float w = 460 * scale, h = 250 * scale;
+            Rect card = new Rect((Screen.width - w) * 0.5f, Screen.height * 0.58f, w, h);
+            GUI.color = new Color(0f, 0f, 0f, 0.6f);
+            GUI.DrawTexture(card, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            float x = card.x + 16 * scale, y = card.y + 10 * scale, iw = card.width - 32 * scale;
+            string arrows = folds.Count > 1 ? "<color=#888><   </color>" : "";
+            string arrowsR = folds.Count > 1 ? "<color=#888>   ></color>" : "";
+            GUI.Label(new Rect(card.x, y, card.width, 40 * scale),
+                      $"<size={Px(30)}>{arrows}<b>{fold.displayName.ToUpper()}</b>{arrowsR}</size>", big);
+            y += 40 * scale;
+            GUI.Label(new Rect(x, y, iw, 44 * scale), $"<size={Px(16)}><color=#CCC>{fold.description}</color></size>",
+                      new GUIStyle(small) { wordWrap = true, alignment = TextAnchor.UpperCenter });
+            y += 48 * scale;
+
+            // Stat bars, normalised against rough "max" values across folds.
+            FlightSettings f = fold.flight;
+            if (f != null)
+            {
+                StatBar(ref y, x, iw, "Speed", f.maxSpeed / 50f);
+                StatBar(ref y, x, iw, "Glide", f.glideRatio / 15f);
+                StatBar(ref y, x, iw, "Agility", f.turnRate / 120f);
+            }
+            if (fold.paper != null) StatBar(ref y, x, iw, "Paper", fold.paper.maxIntegrity / 150f);
+
+            if (folds.Count > 1)
+                GUI.Label(new Rect(card.x, card.yMax - 26 * scale, card.width, 24 * scale),
+                          $"<size={Px(14)}><color=#999>Q / E   or   LB / RB   to change fold</color></size>", big);
+        }
+
+        void StatBar(ref float y, float x, float w, string label, float value01)
+        {
+            float labelW = 80 * scale;
+            GUI.Label(new Rect(x, y - 6 * scale, labelW, 22 * scale), $"<size={Px(15)}>{label}</size>", panelText);
+            float barY = y;
+            Bar(ref barY, x + labelW, w - labelW, Mathf.Clamp01(value01), Cyan);
+            y += 24 * scale;
         }
 
         // ------------------------------------------------------------------ drawing helpers

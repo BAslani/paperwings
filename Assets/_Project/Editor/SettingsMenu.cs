@@ -12,17 +12,36 @@ namespace PaperWings.EditorTools
     {
         const string Dir = "Assets/_Project/Settings/";
 
-        [MenuItem("PaperWings/Settings/Flight (Dart)  - controls, invert pitch, speed, turning", priority = 0)]
-        static void Flight() => Open("FlightSettings_Dart.asset");
-
-        [MenuItem("PaperWings/Settings/Paper (Dart)  - damage, wetness", priority = 1)]
-        static void Paper() => Open("Paper_Dart.asset");
+        [MenuItem("PaperWings/Settings/Controls  - invert pitch", priority = 0)]
+        static void Controls() => Open("Controls.asset");
 
         [MenuItem("PaperWings/Settings/Camera Feel", priority = 1)]
         static void Camera() => Open("CameraFeel_Chase.asset");
 
         [MenuItem("PaperWings/Settings/Landing (Mug)", priority = 2)]
         static void Landing() => Open("Landing_Mug.asset");
+
+        // Folds: each has a flight feel, a paper, and a fold asset (name, description, mesh, colour).
+        [MenuItem("PaperWings/Settings/Dart - Flight", priority = 10)]
+        static void Flight() => Open("FlightSettings_Dart.asset");
+        [MenuItem("PaperWings/Settings/Dart - Paper", priority = 11)]
+        static void Paper() => Open("Paper_Dart.asset");
+        [MenuItem("PaperWings/Settings/Dart - Fold", priority = 12)]
+        static void FoldDart() => Open("Fold_Dart.asset");
+
+        [MenuItem("PaperWings/Settings/Glider - Flight", priority = 13)]
+        static void GliderFlight() => Open("FlightSettings_Glider.asset");
+        [MenuItem("PaperWings/Settings/Glider - Paper", priority = 14)]
+        static void GliderPaper() => Open("Paper_Glider.asset");
+        [MenuItem("PaperWings/Settings/Glider - Fold", priority = 15)]
+        static void FoldGlider() => Open("Fold_Glider.asset");
+
+        [MenuItem("PaperWings/Settings/Stunt - Flight", priority = 16)]
+        static void StuntFlight() => Open("FlightSettings_Stunt.asset");
+        [MenuItem("PaperWings/Settings/Stunt - Paper", priority = 17)]
+        static void StuntPaper() => Open("Paper_Stunt.asset");
+        [MenuItem("PaperWings/Settings/Stunt - Fold", priority = 18)]
+        static void FoldStunt() => Open("Fold_Stunt.asset");
 
         [MenuItem("PaperWings/Settings/Air - Laptop Thermal", priority = 20)]
         static void Thermal() => Open("Thermal_Laptop.asset");

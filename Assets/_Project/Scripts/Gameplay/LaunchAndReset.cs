@@ -89,11 +89,10 @@ namespace PaperWings.Gameplay
         void UpdateHeld()
         {
             FlightSettings s = plane.Settings;
-            Vector2 stick = input != null ? input.Steer : Vector2.zero;
-
             // Aim: left/right turns, up/down tilts (same pitch convention as flight).
-            float pitchIn = s.invertPitch ? stick.y : -stick.y;
-            aimYaw = Mathf.Clamp(aimYaw + stick.x * aimYawRate * Time.deltaTime, -aimMaxYaw, aimMaxYaw);
+            float pitchIn = input != null ? input.PitchInput : 0f;
+            float rollIn = input != null ? input.RollInput : 0f;
+            aimYaw = Mathf.Clamp(aimYaw + rollIn * aimYawRate * Time.deltaTime, -aimMaxYaw, aimMaxYaw);
             aimPitch = Mathf.Clamp(aimPitch + pitchIn * aimYawRate * Time.deltaTime, -aimMaxPitch, aimMaxPitch);
 
             bool held = input != null && input.ThrowHeld;

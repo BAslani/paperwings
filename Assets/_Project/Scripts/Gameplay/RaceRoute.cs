@@ -33,7 +33,13 @@ namespace PaperWings.Gameplay
         public string LastResult { get; private set; }
         public bool LastWasNewBest { get; private set; }
 
-        string BestKey => $"PaperWings.BestRoute.{SceneManager.GetActiveScene().name}";
+        FoldSelector foldSelector;
+
+        /// <summary>Name of the fold the best time belongs to (empty if there's no fold picker).</summary>
+        public string BestTimeFold => foldSelector != null && foldSelector.Current != null ? foldSelector.Current.displayName : "";
+
+        // Best times are kept per scene AND per fold: a Glider time shouldn't compete with a Stunt time.
+        string BestKey => $"PaperWings.BestRoute.{SceneManager.GetActiveScene().name}.{BestTimeFold}";
 
         void Awake()
         {
@@ -43,10 +49,17 @@ namespace PaperWings.Gameplay
                 rings[i].Index = i;
                 rings[i].Route = this;
             }
-            BestTime = PlayerPrefs.GetFloat(BestKey, 0f);
         }
 
-        void Start() => ResetRoute();
+        void Start()
+        {
+            foldSelector = FindAnyObjectByType<FoldSelector>();
+            if (foldSelector != null) foldSelector.FoldChanged += _ => LoadBestTime();
+            LoadBestTime();
+            ResetRoute();
+        }
+
+        void LoadBestTime() => BestTime = PlayerPrefs.GetFloat(BestKey, 0f);
 
         void OnEnable() => LandingZone.AnyLanded += OnLanded;
         void OnDisable() => LandingZone.AnyLanded -= OnLanded;

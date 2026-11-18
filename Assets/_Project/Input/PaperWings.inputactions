@@ -41,6 +41,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "FoldPrev",
+                    "type": "Button",
+                    "id": "a1000000-0000-4000-8000-000000000014",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "FoldNext",
+                    "type": "Button",
+                    "id": "a1000000-0000-4000-8000-000000000015",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -69,7 +87,12 @@
 
                 { "name": "", "id": "a1000000-0000-4000-8000-000000000400", "path": "<Keyboard>/r", "interactions": "", "processors": "", "groups": "", "action": "Reset", "isComposite": false, "isPartOfComposite": false },
                 { "name": "", "id": "a1000000-0000-4000-8000-000000000401", "path": "<Gamepad>/select", "interactions": "", "processors": "", "groups": "", "action": "Reset", "isComposite": false, "isPartOfComposite": false },
-                { "name": "", "id": "a1000000-0000-4000-8000-000000000402", "path": "<Gamepad>/buttonNorth", "interactions": "", "processors": "", "groups": "", "action": "Reset", "isComposite": false, "isPartOfComposite": false }
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000402", "path": "<Gamepad>/buttonNorth", "interactions": "", "processors": "", "groups": "", "action": "Reset", "isComposite": false, "isPartOfComposite": false },
+
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000500", "path": "<Keyboard>/q", "interactions": "", "processors": "", "groups": "", "action": "FoldPrev", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000501", "path": "<Gamepad>/leftShoulder", "interactions": "", "processors": "", "groups": "", "action": "FoldPrev", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000510", "path": "<Keyboard>/e", "interactions": "", "processors": "", "groups": "", "action": "FoldNext", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000511", "path": "<Gamepad>/rightShoulder", "interactions": "", "processors": "", "groups": "", "action": "FoldNext", "isComposite": false, "isPartOfComposite": false }
             ]
         }
     ],
