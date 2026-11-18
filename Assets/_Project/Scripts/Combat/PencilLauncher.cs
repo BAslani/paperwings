@@ -88,7 +88,7 @@ namespace PaperWings.Combat
         // Any enemy-side CombatTarget can be locked: rival planes, bosses...
         CombatTarget FindCandidate() =>
             CombatTarget.FindBestInCone(plane.transform.position, plane.transform.forward,
-                                        settings.lockAngle, settings.lockRange, wantPlayerSide: false);
+                                        settings.lockAngle, settings.lockRange, CombatTarget.FactionOfPlane(plane));
 
         bool InCone(CombatTarget other, float angle)
         {

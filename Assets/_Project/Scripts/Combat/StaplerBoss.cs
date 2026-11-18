@@ -220,7 +220,7 @@ namespace PaperWings.Combat
                 Vector3 dir = Quaternion.AngleAxis(yaw, Vector3.up) * aim;
                 var staple = Instantiate(staplePrefab, origin, Quaternion.LookRotation(dir));
                 staple.transform.localScale *= 2f;   // boss staples are BIG
-                staple.Launch(null, transform, false, dir * settings.projectileSpeed,
+                staple.Launch(null, transform, Faction.Accounting, dir * settings.projectileSpeed,
                               settings.projectileDamage, settings.projectileLifetime);
             }
         }

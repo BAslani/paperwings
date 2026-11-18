@@ -100,7 +100,7 @@ namespace PaperWings.Combat
             // Sound: your own gun in your ears, rivals' guns from where they are.
             if (plane.IsPlayer) Audio.AudioFx.Play(Audio.Sfx.StapleFire, 0.45f);
             else Audio.AudioFx.PlayAt(Audio.Sfx.StapleFire, origin, 0.9f, 0.85f);
-            staple.Launch(plane, plane.transform, plane.IsPlayer,
+            staple.Launch(plane, plane.transform, CombatTarget.FactionOfPlane(plane),
                           plane.Velocity + dir * settings.projectileSpeed, settings.damage, settings.projectileLifetime);
             return true;
         }
@@ -110,7 +110,7 @@ namespace PaperWings.Combat
         {
             if (settings.aimAssistAngle <= 0f || plane.State != PlaneState.Flying) return null;
             return CombatTarget.FindBestInCone(origin, plane.transform.forward, settings.aimAssistAngle,
-                                               settings.aimAssistRange, wantPlayerSide: !plane.IsPlayer);
+                                               settings.aimAssistRange, CombatTarget.FactionOfPlane(plane));
         }
 
         /// <summary>Where the target WILL be when a staple gets there (its position + velocity x travel time).</summary>

@@ -26,11 +26,12 @@ namespace PaperWings.UI
         GUIStyle title, body, small, button;
         float scale;
 
-        static readonly GameMode[] Modes = { GameMode.FreeFlight, GameMode.RingRun, GameMode.Dogfight, GameMode.BossFight };
+        static readonly GameMode[] Modes = { GameMode.FreeFlight, GameMode.RingRun, GameMode.Dogfight, GameMode.Squadron, GameMode.BossFight };
 
         void Start()
         {
-            selected = Mathf.Clamp(PlayerPrefs.GetInt("PaperWings.LastMode", 1), 0, Modes.Length - 1);
+            // The saved value is the mode itself; find where it sits in the menu list.
+            selected = Mathf.Max(0, System.Array.IndexOf(Modes, (GameMode)PlayerPrefs.GetInt("PaperWings.LastMode", (int)GameMode.RingRun)));
             if (director != null) director.Completed += _ => Show(Screen.Results);
             Show(Screen.Menu);
         }
@@ -102,6 +103,7 @@ namespace PaperWings.UI
                         if (kb.digit2Key.wasPressedThisFrame) { Choose(1); break; }
                         if (kb.digit3Key.wasPressedThisFrame) { Choose(2); break; }
                         if (kb.digit4Key.wasPressedThisFrame) { Choose(3); break; }
+                        if (kb.digit5Key.wasPressedThisFrame) { Choose(4); break; }
                     }
                     if (confirm) Choose(selected);
                     else if ((menuKey || back) && director.HasMode && !director.RunComplete) Show(Screen.None);   // resume
@@ -129,7 +131,7 @@ namespace PaperWings.UI
         void DrawMenu()
         {
             Dim(0.65f);
-            float w = 760 * scale, h = 640 * scale;
+            float w = 760 * scale, h = 740 * scale;
             Rect panel = Centered(w, h);
             Box(panel, 0.85f);
 
@@ -164,7 +166,7 @@ namespace PaperWings.UI
 
             string resume = director.HasMode && !director.RunComplete ? "    Esc / M: resume" : "";
             GUI.Label(new Rect(panel.x, panel.yMax - 44 * scale, w, 30 * scale),
-                      $"<color=#999999>Up/Down or W/S, Enter / Space to start, or 1-4, or click.{resume}</color>", small);
+                      $"<color=#999999>Up/Down or W/S, Enter / Space to start, or 1-5, or click.{resume}</color>", small);
         }
 
         void DrawResults()
@@ -197,11 +199,12 @@ namespace PaperWings.UI
                 GameMode.FreeFlight => "Free flight: no objective. Ride the air, practise landings.",
                 GameMode.RingRun => "Fly through every ring, then land on the mug.",
                 GameMode.Dogfight => $"Rivals shot down  <b>{director.KillsThisRun} / {director.DogfightTarget}</b>",
+                GameMode.Squadron => $"Squadron kills  <b>{director.TeamKillsThisRun} / {director.SquadronTarget}</b>   <color=#AAAAAA>(yours {director.KillsThisRun})</color>",
                 _ => "Defeat THE STAPLER. Hit the glowing mouth when the jaw opens."
             };
-            string timer = m == GameMode.Dogfight || m == GameMode.BossFight ? $"    Time <b>{director.RunTime:0.0}s</b>" : "";
+            string timer = m == GameMode.Dogfight || m == GameMode.Squadron || m == GameMode.BossFight ? $"    Time <b>{director.RunTime:0.0}s</b>" : "";
             float best = director.BestTime(m);
-            string bestText = (m == GameMode.Dogfight || m == GameMode.BossFight) && best > 0f ? $"    <color=#AAAAAA>Best {best:0.0}s</color>" : "";
+            string bestText = (m == GameMode.Dogfight || m == GameMode.Squadron || m == GameMode.BossFight) && best > 0f ? $"    <color=#AAAAAA>Best {best:0.0}s</color>" : "";
 
             float w = 900 * scale;
             Rect r = new Rect((UnityEngine.Screen.width - w) * 0.5f, UnityEngine.Screen.height - 72 * scale, w, 32 * scale);
@@ -216,6 +219,7 @@ namespace PaperWings.UI
             GameMode.FreeFlight => "Just you, the desk and the air. No enemies, no clock.",
             GameMode.RingRun => "Thread all five sticky-note rings, then land on the coffee mug. Race the clock.",
             GameMode.Dogfight => "Accounting's rival planes are up. Shoot down five of them as fast as you can.",
+            GameMode.Squadron => "Fly with two Marketing wingmen against four rivals. Your squadron needs eight kills.",
             _ => "THE STAPLER guards the mug. Dodge its staple fans and slams, hit the open jaw.",
         };
 

@@ -10369,6 +10369,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.CombatTarget
   displayName: THE STAPLER
+  faction: 1
   isBoss: 1
   aimPoint: {fileID: 3947427066340594876}
 --- !u!1 &7041673290973544137

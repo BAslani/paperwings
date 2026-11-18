@@ -55,10 +55,11 @@ namespace PaperWings.Combat
 
         void OnRivalDowned(bool crash)
         {
-            // Credit the player if their staples did it recently.
-            if (currentPaper != null && currentPaper.LastAttacker != null && currentPaper.LastAttacker.IsPlayer
-                && Time.time - currentPaper.LastAttackTime < 3f)
-                CombatScore.AddKill();
+            // Credit the player's faction if one of its planes (you or a wingman) hit it recently.
+            var attacker = currentPaper != null ? currentPaper.LastAttacker : null;
+            if (attacker != null && Time.time - currentPaper.LastAttackTime < 3f
+                && CombatTarget.FactionOfPlane(attacker) == CombatTarget.PlayerFaction)
+                CombatScore.AddKill(byPlayer: attacker.IsPlayer);
 
             respawnAt = Time.time + (pilotSettings != null ? pilotSettings.respawnDelay : 4f);
         }

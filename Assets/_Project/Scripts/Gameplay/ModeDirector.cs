@@ -10,7 +10,8 @@ namespace PaperWings.Gameplay
         FreeFlight,   // just the desk and the air
         RingRun,      // fly the ring route, land on the mug
         Dogfight,     // shoot down N rivals
-        BossFight     // defeat The Stapler
+        BossFight,    // defeat The Stapler
+        Squadron      // you + wingmen vs a bigger rival squadron (added last so saved mode numbers stay valid)
     }
 
     /// <summary>What to show on the results screen.</summary>
@@ -39,10 +40,14 @@ namespace PaperWings.Gameplay
         [SerializeField] GameObject routeGroup;
         [SerializeField] GameObject combatGroup;
         [SerializeField] GameObject bossGroup;
+        [Tooltip("Extra rivals plus your wingmen; switched on only in Squadron Battle.")]
+        [SerializeField] GameObject squadronGroup;
 
         [Header("Objectives")]
         [Tooltip("Rivals to shoot down to win a Dogfight.")]
         [SerializeField] int dogfightKillTarget = 5;
+        [Tooltip("Rivals your squadron (you + wingmen) must shoot down to win a Squadron Battle.")]
+        [SerializeField] int squadronKillTarget = 8;
 
         public GameMode Mode { get; private set; }
         public bool HasMode { get; private set; }
@@ -51,6 +56,8 @@ namespace PaperWings.Gameplay
         public float RunTime { get; private set; }
         public int DogfightTarget => dogfightKillTarget;
         public int KillsThisRun => CombatScore.Kills - killBaseline;
+        public int TeamKillsThisRun => CombatScore.TeamKills - teamKillBaseline;
+        public int SquadronTarget => squadronKillTarget;
         public RaceRoute Route { get; private set; }
         public StaplerBoss Boss { get; private set; }
         public ModeResult LastResult { get; private set; }
@@ -58,6 +65,7 @@ namespace PaperWings.Gameplay
         public event Action<ModeResult> Completed;
 
         int killBaseline;
+        int teamKillBaseline;
         bool ringLandingPending;
 
         public static string ModeName(GameMode m) => m switch
@@ -65,6 +73,7 @@ namespace PaperWings.Gameplay
             GameMode.FreeFlight => "Free Flight",
             GameMode.RingRun => "Ring Run",
             GameMode.Dogfight => "Dogfight",
+            GameMode.Squadron => "Squadron Battle",
             _ => "Boss Fight"
         };
 
@@ -104,21 +113,27 @@ namespace PaperWings.Gameplay
 
             // Toggling a group off and on again gives a clean slate (spawners respawn their rivals).
             SetGroups(route: false, combat: false, boss: false);
-            SetGroups(route: mode == GameMode.RingRun, combat: mode == GameMode.Dogfight, boss: mode == GameMode.BossFight);
+            // Squadron = the solo-dogfight rivals PLUS the squadron group (extra rivals and your wingmen).
+            SetGroups(route: mode == GameMode.RingRun,
+                      combat: mode == GameMode.Dogfight || mode == GameMode.Squadron,
+                      boss: mode == GameMode.BossFight,
+                      squadron: mode == GameMode.Squadron);
 
             if (mode == GameMode.BossFight && Boss != null) Boss.ResetFight();
             if (mode == GameMode.RingRun && Route != null) Route.ResetRoute();
 
             killBaseline = CombatScore.Kills;
+            teamKillBaseline = CombatScore.TeamKills;
             if (launcher != null) launcher.ResetToStart();
             PlayerPrefs.SetInt("PaperWings.LastMode", (int)mode);
         }
 
-        void SetGroups(bool route, bool combat, bool boss)
+        void SetGroups(bool route, bool combat, bool boss, bool squadron = false)
         {
             if (routeGroup != null) routeGroup.SetActive(route);
             if (combatGroup != null) combatGroup.SetActive(combat);
             if (bossGroup != null) bossGroup.SetActive(boss);
+            if (squadronGroup != null) squadronGroup.SetActive(squadron);
         }
 
         void Update()
@@ -127,6 +142,9 @@ namespace PaperWings.Gameplay
 
             if (!RunStarted && player.State == PlaneState.Flying) RunStarted = true;
             if (RunStarted) RunTime += Time.deltaTime;
+
+            if (Mode == GameMode.Squadron && TeamKillsThisRun >= squadronKillTarget)
+                CompleteTimed("SQUADRON VICTORY!", $"Your squadron downed {squadronKillTarget} rivals in");
 
             if (Mode == GameMode.Dogfight && KillsThisRun >= dogfightKillTarget)
                 CompleteTimed($"DOGFIGHT WON!", $"{dogfightKillTarget} rivals shot down in");

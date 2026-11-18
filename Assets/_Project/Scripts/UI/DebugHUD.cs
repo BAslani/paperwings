@@ -37,6 +37,7 @@ namespace PaperWings.UI
         StapleGun gun;
         float hitFlash;         // >0 briefly after your staple hits a rival
         float killFlash;        // >0 briefly after shooting a rival down
+        float allyKillFlash;    // >0 briefly after a wingman shoots a rival down
         PencilLauncher pencils;
         float noLockFlash;      // >0 briefly after pressing fire without a lock
 
@@ -56,6 +57,7 @@ namespace PaperWings.UI
             if (pencils != null) pencils.FireRefused += () => noLockFlash = 1f;
             CombatScore.AnyHit += OnAnyHit;
             CombatScore.KillScored += OnKill;
+            CombatScore.AllyKillScored += OnAllyKill;
         }
 
         void OnDestroy()
@@ -63,11 +65,13 @@ namespace PaperWings.UI
             // Static events outlive this object: always unsubscribe.
             CombatScore.AnyHit -= OnAnyHit;
             CombatScore.KillScored -= OnKill;
+            CombatScore.AllyKillScored -= OnAllyKill;
             if (boss != null) { boss.Damaged -= OnBossDamaged; boss.Defeated -= OnBossDefeated; }
         }
 
         void OnAnyHit(PlaneController shooter, GameObject victim) { if (shooter == plane) hitFlash = 1f; }
         void OnKill(int kills) => killFlash = 1f;
+        void OnAllyKill(int teamKills) => allyKillFlash = 1f;
 
         /// <summary>True when the ring route exists and is switched on (e.g. in Ring Run mode).</summary>
         bool RouteActive => route != null && route.isActiveAndEnabled && route.RingCount > 0;
@@ -85,6 +89,7 @@ namespace PaperWings.UI
             damageFlash = Mathf.MoveTowards(damageFlash, 0f, Time.deltaTime * 1.5f);
             hitFlash = Mathf.MoveTowards(hitFlash, 0f, Time.deltaTime * 4f);
             killFlash = Mathf.MoveTowards(killFlash, 0f, Time.deltaTime * 0.8f);
+            allyKillFlash = Mathf.MoveTowards(allyKillFlash, 0f, Time.deltaTime * 0.8f);
             noLockFlash = Mathf.MoveTowards(noLockFlash, 0f, Time.deltaTime * 1.5f);
             bossHitFlash = Mathf.MoveTowards(bossHitFlash, 0f, Time.deltaTime * 2.5f);
             bossDefeatFlash = Mathf.MoveTowards(bossDefeatFlash, 0f, Time.deltaTime * 0.3f);
@@ -172,7 +177,7 @@ namespace PaperWings.UI
         /// Shared marker logic: text over a world point when it's on screen, or an arrow clamped
         /// to the screen edge pointing at it when it isn't. Returns the on-screen GUI position (or null).
         /// </summary>
-        Vector2? DrawWorldMarker(Camera cam, Vector3 world, string color, string onScreenText, string arrowText, float yOffset = -60f)
+        Vector2? DrawWorldMarker(Camera cam, Vector3 world, string color, string onScreenText, string arrowText, float yOffset = -60f, bool edgeArrow = true)
         {
             Vector3 sp = cam.WorldToScreenPoint(world);
             bool behind = sp.z < 0f;
@@ -190,6 +195,8 @@ namespace PaperWings.UI
                               $"<size={Px(20)}><color={color}>{onScreenText}</color></size>", big);
                 return gui;
             }
+
+            if (!edgeArrow) return null;
 
             // Clamp to the screen edge and draw an arrow pointing toward the target.
             Vector2 center = new Vector2(Screen.width, Screen.height) * 0.5f;
@@ -468,7 +475,13 @@ namespace PaperWings.UI
             {
                 foreach (var t in CombatTarget.All)
                 {
-                    if (t.IsPlayerSide || !t.IsAlive) continue;
+                    if (!t.IsAlive) continue;
+                    if (t.IsPlayerSide)
+                    {
+                        // Wingmen: small green marker, on screen only (no edge arrows, to keep things tidy).
+                        if (t.IsAlly) DrawWorldMarker(cam, t.Position, "#70FF80", "(W)", null, -14f, edgeArrow: false);
+                        continue;
+                    }
                     float dist = Vector3.Distance(plane.transform.position, t.Position);
                     string color = t.IsBoss ? "#FF9030" : "#FF5040";
                     string tag = t.IsBoss ? "BOSS" : "RIVAL";
@@ -497,7 +510,14 @@ namespace PaperWings.UI
             {
                 float ky = (RouteActive ? 120 : 10) * scale;
                 GUI.Label(new Rect(Screen.width - 290 * scale, ky, 280 * scale, 30 * scale),
-                          $"<size={Px(20)}>Rivals shot down: <b>{CombatScore.Kills}</b></size>", panelText);
+                          $"<size={Px(20)}>Rivals shot down: <b>{CombatScore.Kills}</b>" + (CombatScore.TeamKills > CombatScore.Kills ? $"   <color=#80FF90>team {CombatScore.TeamKills}</color>" : "") + "</size>", panelText);
+            }
+
+            if (allyKillFlash > 0f)
+            {
+                GUI.color = new Color(0.5f, 1f, 0.6f, allyKillFlash);
+                GUI.Label(new Rect(0, Screen.height * 0.3f + 60 * scale, Screen.width, 40 * scale), $"<size={Px(28)}><b>WINGMAN GOT ONE!</b></size>", big);
+                GUI.color = Color.white;
             }
 
             if (killFlash > 0f)

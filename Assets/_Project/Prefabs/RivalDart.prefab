@@ -175,6 +175,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.CombatTarget
   displayName: Rival
+  faction: 1
   isBoss: 0
   aimPoint: {fileID: 0}
 --- !u!1 &2425711353659723294

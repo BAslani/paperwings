@@ -13,17 +13,17 @@ namespace PaperWings.Combat
     {
         PlaneController ownerPlane;   // for kill credit (null when a boss fires)
         Transform ownerRoot;          // never hit anything under this (the shooter itself)
-        bool firedByPlayerSide;
+        Faction shooterFaction;
         Vector3 velocity;
         float damage;
         float dieTime;
 
-        public void Launch(PlaneController shooterPlane, Transform shooterRoot, bool playerSide,
+        public void Launch(PlaneController shooterPlane, Transform shooterRoot, Faction faction,
                            Vector3 startVelocity, float hitDamage, float lifetime)
         {
             ownerPlane = shooterPlane;
             ownerRoot = shooterRoot;
-            firedByPlayerSide = playerSide;
+            shooterFaction = faction;
             velocity = startVelocity;
             damage = hitDamage;
             dieTime = Time.time + lifetime;
@@ -39,7 +39,7 @@ namespace PaperWings.Combat
 
             if (Projectiles.SweepHit(from, step, ownerRoot, out RaycastHit hit))
             {
-                Projectiles.ApplyHit(hit.collider, damage, ownerPlane, firedByPlayerSide);
+                Projectiles.ApplyHit(hit.collider, damage, ownerPlane, shooterFaction);
                 Destroy(gameObject);
                 return;
             }
@@ -69,14 +69,14 @@ namespace PaperWings.Combat
         }
 
         /// <summary>Damages what was hit if it's damageable and on the other side. Returns true if it took damage.</summary>
-        public static bool ApplyHit(Component hit, float damage, PlaneController shooterPlane, bool firedByPlayerSide,
+        public static bool ApplyHit(Component hit, float damage, PlaneController shooterPlane, Faction shooterFaction,
                                     Audio.Sfx hitSound = Audio.Sfx.StapleHit)
         {
             var damageable = hit.GetComponentInParent<IDamageable>();
             if (damageable == null || !damageable.IsAlive) return false;
 
-            bool? side = CombatTarget.SideOf(hit);
-            if (side.HasValue && side.Value == firedByPlayerSide) return false;   // no friendly fire
+            Faction? side = CombatTarget.FactionOf(hit);
+            if (side.HasValue && side.Value == shooterFaction) return false;   // no friendly fire
 
             damageable.ApplyDamage(damage, shooterPlane);
             Audio.AudioFx.PlayAt(hitSound, ((Component)damageable).transform.position, 0.9f);

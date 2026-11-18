@@ -9,17 +9,28 @@ namespace PaperWings.Combat
     /// </summary>
     public static class CombatScore
     {
+        /// <summary>Rivals shot down by the player personally.</summary>
         public static int Kills { get; private set; }
+        /// <summary>Rivals shot down by the player's whole faction (player + wingmen).</summary>
+        public static int TeamKills { get; private set; }
         /// <summary>Fired when the player shoots a rival down.</summary>
         public static event Action<int> KillScored;
+        /// <summary>Fired when a wingman shoots a rival down.</summary>
+        public static event Action<int> AllyKillScored;
 
         /// <summary>Fired whenever any projectile (staple, pencil...) hits a plane. Args: shooter, victim.</summary>
         public static event Action<Flight.PlaneController, GameObject> AnyHit;
 
-        public static void AddKill()
+        /// <summary>Credits a kill to the player's faction; byPlayer = the player did it personally.</summary>
+        public static void AddKill(bool byPlayer = true)
         {
-            Kills++;
-            KillScored?.Invoke(Kills);
+            TeamKills++;
+            if (byPlayer)
+            {
+                Kills++;
+                KillScored?.Invoke(Kills);
+            }
+            else AllyKillScored?.Invoke(TeamKills);
         }
 
         public static void ReportHit(Flight.PlaneController shooter, GameObject victim) => AnyHit?.Invoke(shooter, victim);
@@ -28,6 +39,8 @@ namespace PaperWings.Combat
         static void ResetStatics()
         {
             Kills = 0;
+            TeamKills = 0;
+            AllyKillScored = null;
             KillScored = null;
             AnyHit = null;
         }

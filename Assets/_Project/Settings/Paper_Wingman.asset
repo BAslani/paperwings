@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 945bed081f32bc244b97545a7cf18af9, type: 3}
+  m_Name: Paper_Wingman
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PaperSettings
+  damageEnabled: 1
+  maxIntegrity: 80
+  bumpBaseDamage: 8
+  bumpDamagePerImpact: 3
+  glideAtZero: 0.6
+  controlAtZero: 0.7
+  maxRollBias: 8
+  wetnessEnabled: 1
+  wetFromSteam: 0.7
+  dryRate: 0.025
+  heatDryRate: 0.5
+  wetExtraSink: 1.8
+  wetControlScale: 0.8
+  crumpleAmount: 0.18
+  damagedColor: {r: 0.45, g: 0.55, b: 0.7, a: 1}
+  wetColor: {r: 0.6, g: 0.67, b: 0.75, a: 1}

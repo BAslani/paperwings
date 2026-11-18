@@ -20,6 +20,7 @@ namespace PaperWings.Combat
         public CombatTarget Target { get; private set; }
 
         PlaneController owner;
+        Faction ownerFaction;
         PencilSettings settings;
         Vector3 velocity;
         float speed;
@@ -35,6 +36,7 @@ namespace PaperWings.Combat
         public void Launch(PlaneController shooter, CombatTarget target, PencilSettings pencilSettings)
         {
             owner = shooter;
+            ownerFaction = CombatTarget.FactionOfPlane(shooter);
             Target = target;
             settings = pencilSettings;
 
@@ -80,7 +82,7 @@ namespace PaperWings.Combat
                     // Proximity fuse: near misses still count.
                     if (Vector3.Distance(transform.position, Target.Position) < settings.proximityFuse)
                     {
-                        Projectiles.ApplyHit(Target, settings.damage, owner, true, Audio.Sfx.PencilImpact);
+                        Projectiles.ApplyHit(Target, settings.damage, owner, ownerFaction, Audio.Sfx.PencilImpact);
                         Destroy(gameObject);
                         return;
                     }
@@ -92,7 +94,7 @@ namespace PaperWings.Combat
             Vector3 step = velocity * dt;
             if (Projectiles.SweepHit(transform.position, step, owner != null ? owner.transform : null, out RaycastHit hit))
             {
-                if (!Projectiles.ApplyHit(hit.collider, settings.damage, owner, true, Audio.Sfx.PencilImpact))
+                if (!Projectiles.ApplyHit(hit.collider, settings.damage, owner, ownerFaction, Audio.Sfx.PencilImpact))
                     Audio.AudioFx.PlayAt(Audio.Sfx.PencilImpact, hit.point, 0.6f, 0.85f);   // thudded into the scenery
                 Destroy(gameObject);
                 return;

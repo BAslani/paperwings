@@ -57,6 +57,8 @@ namespace PaperWings.EditorTools
         static void RivalWeapon() => Open("Weapon_RivalStaples.asset");
         [MenuItem("PaperWings/Settings/Combat - Rival Pilot (AI)", priority = 42)]
         static void RivalPilot() => Open("Pilot_Rival.asset");
+        [MenuItem("PaperWings/Settings/Combat - Wingman Pilot (AI)", priority = 45)]
+        static void WingmanPilot() => Open("Pilot_Wingman.asset");
         [MenuItem("PaperWings/Settings/Combat - Rival Flight", priority = 43)]
         static void RivalFlight() => Open("FlightSettings_Rival.asset");
         [MenuItem("PaperWings/Settings/Combat - Rival Paper", priority = 44)]

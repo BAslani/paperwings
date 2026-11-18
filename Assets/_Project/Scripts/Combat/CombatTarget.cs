@@ -15,13 +15,21 @@ namespace PaperWings.Combat
         public static readonly List<CombatTarget> All = new List<CombatTarget>();
 
         [SerializeField] string displayName = "Rival";
+        [Tooltip("Which department this belongs to. Weapons and AI only hurt/target other factions.")]
+        [SerializeField] Faction faction = Faction.Accounting;
         [SerializeField] bool isBoss;
         [Tooltip("Where to aim (e.g. a boss's weak spot). Defaults to the object's position.")]
         [SerializeField] Transform aimPoint;
 
         public string DisplayName => displayName;
+        public Faction Faction => faction;
         public bool IsBoss => isBoss;
         public PlaneController Plane { get; private set; }
+        /// <summary>True for friendly AI planes on the player's faction (wingmen).</summary>
+        public bool IsAlly => faction == PlayerFaction && Plane != null && !Plane.IsPlayer;
+
+        /// <summary>The faction the player flies for.</summary>
+        public const Faction PlayerFaction = Faction.Marketing;
 
         IDamageable health;
 
@@ -29,6 +37,7 @@ namespace PaperWings.Combat
         {
             Plane = GetComponent<PlaneController>();
             health = GetComponent<IDamageable>();
+            if (Plane != null && Plane.IsPlayer) faction = PlayerFaction;   // the player is always Marketing
         }
 
         void OnEnable() => All.Add(this);
@@ -39,21 +48,22 @@ namespace PaperWings.Combat
 
         public Vector3 Position => aimPoint != null ? aimPoint.position : transform.position;
         public Vector3 Velocity => Plane != null ? Plane.Velocity : Vector3.zero;
-        /// <summary>True for the player's side (currently just the player's plane).</summary>
-        public bool IsPlayerSide => Plane != null && Plane.IsPlayer;
+        /// <summary>True for anything on the player's faction (the player and wingmen).</summary>
+        public bool IsPlayerSide => faction == PlayerFaction;
         public bool IsAlive => Plane != null ? Plane.State == PlaneState.Flying : (health == null || health.IsAlive);
         public float Health01 => health != null ? health.Health01 : 1f;
 
         /// <summary>
-        /// The living target on the requested side that's closest to 'forward' within the cone and range.
+        /// The living ENEMY of 'shooter' (any other faction) closest to 'forward' within the cone and range.
         /// </summary>
-        public static CombatTarget FindBestInCone(Vector3 origin, Vector3 forward, float maxAngle, float range, bool wantPlayerSide)
+        public static CombatTarget FindBestInCone(Vector3 origin, Vector3 forward, float maxAngle, float range,
+                                                  Faction shooter, bool planesOnly = false)
         {
             CombatTarget best = null;
             float bestAngle = maxAngle;
             foreach (var t in All)
             {
-                if (t.IsPlayerSide != wantPlayerSide || !t.IsAlive) continue;
+                if (t.faction == shooter || !t.IsAlive || (planesOnly && t.Plane == null)) continue;
                 Vector3 to = t.Position - origin;
                 if (to.magnitude > range) continue;
                 float angle = Vector3.Angle(forward, to);
@@ -62,11 +72,33 @@ namespace PaperWings.Combat
             return best;
         }
 
-        /// <summary>Which side a hit object belongs to: true = player, false = enemy, null = neutral scenery.</summary>
-        public static bool? SideOf(Component c)
+        /// <summary>The nearest living enemy plane of 'shooter' within range (used by AI pilots).</summary>
+        public static CombatTarget FindNearestEnemyPlane(Vector3 origin, Faction shooter, float range)
+        {
+            CombatTarget best = null;
+            float bestDist = range;
+            foreach (var t in All)
+            {
+                if (t.faction == shooter || t.Plane == null || !t.IsAlive) continue;
+                float d = Vector3.Distance(origin, t.Position);
+                if (d < bestDist) { bestDist = d; best = t; }
+            }
+            return best;
+        }
+
+        /// <summary>Which faction a hit object belongs to, or null for neutral scenery.</summary>
+        public static Faction? FactionOf(Component c)
         {
             var t = c.GetComponentInParent<CombatTarget>();
-            return t != null ? t.IsPlayerSide : (bool?)null;
+            return t != null ? t.faction : (Faction?)null;
+        }
+
+        /// <summary>The faction of whatever owns this component (planes without a CombatTarget fall back by IsPlayer).</summary>
+        public static Faction FactionOfPlane(PlaneController plane)
+        {
+            var t = plane.GetComponent<CombatTarget>();
+            if (t != null) return t.faction;
+            return plane.IsPlayer ? PlayerFaction : Faction.Accounting;
         }
     }
 }
