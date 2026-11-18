@@ -131,12 +131,12 @@ namespace PaperWings.EditorTools
             shimmerGo.transform.SetParent(root.transform, false);
             shimmerGo.transform.localPosition = new Vector3(0f, 0.3f, 0f);
             shimmerGo.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);   // particle systems emit along +Z; point it up
-            var shimmer = AddParticles(shimmerGo, shimmerMat, stretched: false, sizeMin: 0.6f, sizeMax: 1.4f);
+            var shimmer = AddParticles(shimmerGo, shimmerMat, stretched: false, sizeMin: 0.4f, sizeMax: 0.9f);
 
             // Wobbly drift = cheap "shimmer".
             var noise = shimmer.noise;
             noise.enabled = true;
-            noise.strength = 0.8f;
+            noise.strength = 0.4f;
             noise.frequency = 0.3f;
             noise.scrollSpeed = 0.4f;
 

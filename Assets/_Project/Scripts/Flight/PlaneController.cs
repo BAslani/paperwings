@@ -297,6 +297,13 @@ namespace PaperWings.Flight
             return sink;
         }
 
+        /// <summary>Adds airspeed (e.g. a reward for flying through a ring). Only while flying.</summary>
+        public void AddSpeed(float amount)
+        {
+            if (State != PlaneState.Flying) return;
+            speed = Mathf.Clamp(speed + amount, 2f, settings.maxSpeed);
+        }
+
         void TryBoost()
         {
             if (Time.time < boostReadyTime) return;

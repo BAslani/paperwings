@@ -22,9 +22,12 @@ namespace PaperWings.Air
         protected virtual void OnEnable() => AirField.Register(this);
         protected virtual void OnDisable() => AirField.Unregister(this);
 
-        protected Color GizmoColor => Kind == AirKind.Thermal
-            ? new Color(1f, 0.55f, 0.15f)
-            : new Color(0.3f, 0.85f, 1f);
+        protected Color GizmoColor => Kind switch
+        {
+            AirKind.Thermal   => new Color(1f, 0.55f, 0.15f),
+            AirKind.Downdraft => new Color(0.55f, 0.45f, 1f),
+            _                 => new Color(0.3f, 0.85f, 1f)
+        };
 
         /// <summary>
         /// When selected: sample a 3D grid inside the bounds and draw an arrow for the wind at each point.

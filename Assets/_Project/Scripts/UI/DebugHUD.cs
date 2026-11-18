@@ -20,10 +20,20 @@ namespace PaperWings.UI
         [SerializeField] LaunchAndReset launcher;
         [Tooltip("Layers counted as 'floor' for the height readout.")]
         [SerializeField] LayerMask floorMask = ~0;
+        [Tooltip("Optional. Found automatically if left empty.")]
+        [SerializeField] RaceRoute route;
 
         GUIStyle panelText, big, small;
         bool showPanel = true;
         float scale;
+        float ringFlash;   // >0 briefly after passing a ring
+        LandingZone landingZone;
+
+        void Start()
+        {
+            if (route == null) route = FindAnyObjectByType<RaceRoute>();
+            if (route != null) route.RingPassed += _ => ringFlash = 1f;
+        }
 
         static readonly Color Green = new Color(0.45f, 1f, 0.35f);
         static readonly Color Yellow = new Color(1f, 0.82f, 0.3f);
@@ -34,6 +44,7 @@ namespace PaperWings.UI
         {
             // Debug-only shortcut, read straight from the keyboard.
             if (Keyboard.current != null && Keyboard.current.f1Key.wasPressedThisFrame) showPanel = !showPanel;
+            ringFlash = Mathf.MoveTowards(ringFlash, 0f, Time.deltaTime * 1.5f);
         }
 
         float HeightAboveSurface()
@@ -51,8 +62,96 @@ namespace PaperWings.UI
             EnsureStyles();
 
             if (showPanel) DrawPanel();
+            if (route != null && route.RingCount > 0)
+            {
+                DrawRoutePanel();
+                DrawNextTargetPointer();
+            }
             DrawControlsHint();
             DrawCenter();
+        }
+
+        // ------------------------------------------------------------------ route
+
+        void DrawRoutePanel()
+        {
+            Rect panel = new Rect(Screen.width - 290 * scale, 10 * scale, 280 * scale, 104 * scale);
+            GUI.color = new Color(0f, 0f, 0f, 0.55f);
+            GUI.DrawTexture(panel, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            float x = panel.x + 12 * scale, y = panel.y + 8 * scale, w = panel.width - 24 * scale, line = 26 * scale;
+            string rings = route.AllRingsPassed
+                ? $"<color=#60FF80><b>All {route.RingCount} rings!</b></color>  land on the mug"
+                : $"Rings  <b>{route.NextIndex} / {route.RingCount}</b>";
+            Label(ref y, x, w, line, rings);
+            Label(ref y, x, w, line, $"Time   <b>{plane.FlightTime:0.00}s</b>");
+            Label(ref y, x, w, line, route.BestTime > 0f ? $"Best   {route.BestTime:0.00}s" : "Best   —");
+
+            // "+RING" flash under the panel.
+            if (ringFlash > 0f)
+            {
+                GUI.color = new Color(1f, 0.9f, 0.3f, ringFlash);
+                GUI.Label(new Rect(panel.x, panel.yMax + 4 * scale, panel.width, 40 * scale), $"<size={Px(30)}><b>+RING</b></size>", big);
+                GUI.color = Color.white;
+            }
+        }
+
+        /// <summary>
+        /// Points at the next ring (or the mug once all rings are done): a marker over it when it's
+        /// on screen, an arrow at the screen edge when it isn't. Readability over realism!
+        /// </summary>
+        void DrawNextTargetPointer()
+        {
+            if (plane.State != PlaneState.Flying && plane.State != PlaneState.Held) return;
+            Camera cam = Camera.main;
+            if (cam == null) return;
+
+            Vector3 target;
+            string label;
+            if (!route.AllRingsPassed) { target = route.NextRing.transform.position; label = $"{route.NextIndex + 1}"; }
+            else
+            {
+                if (landingZone == null) landingZone = FindAnyObjectByType<LandingZone>();
+                if (landingZone == null) return;
+                target = landingZone.SurfaceCenter;
+                label = "LAND";
+            }
+
+            float dist = Vector3.Distance(plane.transform.position, target);
+            Vector3 sp = cam.WorldToScreenPoint(target);
+            bool behind = sp.z < 0f;
+            // IMGUI's y axis points down; screen space points up.
+            Vector2 gui = new Vector2(sp.x, Screen.height - sp.y);
+            if (behind) gui = new Vector2(Screen.width - gui.x, Screen.height - gui.y);   // mirror when behind
+
+            float margin = 50 * scale;
+            bool onScreen = !behind && gui.x > margin && gui.x < Screen.width - margin && gui.y > margin && gui.y < Screen.height - margin;
+            string color = route.AllRingsPassed ? "#60FF80" : "#FFE040";
+
+            if (onScreen)
+            {
+                GUI.Label(new Rect(gui.x - 80 * scale, gui.y - 60 * scale, 160 * scale, 30 * scale),
+                          $"<size={Px(20)}><color={color}><b>{label}</b>  {dist:0}</color></size>", big);
+                return;
+            }
+
+            // Clamp to the screen edge and draw an arrow pointing toward the target.
+            Vector2 center = new Vector2(Screen.width, Screen.height) * 0.5f;
+            Vector2 dir = (gui - center).normalized;
+            if (dir.sqrMagnitude < 0.001f) dir = Vector2.up;
+            float sx = (center.x - margin) / Mathf.Max(0.001f, Mathf.Abs(dir.x));
+            float sy = (center.y - margin) / Mathf.Max(0.001f, Mathf.Abs(dir.y));
+            Vector2 edge = center + dir * Mathf.Min(sx, sy);
+
+            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+            Matrix4x4 old = GUI.matrix;
+            GUIUtility.RotateAroundPivot(angle, edge);
+            GUI.Label(new Rect(edge.x - 30 * scale, edge.y - 20 * scale, 60 * scale, 40 * scale),
+                      $"<size={Px(34)}><color={color}><b>>></b></color></size>", big);
+            GUI.matrix = old;
+            GUI.Label(new Rect(edge.x - 60 * scale, edge.y + 14 * scale, 120 * scale, 26 * scale),
+                      $"<size={Px(16)}><color={color}>{label}  {dist:0}</color></size>", big);
         }
 
         // ------------------------------------------------------------------ panel
@@ -94,8 +193,10 @@ namespace PaperWings.UI
             Bar(ref y, x, w, 1f - boostCd / Mathf.Max(0.01f, s.boostCooldown), boostCd <= 0f ? Green : Cyan);
 
             var air = plane.Air;
-            string airText = !air.InThermal && !air.InDraft ? "calm" :
-                (air.InThermal ? "<color=#FFA040>THERMAL</color> " : "") + (air.InDraft ? "<color=#60D8FF>DRAFT</color>" : "");
+            string airText = !air.InThermal && !air.InDraft && !air.InDowndraft ? "calm" :
+                (air.InThermal ? "<color=#FFA040>THERMAL</color> " : "") +
+                (air.InDraft ? "<color=#60D8FF>DRAFT</color> " : "") +
+                (air.InDowndraft ? "<color=#A08CFF>DOWNDRAFT</color>" : "");
             Label(ref y, x, w, line, $"Air  {airText}   {plane.AirVelocity.magnitude:0.0} (up {plane.AirVelocity.y:+0.0;-0.0})");
             Label(ref y, x, w, line, plane.LandingAssistStrength > 0.01f
                 ? $"Assist  <color=#60FF80>landing {Mathf.RoundToInt(plane.LandingAssistStrength * 100)}%</color>"
@@ -136,7 +237,8 @@ namespace PaperWings.UI
                     var air = plane.Air;
                     string zone = "";
                     if (air.InThermal) zone += $"<color=#FFA040>^ THERMAL {Mathf.RoundToInt(air.thermal * 100)}%</color>     ";
-                    if (air.InDraft)   zone += $"<color=#60D8FF>>> DRAFT {Mathf.RoundToInt(air.draft * 100)}%</color>";
+                    if (air.InDraft)   zone += $"<color=#60D8FF>>> DRAFT {Mathf.RoundToInt(air.draft * 100)}%</color>     ";
+                    if (air.InDowndraft) zone += $"<color=#A08CFF>v DOWNDRAFT {Mathf.RoundToInt(air.downdraft * 100)}%</color>";
                     if (zone.Length > 0)
                         GUI.Label(new Rect(0, 12 * scale, Screen.width, 50 * scale), $"<size={Px(30)}>{zone}</size>", big);
 
@@ -163,6 +265,12 @@ namespace PaperWings.UI
                     GUI.Label(center, $"<size={Mathf.RoundToInt(56 * scale * pulse)}><color=#60FF80>{plane.LastResultMessage}</color></size>", big);
                     Rect sub = new Rect(0, center.yMax + 10 * scale, Screen.width, 40 * scale);
                     GUI.Label(sub, $"<size={Px(24)}>Flight time {plane.FlightTime:0.0}s     —     SPACE / (A) to fly again</size>", big);
+                    if (route != null && route.LastResult != null)
+                    {
+                        string rc = route.LastWasNewBest ? "#FFE040" : (route.AllRingsPassed ? "#FFFFFF" : "#BBBBBB");
+                        Rect res = new Rect(0, sub.yMax + 6 * scale, Screen.width, 44 * scale);
+                        GUI.Label(res, $"<size={Px(30)}><color={rc}>{route.LastResult}</color></size>", big);
+                    }
                     break;
                 }
             }

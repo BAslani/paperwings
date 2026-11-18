@@ -28,9 +28,16 @@ namespace PaperWings.Air
         [Tooltip("Gentle sideways pull toward the center (units/sec at the edge). Helps you stay in while circling.")]
         public float centeringAssist = 1.5f;
 
-        [Header("Visuals")]
+        [Header("Visuals  (looks only; the lift zone above is unaffected)")]
         [Tooltip("Shimmer particles per second.")]
-        public float shimmerRate = 35f;
-        public Color shimmerColor = new Color(1f, 0.7f, 0.35f, 0.22f);
+        public float shimmerRate = 18f;
+        public Color shimmerColor = new Color(1f, 0.7f, 0.35f, 0.12f);
+
+        [Tooltip("How wide the shimmer spawns, as a fraction of the lift Radius. " +
+                 "0.4 = particles rise from the middle 40%, while the lift still covers the full radius.")]
+        [Range(0.05f, 1f)] public float shimmerSpread = 0.4f;
+
+        [Tooltip("Random particle size range (min, max).")]
+        public Vector2 shimmerSize = new Vector2(0.25f, 0.6f);
     }
 }

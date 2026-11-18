@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8599d63f09e9f04bafde920515dd157, type: 3}
   m_Name: FlightSettings_Dart
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.FlightSettings
+  invertPitch: 0
   cruiseSpeed: 14
   maxSpeed: 45
   diveSpeedGain: 18
@@ -29,7 +30,6 @@ MonoBehaviour:
   bankResponse: 5
   turnRate: 75
   lowSpeedAuthority: 0.4
-  invertPitch: 1
   glidePitch: -4
   autoLevelStrength: 1.2
   rollAutoLevel: 3
@@ -47,6 +47,9 @@ MonoBehaviour:
   airInfluence: 1
   airResponse: 4
   tailwindSpeedGain: 0.5
+  landingYawAssist: 1.5
+  landingPitchAssist: 0.8
+  landingSpeedBrake: 1.5
   bumpTolerance: 6
   bumpSpeedKeep: 0.75
   touchdownMaxImpact: 6
@@ -56,3 +59,8 @@ MonoBehaviour:
   wobbleFrequency: 2.2
   stallShake: 8
   turbulenceWobble: 0.25
+  trailsEnabled: 1
+  trailMinSpeed: 18
+  trailFullSpeed: 35
+  trailTime: 0.8
+  trailWidth: 0.1

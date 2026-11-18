@@ -71,11 +71,13 @@ namespace PaperWings.Air
             main.startSpeed = riseSpeed;
             main.startLifetime = settings.height / riseSpeed;
             main.startColor = settings.shimmerColor;
+            main.startSize = new ParticleSystem.MinMaxCurve(settings.shimmerSize.x, settings.shimmerSize.y);
             main.simulationSpace = ParticleSystemSimulationSpace.World;
 
+            // Visual spread is its own knob, so you can tighten the look without shrinking the lift zone.
             var shape = shimmer.shape;
             shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = settings.radius * Mathf.Lerp(settings.coreFraction, 1f, 0.5f);
+            shape.radius = settings.radius * settings.shimmerSpread;
 
             var emission = shimmer.emission;
             emission.rateOverTime = settings.shimmerRate;

@@ -5,8 +5,9 @@ namespace PaperWings.Air
 {
     public enum AirKind
     {
-        Draft,    // mostly sideways push: fans, AC vents
-        Thermal   // mostly upward lift: laptops, coffee steam, radiators
+        Draft,     // mostly sideways push: fans, wall vents
+        Thermal,   // mostly upward lift: laptops, coffee steam, radiators
+        Downdraft  // mostly downward push: ceiling AC vents (a hazard)
     }
 
     /// <summary>The combined air at one point in space.</summary>
@@ -18,9 +19,12 @@ namespace PaperWings.Air
         public float thermal;
         /// <summary>Strongest draft influence here, 0 (none) to 1 (core).</summary>
         public float draft;
+        /// <summary>Strongest downdraft influence here, 0 (none) to 1 (core).</summary>
+        public float downdraft;
 
         public bool InThermal => thermal > 0.05f;
         public bool InDraft => draft > 0.05f;
+        public bool InDowndraft => downdraft > 0.05f;
     }
 
     /// <summary>
@@ -53,8 +57,12 @@ namespace PaperWings.Air
                 if (influence <= 0f) continue;
 
                 result.wind += wind;
-                if (s.Kind == AirKind.Thermal) result.thermal = Mathf.Max(result.thermal, influence);
-                else                           result.draft = Mathf.Max(result.draft, influence);
+                switch (s.Kind)
+                {
+                    case AirKind.Thermal:   result.thermal = Mathf.Max(result.thermal, influence); break;
+                    case AirKind.Downdraft: result.downdraft = Mathf.Max(result.downdraft, influence); break;
+                    default:                result.draft = Mathf.Max(result.draft, influence); break;
+                }
             }
             return result;
         }

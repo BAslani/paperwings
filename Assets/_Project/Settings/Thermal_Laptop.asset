@@ -18,5 +18,5 @@ MonoBehaviour:
   coreFraction: 0.45
   topFade: 0.25
   centeringAssist: 1.5
-  shimmerRate: 35
-  shimmerColor: {r: 1, g: 0.7, b: 0.35, a: 0.22}
+  shimmerRate: 10
+  shimmerColor: {r: 1, g: 0.7, b: 0.35, a: 0.12}
