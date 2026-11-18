@@ -90,10 +90,23 @@ namespace PaperWings.Gameplay
         {
             FlightSettings s = plane.Settings;
             // Aim: left/right turns, up/down tilts (same pitch convention as flight).
-            float pitchIn = input != null ? input.PitchInput : 0f;
-            float rollIn = input != null ? input.RollInput : 0f;
-            aimYaw = Mathf.Clamp(aimYaw + rollIn * aimYawRate * Time.deltaTime, -aimMaxYaw, aimMaxYaw);
-            aimPitch = Mathf.Clamp(aimPitch + pitchIn * aimYawRate * Time.deltaTime, -aimMaxPitch, aimMaxPitch);
+            float yawDelta, pitchDelta;
+            if (input != null && input.IsMouseAim)
+            {
+                // Mouse aim: the mouse moves the throw direction directly; WASD still nudges it.
+                float manualPitch = input.InvertPitch ? input.Steer.y : -input.Steer.y;
+                yawDelta = input.AimDelta.x + input.Steer.x * aimYawRate * Time.deltaTime;
+                pitchDelta = input.AimDelta.y + manualPitch * aimYawRate * Time.deltaTime;
+            }
+            else
+            {
+                float pitchIn = input != null ? input.PitchInput : 0f;
+                float rollIn = input != null ? input.RollInput : 0f;
+                yawDelta = rollIn * aimYawRate * Time.deltaTime;
+                pitchDelta = pitchIn * aimYawRate * Time.deltaTime;
+            }
+            aimYaw = Mathf.Clamp(aimYaw + yawDelta, -aimMaxYaw, aimMaxYaw);
+            aimPitch = Mathf.Clamp(aimPitch + pitchDelta, -aimMaxPitch, aimMaxPitch);
 
             bool held = input != null && input.ThrowHeld;
             if (held)

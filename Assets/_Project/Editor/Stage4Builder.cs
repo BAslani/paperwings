@@ -138,6 +138,11 @@ namespace PaperWings.EditorTools
             BuilderUtil.SetRef(fx, "plane", plane);
             BuilderUtil.SetRef(fx, "settings", settings);
             BuilderUtil.SetRef(fx, "speedLines", speedLines);
+
+            // Mouse-aim scheme: camera follows the aim direction instead of the nose (Stage 11).
+            var mouseCam = vGo.AddComponent<MouseAimCamera>();
+            BuilderUtil.SetRef(mouseCam, "plane", plane);
+            BuilderUtil.SetRef(mouseCam, "input", plane.GetComponent<PlaneInput>());
         }
 
         static ParticleSystem CreateSpeedLines(Transform camera)

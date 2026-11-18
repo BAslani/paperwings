@@ -275,6 +275,29 @@ namespace PaperWings.UI
 
         string AmmoText() => gun.Unlimited ? "" : $"<color=#DDDDDD>{gun.Ammo}</color>";
 
+        /// <summary>
+        /// Mouse-aim marker: a small circle with four ticks where the MOUSE is aiming. The bigger
+        /// reticle ring shows where the NOSE points; watch it slide onto this marker as the plane turns.
+        /// </summary>
+        void DrawMouseAimMarker(Camera cam)
+        {
+            if (ringTex == null) ringTex = MakeRing(128, 7f);
+            Vector3 sp = cam.WorldToScreenPoint(plane.transform.position + planeInput.AimDirection * 100f);
+            if (sp.z <= 0f) return;
+            Vector2 c = new Vector2(sp.x, Screen.height - sp.y);
+
+            float size = 22f * scale, tick = 8f * scale, t = Mathf.Max(2f, 2f * scale);
+            GUI.color = new Color(0.6f, 1f, 0.9f, 0.9f);
+            GUI.DrawTexture(new Rect(c.x - size * 0.5f, c.y - size * 0.5f, size, size), ringTex);
+            // Ticks pointing in from the four sides.
+            float r = size * 0.5f;
+            GUI.DrawTexture(new Rect(c.x - t * 0.5f, c.y - r - tick, t, tick), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(c.x - t * 0.5f, c.y + r, t, tick), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(c.x - r - tick, c.y - t * 0.5f, tick, t), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(c.x + r, c.y - t * 0.5f, tick, t), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+        }
+
         // ------------------------------------------------------------------ boss
 
         StaplerBoss boss;
@@ -457,6 +480,7 @@ namespace PaperWings.UI
             DrawBossBar();
 
             if (plane.State == PlaneState.Flying && gun != null) DrawReticle(cam);
+            if (plane.State == PlaneState.Flying && planeInput != null && planeInput.IsMouseAim) DrawMouseAimMarker(cam);
             if (plane.State == PlaneState.Flying && pencils != null) DrawPencilLock(cam);
             else reticleValid = false;
 
@@ -554,7 +578,9 @@ namespace PaperWings.UI
         void DrawControlsHint()
         {
             string pitchHint = planeInput != null && planeInput.InvertPitch ? "W climbs" : "W dives";
-            string controls = $"W/S or stick: pitch ({pitchHint})    A/D: bank & turn    SPACE / Shift / (A) / RT: boost    F / LMB / (X): staples    G / RMB / LT: pencil    R / (Y): reset    F1: HUD";
+            string controls = planeInput != null && planeInput.IsMouseAim
+                ? $"<b>MOUSE AIM</b>    Mouse: steer    W/S A/D: manual override    LMB: staples    RMB: pencil (lock first)    SPACE: throw / boost    R: reset    C: classic controls    Esc: free cursor"
+                : $"<b>CLASSIC</b>    W/S or stick: pitch ({pitchHint})    A/D: bank & turn    SPACE / Shift / (A) / RT: boost    F / LMB / (X): staples    G / RMB / LT: pencil    R / (Y): reset    C: mouse aim    F1: HUD";
             GUI.Label(new Rect(10 * scale, Screen.height - 32 * scale, Screen.width, 30 * scale), controls, small);
         }
 

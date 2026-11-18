@@ -12,4 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f74b383a3195244d95bf6fb129a2c7b, type: 3}
   m_Name: Controls
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.ControlSettings
+  scheme: 0
   invertPitch: 0
+  mouseSensitivity: 0.08
+  invertMouseY: 0
+  aimResponsiveness: 1
+  keyboardOverride: 1
+  lockCursor: 1
+  cameraLookDistance: 40
