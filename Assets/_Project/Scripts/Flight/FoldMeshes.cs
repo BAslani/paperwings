@@ -78,6 +78,7 @@ namespace PaperWings.Flight
                 mesh.SetVertices(verts);
                 mesh.SetNormals(normals);
                 mesh.SetTriangles(tris, 0);
+                DartMesh.ApplyPaperUVs(mesh);
                 mesh.RecalculateBounds();
                 return mesh;
             }

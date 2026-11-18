@@ -31,8 +31,24 @@ namespace PaperWings.Flight
             mesh.SetVertices(verts);
             mesh.SetNormals(normals);
             mesh.SetTriangles(tris, 0);
+            ApplyPaperUVs(mesh);
             mesh.RecalculateBounds();
             return mesh;
+        }
+
+        /// <summary>
+        /// Texture coordinates for paper textures: project the plane from above, like laying the
+        /// unfolded sheet flat. u runs across the wings (centre crease at u = 0.5), v runs nose-to-tail.
+        /// Every fold uses the same mapping, so one paper texture fits them all.
+        /// UNITY NOTE: UVs say which part of a texture lands on each vertex (0..1 across the image).
+        /// </summary>
+        public static void ApplyPaperUVs(Mesh mesh)
+        {
+            var v = mesh.vertices;
+            var uv = new Vector2[v.Length];
+            for (int i = 0; i < v.Length; i++)
+                uv[i] = new Vector2(v[i].x * 0.38f + 0.5f, v[i].z * 0.5f + 0.5f);
+            mesh.uv = uv;
         }
 
         // Adds a triangle visible from both sides, with its own vertices for flat shading.

@@ -102,3 +102,7 @@
 *.cubemap filter=lfs diff=lfs merge=lfs -text
 *.bytes   filter=lfs diff=lfs merge=lfs -text
 LightingData.asset filter=lfs diff=lfs merge=lfs -text
+
+# Procedurally generated textures (pixel data stored in .asset files, ~2.7 MB each):
+# keep them in LFS so re-running the art builder doesn't bloat history.
+Assets/_Project/Art/T_*.asset filter=lfs diff=lfs merge=lfs -text

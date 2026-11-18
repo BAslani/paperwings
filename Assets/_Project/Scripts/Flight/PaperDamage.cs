@@ -36,6 +36,7 @@ namespace PaperWings.Flight
         Renderer visualRenderer;
         MaterialPropertyBlock block;
         Color paperColor = Color.white;
+        Texture2D paperTexture;   // set per fold (lined, graph, cardstock...); null = keep the material's
 
         float integrity;
         float wetness;
@@ -46,6 +47,7 @@ namespace PaperWings.Flight
         float shownCrumple = -1f;
 
         static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
 
         void Awake()
         {
@@ -65,10 +67,11 @@ namespace PaperWings.Flight
         /// <summary>
         /// Switches to another fold's paper: new settings, new mesh, new base colour. Resets to a fresh sheet.
         /// </summary>
-        public void Configure(PaperSettings newSettings, Mesh sourceMesh, Color baseColor)
+        public void Configure(PaperSettings newSettings, Mesh sourceMesh, Color baseColor, Texture2D texture = null)
         {
             if (newSettings != null) settings = newSettings;
             paperColor = baseColor;
+            if (texture != null) paperTexture = texture;
             SetVisualMesh(sourceMesh);
             Repair();
         }
@@ -189,6 +192,7 @@ namespace PaperWings.Flight
                 Color c = Color.Lerp(paperColor, settings.damagedColor, damage01);
                 c = Color.Lerp(c, settings.wetColor, wetness * 0.8f);
                 block.SetColor(BaseColorId, c);
+                if (paperTexture != null) block.SetTexture(BaseMapId, paperTexture);
                 visualRenderer.SetPropertyBlock(block);
             }
         }

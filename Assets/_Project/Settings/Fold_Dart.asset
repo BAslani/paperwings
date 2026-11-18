@@ -19,3 +19,4 @@ MonoBehaviour:
   paper: {fileID: 11400000, guid: df72df61acede124088fbc547c59bb4b, type: 2}
   mesh: {fileID: 4300000, guid: 2d04e0b5dcb748b48a2e47882061ffbb, type: 2}
   paperColor: {r: 0.96, g: 0.95, b: 0.9, a: 1}
+  paperTexture: {fileID: 2800000, guid: 38d78f89883eae04cad1901e6c1d755d, type: 2}

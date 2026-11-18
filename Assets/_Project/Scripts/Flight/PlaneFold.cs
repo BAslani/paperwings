@@ -22,5 +22,7 @@ namespace PaperWings.Flight
         public Mesh mesh;
         [Tooltip("Base paper colour (damage and wetness tint on top of this).")]
         public Color paperColor = new Color(0.96f, 0.95f, 0.9f);
+        [Tooltip("Paper stock: lined, graph, cardstock... (optional; white-based, tinted by Paper Color).")]
+        public Texture2D paperTexture;
     }
 }

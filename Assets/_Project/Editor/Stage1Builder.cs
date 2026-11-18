@@ -220,6 +220,7 @@ namespace PaperWings.EditorTools
                 existing.Clear();
                 existing.vertices = mesh.vertices;
                 existing.normals = mesh.normals;
+                existing.uv = mesh.uv;
                 existing.triangles = mesh.triangles;
                 existing.RecalculateBounds();
                 EditorUtility.SetDirty(existing);

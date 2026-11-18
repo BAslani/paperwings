@@ -66,7 +66,7 @@ namespace PaperWings.Gameplay
 
             Transform visual = plane.transform.Find("Visual");
             var damage = plane.GetComponent<PaperDamage>();
-            if (damage != null) damage.Configure(fold.paper, fold.mesh, fold.paperColor);
+            if (damage != null) damage.Configure(fold.paper, fold.mesh, fold.paperColor, fold.paperTexture);
             else if (visual != null && fold.mesh != null) visual.GetComponent<MeshFilter>().sharedMesh = fold.mesh;
 
             if (fold.mesh != null)
