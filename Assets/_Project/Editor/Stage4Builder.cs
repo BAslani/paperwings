@@ -181,9 +181,9 @@ namespace PaperWings.EditorTools
         public const string PaperSettingsPath = "Assets/_Project/Settings/Paper_Dart.asset";
 
         /// <summary>Adds (or rebuilds) PaperDamage and its tear-bits particles on the plane root.</summary>
-        public static void AddPaperDamage(GameObject planeRoot)
+        public static void AddPaperDamage(GameObject planeRoot, PaperSettings paperOverride = null)
         {
-            var settings = Stage2Builder.LoadOrCreate<PaperSettings>(PaperSettingsPath);
+            var settings = paperOverride != null ? paperOverride : Stage2Builder.LoadOrCreate<PaperSettings>(PaperSettingsPath);
 
             var old = planeRoot.transform.Find("TearBits");
             if (old != null) Object.DestroyImmediate(old.gameObject);

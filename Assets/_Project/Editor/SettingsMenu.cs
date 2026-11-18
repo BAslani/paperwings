@@ -43,6 +43,20 @@ namespace PaperWings.EditorTools
         [MenuItem("PaperWings/Settings/Stunt - Fold", priority = 18)]
         static void FoldStunt() => Open("Fold_Stunt.asset");
 
+        // Combat
+        [MenuItem("PaperWings/Settings/Combat - Player Staples", priority = 40)]
+        static void PlayerWeapon() => Open("Weapon_PlayerStaples.asset");
+        [MenuItem("PaperWings/Settings/Combat - Pencil Missiles", priority = 40)]
+        static void Pencils() => Open("Pencils.asset");
+        [MenuItem("PaperWings/Settings/Combat - Rival Staples", priority = 41)]
+        static void RivalWeapon() => Open("Weapon_RivalStaples.asset");
+        [MenuItem("PaperWings/Settings/Combat - Rival Pilot (AI)", priority = 42)]
+        static void RivalPilot() => Open("Pilot_Rival.asset");
+        [MenuItem("PaperWings/Settings/Combat - Rival Flight", priority = 43)]
+        static void RivalFlight() => Open("FlightSettings_Rival.asset");
+        [MenuItem("PaperWings/Settings/Combat - Rival Paper", priority = 44)]
+        static void RivalPaper() => Open("Paper_Rival.asset");
+
         [MenuItem("PaperWings/Settings/Air - Laptop Thermal", priority = 20)]
         static void Thermal() => Open("Thermal_Laptop.asset");
 

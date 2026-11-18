@@ -102,7 +102,7 @@ namespace PaperWings.Gameplay
         /// </summary>
         public bool HandleTouchdown(PlaneController plane, Collision collision)
         {
-            if (settings == null) return false;
+            if (settings == null || !plane.IsPlayer) return false;   // only the player lands on targets; rivals just bump
 
             ContactPoint contact = collision.GetContact(0);
             if (contact.normal.y < 0.5f) return false;   // hit the side, not the top

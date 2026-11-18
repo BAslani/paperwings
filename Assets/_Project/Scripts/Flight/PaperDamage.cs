@@ -92,17 +92,27 @@ namespace PaperWings.Flight
             ApplyDamage(settings.bumpBaseDamage + impactSpeed * settings.bumpDamagePerImpact);
         }
 
-        /// <summary>Removes paper. Public so future hazards (scissors, staplers...) can call it.</summary>
-        public void ApplyDamage(float amount)
+        /// <summary>The plane that last damaged us (null for bumps), and when. Used to credit kills.</summary>
+        public PlaneController LastAttacker { get; private set; }
+        public float LastAttackTime { get; private set; }
+
+        /// <summary>Removes paper. 'source' = the plane responsible (e.g. whoever fired the staple), if any.</summary>
+        public void ApplyDamage(float amount, PlaneController source = null)
         {
             if (settings == null || plane.State != PlaneState.Flying || amount <= 0f) return;
 
+            if (source != null)
+            {
+                LastAttacker = source;
+                LastAttackTime = Time.time;
+            }
             integrity = Mathf.Max(0f, integrity - amount);
             if (bentSide == 0f) bentSide = UnityEngine.Random.value < 0.5f ? -1f : 1f;
             if (tearBits != null) tearBits.Emit(Mathf.RoundToInt(4f + amount * 0.6f));
             Damaged?.Invoke(amount);
 
-            if (integrity <= 0f) plane.GoDown(crash: true, reason: "Crumpled! Too many bumps.");
+            if (integrity <= 0f)
+                plane.GoDown(crash: true, reason: source != null ? "Shot down! Stapled to pieces." : "Crumpled! Too many bumps.");
         }
 
         public void Repair()

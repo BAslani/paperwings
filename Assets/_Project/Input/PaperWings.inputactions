@@ -59,6 +59,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Fire",
+                    "type": "Button",
+                    "id": "a1000000-0000-4000-8000-000000000016",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Missile",
+                    "type": "Button",
+                    "id": "a1000000-0000-4000-8000-000000000017",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -92,7 +110,15 @@
                 { "name": "", "id": "a1000000-0000-4000-8000-000000000500", "path": "<Keyboard>/q", "interactions": "", "processors": "", "groups": "", "action": "FoldPrev", "isComposite": false, "isPartOfComposite": false },
                 { "name": "", "id": "a1000000-0000-4000-8000-000000000501", "path": "<Gamepad>/leftShoulder", "interactions": "", "processors": "", "groups": "", "action": "FoldPrev", "isComposite": false, "isPartOfComposite": false },
                 { "name": "", "id": "a1000000-0000-4000-8000-000000000510", "path": "<Keyboard>/e", "interactions": "", "processors": "", "groups": "", "action": "FoldNext", "isComposite": false, "isPartOfComposite": false },
-                { "name": "", "id": "a1000000-0000-4000-8000-000000000511", "path": "<Gamepad>/rightShoulder", "interactions": "", "processors": "", "groups": "", "action": "FoldNext", "isComposite": false, "isPartOfComposite": false }
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000511", "path": "<Gamepad>/rightShoulder", "interactions": "", "processors": "", "groups": "", "action": "FoldNext", "isComposite": false, "isPartOfComposite": false },
+
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000600", "path": "<Keyboard>/f", "interactions": "", "processors": "", "groups": "", "action": "Fire", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000601", "path": "<Mouse>/leftButton", "interactions": "", "processors": "", "groups": "", "action": "Fire", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000602", "path": "<Gamepad>/buttonWest", "interactions": "", "processors": "", "groups": "", "action": "Fire", "isComposite": false, "isPartOfComposite": false },
+
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000700", "path": "<Keyboard>/g", "interactions": "", "processors": "", "groups": "", "action": "Missile", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000701", "path": "<Mouse>/rightButton", "interactions": "", "processors": "", "groups": "", "action": "Missile", "isComposite": false, "isPartOfComposite": false },
+                { "name": "", "id": "a1000000-0000-4000-8000-000000000702", "path": "<Gamepad>/leftTrigger", "interactions": "", "processors": "", "groups": "", "action": "Missile", "isComposite": false, "isPartOfComposite": false }
             ]
         }
     ],

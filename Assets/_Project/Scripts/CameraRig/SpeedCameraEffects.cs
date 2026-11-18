@@ -48,6 +48,8 @@ namespace PaperWings.CameraRig
             plane.Boosted += OnBoost;
             plane.Downed += OnDowned;
             plane.Bumped += OnBumped;
+            paper = plane.GetComponent<PaperDamage>();
+            if (paper != null) paper.Damaged += OnDamaged;
         }
 
         void OnDisable()
@@ -56,7 +58,13 @@ namespace PaperWings.CameraRig
             plane.Boosted -= OnBoost;
             plane.Downed -= OnDowned;
             plane.Bumped -= OnBumped;
+            if (paper != null) paper.Damaged -= OnDamaged;
         }
+
+        PaperDamage paper;
+
+        // Getting stapled: a sharp little jolt.
+        void OnDamaged(float amount) => kickShake = Mathf.Max(kickShake, settings.boostShake * 1.2f);
 
         void OnBumped(float impact)
         {

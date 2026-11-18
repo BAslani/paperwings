@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using PaperWings.Combat;
 using PaperWings.Flight;
 using PaperWings.Gameplay;
 
@@ -33,6 +34,11 @@ namespace PaperWings.UI
         FoldSelector folds;
         float damageFlash;      // >0 briefly after taking damage
         float lastDamage;
+        StapleGun gun;
+        float hitFlash;         // >0 briefly after your staple hits a rival
+        float killFlash;        // >0 briefly after shooting a rival down
+        PencilLauncher pencils;
+        float noLockFlash;      // >0 briefly after pressing fire without a lock
 
         void Start()
         {
@@ -43,7 +49,23 @@ namespace PaperWings.UI
             if (plane != null) planeInput = plane.GetComponent<PlaneInput>();
             folds = FindAnyObjectByType<FoldSelector>();
             if (paper != null) paper.Damaged += amount => { damageFlash = 1f; lastDamage = amount; };
+
+            if (plane != null) gun = plane.GetComponent<StapleGun>();
+            if (plane != null) pencils = plane.GetComponent<PencilLauncher>();
+            if (pencils != null) pencils.FireRefused += () => noLockFlash = 1f;
+            CombatScore.AnyHit += OnAnyHit;
+            CombatScore.KillScored += OnKill;
         }
+
+        void OnDestroy()
+        {
+            // Static events outlive this object: always unsubscribe.
+            CombatScore.AnyHit -= OnAnyHit;
+            CombatScore.KillScored -= OnKill;
+        }
+
+        void OnAnyHit(PlaneController shooter, PlaneController victim) { if (shooter == plane) hitFlash = 1f; }
+        void OnKill(int kills) => killFlash = 1f;
 
         static readonly Color Green = new Color(0.45f, 1f, 0.35f);
         static readonly Color Yellow = new Color(1f, 0.82f, 0.3f);
@@ -56,6 +78,9 @@ namespace PaperWings.UI
             if (Keyboard.current != null && Keyboard.current.f1Key.wasPressedThisFrame) showPanel = !showPanel;
             ringFlash = Mathf.MoveTowards(ringFlash, 0f, Time.deltaTime * 1.5f);
             damageFlash = Mathf.MoveTowards(damageFlash, 0f, Time.deltaTime * 1.5f);
+            hitFlash = Mathf.MoveTowards(hitFlash, 0f, Time.deltaTime * 4f);
+            killFlash = Mathf.MoveTowards(killFlash, 0f, Time.deltaTime * 0.8f);
+            noLockFlash = Mathf.MoveTowards(noLockFlash, 0f, Time.deltaTime * 1.5f);
         }
 
         float HeightAboveSurface()
@@ -78,6 +103,7 @@ namespace PaperWings.UI
                 DrawRoutePanel();
                 DrawNextTargetPointer();
             }
+            DrawCombat();
             DrawControlsHint();
             DrawCenter();
         }
@@ -131,7 +157,17 @@ namespace PaperWings.UI
             }
 
             float dist = Vector3.Distance(plane.transform.position, target);
-            Vector3 sp = cam.WorldToScreenPoint(target);
+            string color = route.AllRingsPassed ? "#60FF80" : "#FFE040";
+            DrawWorldMarker(cam, target, color, $"<b>{label}</b>  {dist:0}", $"{label}  {dist:0}");
+        }
+
+        /// <summary>
+        /// Shared marker logic: text over a world point when it's on screen, or an arrow clamped
+        /// to the screen edge pointing at it when it isn't. Returns the on-screen GUI position (or null).
+        /// </summary>
+        Vector2? DrawWorldMarker(Camera cam, Vector3 world, string color, string onScreenText, string arrowText, float yOffset = -60f)
+        {
+            Vector3 sp = cam.WorldToScreenPoint(world);
             bool behind = sp.z < 0f;
             // IMGUI's y axis points down; screen space points up.
             Vector2 gui = new Vector2(sp.x, Screen.height - sp.y);
@@ -139,13 +175,13 @@ namespace PaperWings.UI
 
             float margin = 50 * scale;
             bool onScreen = !behind && gui.x > margin && gui.x < Screen.width - margin && gui.y > margin && gui.y < Screen.height - margin;
-            string color = route.AllRingsPassed ? "#60FF80" : "#FFE040";
 
             if (onScreen)
             {
-                GUI.Label(new Rect(gui.x - 80 * scale, gui.y - 60 * scale, 160 * scale, 30 * scale),
-                          $"<size={Px(20)}><color={color}><b>{label}</b>  {dist:0}</color></size>", big);
-                return;
+                if (onScreenText != null)
+                    GUI.Label(new Rect(gui.x - 80 * scale, gui.y + yOffset * scale, 160 * scale, 30 * scale),
+                              $"<size={Px(20)}><color={color}>{onScreenText}</color></size>", big);
+                return gui;
             }
 
             // Clamp to the screen edge and draw an arrow pointing toward the target.
@@ -163,7 +199,203 @@ namespace PaperWings.UI
                       $"<size={Px(34)}><color={color}><b>>></b></color></size>", big);
             GUI.matrix = old;
             GUI.Label(new Rect(edge.x - 60 * scale, edge.y + 14 * scale, 120 * scale, 26 * scale),
-                      $"<size={Px(16)}><color={color}>{label}  {dist:0}</color></size>", big);
+                      $"<size={Px(16)}><color={color}>{arrowText}</color></size>", big);
+            return null;
+        }
+
+        // ------------------------------------------------------------------ reticle
+
+        Texture2D ringTex, dotTex;
+        Vector2 reticlePos;       // smoothed screen position (GUI coords)
+        float reticleSize;        // smoothed ring diameter (pixels)
+        bool reticleValid;
+
+        /// <summary>
+        /// Aim reticle:
+        ///  - Free aim: a white ring where your nose points (30 units ahead), with your staple count under it.
+        ///  - Locked: when aim assist has a rival, the ring turns red, shrinks and slides onto the LEAD point
+        ///    (where staples will actually go), brackets frame the rival, and "LOCK" appears.
+        ///  - Pulses on hits; turns grey with "EMPTY" when you're out of staples.
+        /// </summary>
+        void DrawReticle(Camera cam)
+        {
+            if (ringTex == null) ringTex = MakeRing(128, 7f);
+            if (dotTex == null) dotTex = MakeRing(32, 16f);   // thick ring = filled dot
+
+            Vector3 sp = cam.WorldToScreenPoint(gun.AimPoint);
+            if (sp.z <= 0f) { reticleValid = false; return; }
+            Vector2 target = new Vector2(sp.x, Screen.height - sp.y);
+
+            bool locked = gun.LockTarget != null;
+            bool empty = !gun.Unlimited && gun.Ammo == 0;
+            float wantSize = (locked ? 34f : 48f) * scale * (1f + 0.35f * hitFlash);
+
+            // Smooth movement so the ring glides onto a lock instead of teleporting.
+            float k = 1f - Mathf.Exp(-18f * Time.unscaledDeltaTime);
+            reticlePos = reticleValid ? Vector2.Lerp(reticlePos, target, k) : target;
+            reticleSize = reticleValid ? Mathf.Lerp(reticleSize, wantSize, k) : wantSize;
+            reticleValid = true;
+
+            Color c = empty ? new Color(0.6f, 0.6f, 0.6f, 0.6f)
+                    : locked ? new Color(1f, 0.32f, 0.25f, 0.95f)
+                    : new Color(1f, 1f, 1f, 0.8f);
+            if (hitFlash > 0f) c = Color.Lerp(c, Color.white, hitFlash);
+
+            // Ring + centre dot.
+            GUI.color = c;
+            GUI.DrawTexture(new Rect(reticlePos.x - reticleSize * 0.5f, reticlePos.y - reticleSize * 0.5f, reticleSize, reticleSize), ringTex);
+            float dot = 6f * scale;
+            GUI.DrawTexture(new Rect(reticlePos.x - dot * 0.5f, reticlePos.y - dot * 0.5f, dot, dot), dotTex);
+
+            // Brackets around the locked rival itself (the ring sits on the lead point, ahead of it).
+            if (locked)
+            {
+                Vector3 tp = cam.WorldToScreenPoint(gun.LockTarget.transform.position);
+                if (tp.z > 0f)
+                {
+                    float dist = Vector3.Distance(cam.transform.position, gun.LockTarget.transform.position);
+                    float half = Mathf.Clamp(900f / dist, 14f, 60f) * scale;
+                    DrawBrackets(new Vector2(tp.x, Screen.height - tp.y), half, c);
+                }
+            }
+            GUI.color = Color.white;
+
+            // Text under the ring: LOCK / HIT / EMPTY / ammo count.
+            string text;
+            if (hitFlash > 0.3f) text = "<color=#FFFFFF><b>HIT</b></color>";
+            else if (empty) text = "<color=#FF6050><b>EMPTY</b></color>";
+            else if (locked) text = $"<color=#FF6050><b>LOCK</b></color>  {AmmoText()}";
+            else text = AmmoText();
+            GUI.Label(new Rect(reticlePos.x - 80 * scale, reticlePos.y + reticleSize * 0.5f + 2 * scale, 160 * scale, 24 * scale),
+                      $"<size={Px(15)}>{text}</size>", big);
+        }
+
+        string AmmoText() => gun.Unlimited ? "" : $"<color=#DDDDDD>{gun.Ammo}</color>";
+
+        /// <summary>
+        /// Pencil lock-on: a yellow box that closes in on the rival while locking, then snaps
+        /// tight and turns red with "LOCKED" when you can fire. "NO LOCK" flashes if you fire too early.
+        /// </summary>
+        void DrawPencilLock(Camera cam)
+        {
+            if (pencils.Candidate != null)
+            {
+                Vector3 tp = cam.WorldToScreenPoint(pencils.Candidate.transform.position);
+                if (tp.z > 0f)
+                {
+                    Vector2 c = new Vector2(tp.x, Screen.height - tp.y);
+                    float p = pencils.LockProgress;
+                    bool locked = pencils.IsLocked;
+
+                    // Box shrinks from wide to tight as the lock builds.
+                    float half = Mathf.Lerp(110f, 34f, p * p) * scale;
+                    Color col = locked
+                        ? new Color(1f, 0.25f, 0.2f, 0.6f + 0.4f * Mathf.Sin(Time.time * 18f))   // pulsing red
+                        : new Color(1f, 0.85f, 0.2f, 0.9f);
+                    DrawBox(c, half, col, Mathf.Max(2f, 2f * scale));
+                    GUI.color = Color.white;
+
+                    string label = locked
+                        ? $"<color=#FF5040><b>LOCKED</b></color>  <color=#DDD>G / RMB / LT</color>"
+                        : $"<color=#FFD040>LOCKING {Mathf.RoundToInt(p * 100)}%</color>";
+                    GUI.Label(new Rect(c.x - 140 * scale, c.y - half - 28 * scale, 280 * scale, 24 * scale),
+                              $"<size={Px(16)}>{label}</size>", big);
+                }
+            }
+
+            if (noLockFlash > 0f)
+            {
+                string why = pencils.PencilsLeft == 0 ? "NO PENCILS LEFT" : "NO LOCK";
+                GUI.color = new Color(1f, 1f, 1f, noLockFlash);
+                GUI.Label(new Rect(0, Screen.height * 0.62f, Screen.width, 30 * scale),
+                          $"<size={Px(22)}><color=#FFB040><b>{why}</b></color></size>", big);
+                GUI.color = Color.white;
+            }
+        }
+
+        /// <summary>Square outline (four thin bars) centred on a screen point.</summary>
+        void DrawBox(Vector2 center, float half, Color color, float thickness)
+        {
+            GUI.color = color;
+            float size = half * 2f;
+            GUI.DrawTexture(new Rect(center.x - half, center.y - half, size, thickness), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(center.x - half, center.y + half - thickness, size, thickness), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(center.x - half, center.y - half, thickness, size), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(center.x + half - thickness, center.y - half, thickness, size), Texture2D.whiteTexture);
+        }
+
+        void DrawBrackets(Vector2 center, float half, Color color)
+        {
+            float len = half * 0.45f, t = Mathf.Max(2f, 2.5f * scale);
+            GUI.color = color;
+            for (int sx = -1; sx <= 1; sx += 2)
+            for (int sy = -1; sy <= 1; sy += 2)
+            {
+                Vector2 corner = center + new Vector2(sx * half, sy * half);
+                // Horizontal and vertical arms pointing inward from each corner.
+                GUI.DrawTexture(new Rect(sx > 0 ? corner.x - len : corner.x, corner.y - t * 0.5f, len, t), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(corner.x - t * 0.5f, sy > 0 ? corner.y - len : corner.y, t, len), Texture2D.whiteTexture);
+            }
+        }
+
+        /// <summary>A soft-edged white ring texture, generated once at runtime (no art asset needed).</summary>
+        static Texture2D MakeRing(int size, float thickness)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+            float r = size * 0.5f - 1f, mid = r - thickness * 0.5f;
+            var px = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(size * 0.5f, size * 0.5f));
+                float a = Mathf.Clamp01(1f - (Mathf.Abs(d - mid) - thickness * 0.5f + 1f) / 1.5f);
+                px[y * size + x] = new Color(1f, 1f, 1f, a);
+            }
+            tex.SetPixels(px);
+            tex.Apply();
+            return tex;
+        }
+
+        // ------------------------------------------------------------------ combat
+
+        /// <summary>Red markers + health bars on rival planes, an aim reticle, kills, HIT / SHOT DOWN pops.</summary>
+        void DrawCombat()
+        {
+            Camera cam = Camera.main;
+            if (cam == null) return;
+
+            // Rival markers (only while you're flying or about to throw).
+            if (plane.State == PlaneState.Flying || plane.State == PlaneState.Held)
+            {
+                foreach (var other in PlaneController.All)
+                {
+                    if (other.IsPlayer || other.State != PlaneState.Flying) continue;
+                    float dist = Vector3.Distance(plane.transform.position, other.transform.position);
+                    Vector2? gui = DrawWorldMarker(cam, other.transform.position, "#FF5040", $"[  ]  {dist:0}", $"RIVAL  {dist:0}", -14f);
+                    var otherPaper = other.GetComponent<PaperDamage>();
+                    if (gui.HasValue && otherPaper != null)
+                    {
+                        float bw = 60 * scale, by = gui.Value.y + 18 * scale;
+                        Bar(ref by, gui.Value.x - bw * 0.5f, bw, otherPaper.Integrity01, Red, 0f, Color.clear, 0f, Color.clear, 5);
+                    }
+                }
+            }
+
+            if (plane.State == PlaneState.Flying && gun != null) DrawReticle(cam);
+            if (plane.State == PlaneState.Flying && pencils != null) DrawPencilLock(cam);
+            else reticleValid = false;
+
+            // Kills counter (top-right, under the route panel if there is one).
+            float ky = (route != null && route.RingCount > 0 ? 120 : 10) * scale;
+            GUI.Label(new Rect(Screen.width - 290 * scale, ky, 280 * scale, 30 * scale),
+                      $"<size={Px(20)}>Rivals shot down: <b>{CombatScore.Kills}</b></size>", panelText);
+
+            if (killFlash > 0f)
+            {
+                GUI.color = new Color(1f, 0.85f, 0.3f, killFlash);
+                GUI.Label(new Rect(0, Screen.height * 0.3f, Screen.width, 60 * scale), $"<size={Px(48)}><b>SHOT DOWN!</b></size>", big);
+                GUI.color = Color.white;
+            }
         }
 
         // ------------------------------------------------------------------ panel
@@ -176,7 +408,7 @@ namespace PaperWings.UI
             float h = HeightAboveSurface();
             float boostCd = plane.BoostCooldownRemaining;
 
-            Rect panel = R(10, 10, 440, 390);
+            Rect panel = R(10, 10, 440, 438);
             GUI.color = new Color(0f, 0f, 0f, 0.55f);
             GUI.DrawTexture(panel, Texture2D.whiteTexture);
             GUI.color = Color.white;
@@ -203,6 +435,22 @@ namespace PaperWings.UI
             // Boost cooldown.
             Label(ref y, x, w, line, boostCd <= 0f ? "Boost  <color=#7CFC00><b>READY</b></color>" : $"Boost  {boostCd:0.0}s");
             Bar(ref y, x, w, 1f - boostCd / Mathf.Max(0.01f, s.boostCooldown), boostCd <= 0f ? Green : Cyan);
+
+            // Staples (refill when back in hand).
+            if (gun != null && gun.Settings != null && !gun.Unlimited)
+            {
+                int clip = gun.Settings.clipSize;
+                string ammoColor = gun.Ammo == 0 ? "#FF6050" : "white";
+                Label(ref y, x, w, line, $"Staples  <color={ammoColor}><b>{gun.Ammo} / {clip}</b></color>   <color=#999>(F / LMB / X)</color>");
+            }
+
+            // Pencil missiles left (shown as pencil marks: lit = mounted, dim = fired).
+            if (pencils != null && pencils.MaxPencils > 0)
+            {
+                string marks = new string('I', pencils.PencilsLeft);
+                string used = new string('I', pencils.MaxPencils - pencils.PencilsLeft);
+                Label(ref y, x, w, line, $"Pencils  <b><color=#FFD040>{marks}</color><color=#555>{used}</color></b>   <color=#999>(lock on, then G / RMB / LT)</color>");
+            }
 
             // Paper condition: integrity (green -> red) and wetness (blue).
             if (paper != null)
@@ -231,7 +479,7 @@ namespace PaperWings.UI
         void DrawControlsHint()
         {
             string pitchHint = planeInput != null && planeInput.InvertPitch ? "W climbs" : "W dives";
-            string controls = $"W/S or stick: pitch ({pitchHint})    A/D: bank & turn    SPACE / Shift / (A) / RT: boost    R / (Y) / Select: reset    F1: HUD";
+            string controls = $"W/S or stick: pitch ({pitchHint})    A/D: bank & turn    SPACE / Shift / (A) / RT: boost    F / LMB / (X): staples    G / RMB / LT: pencil    R / (Y): reset    F1: HUD";
             GUI.Label(new Rect(10 * scale, Screen.height - 32 * scale, Screen.width, 30 * scale), controls, small);
         }
 

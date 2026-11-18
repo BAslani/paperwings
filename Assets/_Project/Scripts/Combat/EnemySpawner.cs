@@ -1,0 +1,74 @@
+using UnityEngine;
+using PaperWings.Flight;
+
+namespace PaperWings.Combat
+{
+    /// <summary>
+    /// Spawns one rival plane here, already flying, and respawns it a few seconds after it goes
+    /// down. If the player's staples caused it, the player scores a kill.
+    /// Place the spawner where you want the rival to patrol (it circles this point).
+    /// To turn rivals off, just disable the spawners (or their parent "Combat" object).
+    /// </summary>
+    public class EnemySpawner : MonoBehaviour
+    {
+        [SerializeField] GameObject rivalPrefab;
+        [SerializeField] RivalPilotSettings pilotSettings;
+        [Tooltip("Airspeed the rival starts with.")]
+        [SerializeField] float spawnSpeed = 14f;
+        [Tooltip("Stagger the first appearance (seconds), so rivals don't all arrive at once.")]
+        [SerializeField] float firstSpawnDelay = 1f;
+
+        public PlaneController Current { get; private set; }
+
+        PaperDamage currentPaper;
+        float respawnAt;
+
+        void Start()
+        {
+            if (rivalPrefab == null) { enabled = false; return; }
+            var go = Instantiate(rivalPrefab, transform.position, transform.rotation);
+            go.name = $"Rival ({name})";
+            Current = go.GetComponent<PlaneController>();
+            currentPaper = go.GetComponent<PaperDamage>();
+            var pilot = go.GetComponent<RivalPilot>();
+            if (pilot != null) pilot.PatrolCenter = transform.position;
+            Current.Downed += OnRivalDowned;
+
+            Current.Hold(transform.position, transform.rotation);   // parked until its first spawn
+            respawnAt = Time.time + firstSpawnDelay;
+        }
+
+        void OnDestroy()
+        {
+            if (Current != null) Current.Downed -= OnRivalDowned;
+        }
+
+        void OnRivalDowned(bool crash)
+        {
+            // Credit the player if their staples did it recently.
+            if (currentPaper != null && currentPaper.LastAttacker != null && currentPaper.LastAttacker.IsPlayer
+                && Time.time - currentPaper.LastAttackTime < 3f)
+                CombatScore.AddKill();
+
+            respawnAt = Time.time + (pilotSettings != null ? pilotSettings.respawnDelay : 4f);
+        }
+
+        void Update()
+        {
+            if (Current == null || respawnAt <= 0f || Time.time < respawnAt) return;
+            respawnAt = 0f;
+
+            // Fresh sheet of paper, back at the spawn point, launched straight into the air.
+            Current.Hold(transform.position, transform.rotation);
+            if (currentPaper != null) currentPaper.Repair();
+            Current.Launch(spawnSpeed, 0f);
+        }
+
+        void OnDrawGizmos()
+        {
+            Gizmos.color = new Color(1f, 0.3f, 0.3f, 0.8f);
+            Gizmos.DrawWireSphere(transform.position, 1.5f);
+            if (pilotSettings != null) Air.AirGizmos.DrawCircle(transform.position, Vector3.up, pilotSettings.patrolRadius);
+        }
+    }
+}

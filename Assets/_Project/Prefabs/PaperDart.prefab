@@ -16,6 +16,9 @@ GameObject:
   - component: {fileID: 6473787732960478148}
   - component: {fileID: 8161431587889287243}
   - component: {fileID: 8886335430390546607}
+  - component: {fileID: 2539436628238235410}
+  - component: {fileID: 1872271842463635514}
+  - component: {fileID: 1148123210511282326}
   m_Layer: 0
   m_Name: PaperDart
   m_TagString: Untagged
@@ -161,6 +164,57 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: df72df61acede124088fbc547c59bb4b, type: 2}
   visualMesh: {fileID: 1415266289065176907}
   tearBits: {fileID: 1441244539282988370}
+--- !u!114 &2539436628238235410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 326196553689726882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58f2617e7a9f63b458ac396710e2e670, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.StapleGun
+  plane: {fileID: 1085125706397382876}
+  settings: {fileID: 11400000, guid: d83008ed717191843a5807f7338fc38e, type: 2}
+  projectilePrefab: {fileID: 2039645744099332288, guid: 0e652301656eebf4db5304aa9e1a2581, type: 3}
+  muzzle: {fileID: 0}
+--- !u!114 &1872271842463635514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 326196553689726882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ca4deeab3391bd4a9e9b9c506b502ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.PlayerShooter
+  input: {fileID: 2048565573321549589}
+  gun: {fileID: 2539436628238235410}
+--- !u!114 &1148123210511282326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 326196553689726882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 018b4cd7569eea24fba8137b853920e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.PencilLauncher
+  plane: {fileID: 1085125706397382876}
+  input: {fileID: 2048565573321549589}
+  settings: {fileID: 11400000, guid: d76eb41bea5d6ef4496c1bb5fbd91f67, type: 2}
+  pencilPrefab: {fileID: 4589577444379999458, guid: acf431680efffc848992dda049f774c9, type: 3}
+  slots:
+  - {fileID: 8944536830181985417}
+  - {fileID: 7334378487651302228}
+  - {fileID: 4491184639697930855}
+  - {fileID: 427749294207264927}
 --- !u!1 &741871919941375625
 GameObject:
   m_ObjectHideFlags: 0
@@ -5332,6 +5386,10 @@ Transform:
   m_Children:
   - {fileID: 5939119521715512785}
   - {fileID: 7869938739776561036}
+  - {fileID: 8944536830181985417}
+  - {fileID: 7334378487651302228}
+  - {fileID: 4491184639697930855}
+  - {fileID: 427749294207264927}
   m_Father: {fileID: 1475133575674396421}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1415266289065176907
@@ -5391,3 +5449,127 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &5555571299854212789
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4491184639697930855}
+  m_Layer: 0
+  m_Name: PencilSlot_3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4491184639697930855
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5555571299854212789}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.26, y: -0.12, z: -0.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2928604117616042270}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6296545961759502160
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7334378487651302228}
+  m_Layer: 0
+  m_Name: PencilSlot_2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7334378487651302228
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6296545961759502160}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.48, y: -0.1, z: -0.45}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2928604117616042270}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6551290809829307015
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8944536830181985417}
+  m_Layer: 0
+  m_Name: PencilSlot_1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8944536830181985417
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6551290809829307015}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.48, y: -0.1, z: -0.45}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2928604117616042270}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7685702139808066934
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 427749294207264927}
+  m_Layer: 0
+  m_Name: PencilSlot_4
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &427749294207264927
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7685702139808066934}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.26, y: -0.12, z: -0.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2928604117616042270}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using PaperWings.Air;
 using PaperWings.Gameplay;
@@ -38,10 +39,19 @@ namespace PaperWings.Flight
     public class PlaneController : MonoBehaviour
     {
         [SerializeField] FlightSettings settings;
+        [Tooltip("The player's input. Leave empty on AI planes; any IFlightInput component (e.g. RivalPilot) is used instead.")]
         [SerializeField] PlaneInput input;
+
+        /// <summary>Every active plane (player and AI). Used by aim assist, AI targeting and HUD markers.</summary>
+        public static readonly List<PlaneController> All = new List<PlaneController>();
+
+        // Whoever is flying this plane: the player (PlaneInput) or an AI pilot.
+        IFlightInput flightInput;
 
         // ---- Public read-only state (used by HUD, camera, wobble, etc.) ----
         public FlightSettings Settings => settings;
+        /// <summary>True for the player's plane (it has a PlaneInput), false for AI planes.</summary>
+        public bool IsPlayer => input != null;
         public PlaneState State { get; private set; } = PlaneState.Held;
         public float Speed => speed;
         public Vector3 Velocity => rb.linearVelocity;
@@ -104,7 +114,14 @@ namespace PaperWings.Flight
         {
             rb = GetComponent<Rigidbody>();
             if (input == null) input = GetComponent<PlaneInput>();
+            flightInput = input != null ? input : GetComponent<IFlightInput>();
         }
+
+        void OnEnable() => All.Add(this);
+        void OnDisable() => All.Remove(this);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => All.Clear();
 
         // ------------------------------------------------------------------
         // Public control API (used by LaunchAndReset and, later, the landing zone)
@@ -173,21 +190,22 @@ namespace PaperWings.Flight
         {
             // Always consume a queued boost press, so a press made while held
             // doesn't fire the instant we're thrown.
-            bool boostRequested = input != null && input.ConsumeBoost();
+            bool boostRequested = flightInput != null && flightInput.ConsumeBoost();
 
             if (State != PlaneState.Flying) return;
 
             float dt = Time.fixedDeltaTime;
             // + pitch = nose up (PlaneInput applies the invert-pitch preference), + roll = bank right.
-            float pitchInput = input != null ? input.PitchInput : 0f;
-            float rollInput = input != null ? input.RollInput : 0f;
+            float pitchInput = flightInput != null ? flightInput.PitchInput : 0f;
+            float rollInput = flightInput != null ? flightInput.RollInput : 0f;
 
             // Slow planes respond sluggishly. 0..1 between stall speed and cruise speed.
             float speed01 = Mathf.InverseLerp(settings.stallSpeed, settings.cruiseSpeed, speed);
             float authority = Mathf.Lerp(settings.lowSpeedAuthority, 1f, speed01) * Modifiers.controlScale;
 
             UpdateAir(dt);
-            LandingAssist assist = LandingZone.GetAssist(rb.position, yaw);
+            // Landing assist is a player courtesy; AI rivals fly on their own.
+            LandingAssist assist = IsPlayer ? LandingZone.GetAssist(rb.position, yaw) : default;
             LandingAssistStrength = assist.strength;
 
             UpdateStall(dt);

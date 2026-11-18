@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 746ebc85083c0e54aa8bd2dddf1989da, type: 3}
+  m_Name: Weapon_PlayerStaples
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.WeaponSettings
+  fireInterval: 0.22
+  clipSize: 30
+  projectileSpeed: 75
+  projectileLifetime: 1.2
+  damage: 18
+  spread: 1
+  aimAssistAngle: 8
+  aimAssistRange: 45

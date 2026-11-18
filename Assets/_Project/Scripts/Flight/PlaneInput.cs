@@ -12,14 +12,14 @@ namespace PaperWings.Flight
     /// (Steer, Boost...) are bound to keys/buttons. Double-click
     /// Assets/_Project/Input/PaperWings.inputactions to edit bindings visually.
     /// </summary>
-    public class PlaneInput : MonoBehaviour
+    public class PlaneInput : MonoBehaviour, IFlightInput
     {
         [SerializeField] InputActionAsset actions;
         [Tooltip("Global control preferences (invert pitch). PaperWings > Settings > Controls.")]
         [SerializeField] ControlSettings controls;
 
         InputActionMap map;
-        InputAction steer, boost, throwAction, reset, foldPrev, foldNext;
+        InputAction steer, boost, throwAction, reset, foldPrev, foldNext, fire, missile;
         bool boostQueued;
 
         /// <summary>Raw stick: x = right (+), y = forward (+). Prefer PitchInput / RollInput.</summary>
@@ -46,6 +46,12 @@ namespace PaperWings.Flight
         public bool FoldPrevPressed => foldPrev != null && foldPrev.WasPressedThisFrame();
         public bool FoldNextPressed => foldNext != null && foldNext.WasPressedThisFrame();
 
+        /// <summary>True while the fire button is held (weapons auto-fire at their own rate).</summary>
+        public bool FireHeld => fire != null && fire.IsPressed();
+
+        /// <summary>True on the frame the missile (pencil) button was pressed.</summary>
+        public bool MissilePressed => missile != null && missile.WasPressedThisFrame();
+
         void Awake()
         {
             if (actions == null)
@@ -62,6 +68,8 @@ namespace PaperWings.Flight
             // Optional actions: missing ones simply never fire.
             foldPrev = map.FindAction("FoldPrev", false);
             foldNext = map.FindAction("FoldNext", false);
+            fire = map.FindAction("Fire", false);
+            missile = map.FindAction("Missile", false);
         }
 
         void OnEnable() => map?.Enable();
