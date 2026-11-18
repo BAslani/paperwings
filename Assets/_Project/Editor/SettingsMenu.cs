@@ -46,6 +46,13 @@ namespace PaperWings.EditorTools
         [MenuItem("PaperWings/Settings/Stunt - Fold", priority = 18)]
         static void FoldStunt() => Open("Fold_Stunt.asset");
 
+        [MenuItem("PaperWings/Settings/Canard - Flight", priority = 19)]
+        static void CanardFlight() => Open("FlightSettings_Canard.asset");
+        [MenuItem("PaperWings/Settings/Canard - Paper", priority = 20)]
+        static void CanardPaper() => Open("Paper_Canard.asset");
+        [MenuItem("PaperWings/Settings/Canard - Fold", priority = 21)]
+        static void FoldCanard() => Open("Fold_Canard.asset");
+
         // Combat
         [MenuItem("PaperWings/Settings/Combat - Player Staples", priority = 40)]
         static void PlayerWeapon() => Open("Weapon_PlayerStaples.asset");

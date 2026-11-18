@@ -24,5 +24,8 @@ namespace PaperWings.Flight
         public Color paperColor = new Color(0.96f, 0.95f, 0.9f);
         [Tooltip("Paper stock: lined, graph, cardstock... (optional; white-based, tinted by Paper Color).")]
         public Texture2D paperTexture;
+        [Tooltip("Optional extra part attached to the plane while this fold is selected (e.g. the Canard's propeller). " +
+                 "Spawned under the plane's Visual, so it wobbles with the paper.")]
+        public GameObject attachment;
     }
 }

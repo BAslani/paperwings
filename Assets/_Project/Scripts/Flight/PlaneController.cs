@@ -102,6 +102,7 @@ namespace PaperWings.Flight
         float speed;          // airspeed along the nose
         float stallBlend;     // 0 = flying normally, 1 = fully stalled (smoothed)
         float boostReadyTime; // Time.time when the next boost is allowed
+        float boostLift;      // current extra upward air speed from a boost (fades to 0)
 
         float launchTime, lastFlightTime;
 
@@ -162,6 +163,7 @@ namespace PaperWings.Flight
             stallBlend = 0f;
             IsStalling = false;
             boostReadyTime = Time.time;
+            boostLift = 0f;
             launchTime = Time.time;
             AirVelocity = Vector3.zero;
             Air = default;
@@ -231,7 +233,11 @@ namespace PaperWings.Flight
             Vector3 forward = rotation * Vector3.forward;
             Vector3 desiredVelocity = forward * speed
                                     + Vector3.down * CurrentSinkRate(speed01)
-                                    + AirVelocity;
+                                    + AirVelocity
+                                    + Vector3.up * boostLift;   // boost lift (0 for most folds)
+
+            // Boost lift fades out over its duration.
+            boostLift = Mathf.MoveTowards(boostLift, 0f, settings.boostLift / Mathf.Max(0.05f, settings.boostLiftDuration) * dt);
 
             // Ease toward it. (1 - e^(-k*dt)) is a frame-rate-independent smoothing factor.
             float grip = 1f - Mathf.Exp(-settings.airGrip * dt);
@@ -343,6 +349,7 @@ namespace PaperWings.Flight
             if (Time.time < boostReadyTime) return;
             speed = Mathf.Min(speed + settings.boostSpeed, settings.maxSpeed);
             boostReadyTime = Time.time + settings.boostCooldown;
+            boostLift = settings.boostLift;   // optional upward kick that fades out
             Boosted?.Invoke();
         }
 

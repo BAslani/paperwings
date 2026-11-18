@@ -25,6 +25,7 @@ namespace PaperWings.Gameplay
 
         const string PrefKey = "PaperWings.SelectedFold";
         int index;
+        GameObject currentAttachment;   // spawned part for the current fold (if any)
 
         void Start()
         {
@@ -89,6 +90,12 @@ namespace PaperWings.Gameplay
                     trails.SetTipPositions(left, right);
                 }
             }
+
+            // Swap the fold's optional attachment (e.g. the Canard's propeller).
+            if (currentAttachment != null) Destroy(currentAttachment);
+            currentAttachment = null;
+            if (fold.attachment != null)
+                currentAttachment = Instantiate(fold.attachment, visual != null ? visual : plane.transform, false);
 
             FoldChanged?.Invoke(fold);
         }

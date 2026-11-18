@@ -150,7 +150,7 @@ namespace PaperWings.EditorTools
             };
         }
 
-        static readonly string[] FoldFiles = { "Fold_Dart", "Fold_Glider", "Fold_Stunt" };
+        static readonly string[] FoldFiles = { "Fold_Dart", "Fold_Glider", "Fold_Stunt", "Fold_Canard" };   // Canard: Stage 16
 
         /// <summary>Loads the fold assets fresh from disk, in picker order.</summary>
         static PlaneFold[] LoadFolds()

@@ -32,6 +32,15 @@ namespace PaperWings.EditorTools
             return Crease(c, x, s);
         });
 
+        /// <summary>Dot-grid "bullet journal" paper: a soft grey dot every 20 pixels.</summary>
+        public static Texture2D DotGridPaper() => Save("T_PaperDots", 512, (x, y, s) =>
+        {
+            Color c = Fibres(x, y, s, new Color(0.98f, 0.97f, 0.95f), 0.03f);
+            int dx = x % 20 - 10, dy = y % 20 - 10;
+            if (dx * dx + dy * dy <= 3) c = Color.Lerp(c, new Color(0.5f, 0.5f, 0.55f), 0.6f);
+            return Crease(c, x, s);
+        });
+
         /// <summary>Cardstock: heavier grain with darker speckles.</summary>
         public static Texture2D Cardstock() => Save("T_PaperCard", 512, (x, y, s) =>
         {

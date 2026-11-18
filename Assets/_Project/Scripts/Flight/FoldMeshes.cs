@@ -64,6 +64,42 @@ namespace PaperWings.Flight
             return b.Build("PaperStunt");
         }
 
+        /// <summary>
+        /// Canard: a delta main wing set back, plus a small extra wing (the canard) up near the nose.
+        /// The little front wing is what gives it extra lift and a crisper nose. ~1.9 long, ~1.9 wide.
+        /// </summary>
+        public static Mesh BuildCanard()
+        {
+            var b = new Builder();
+            Vector3 nose = new Vector3(0f, 0f, 1f);
+            Vector3 tail = new Vector3(0f, 0f, -0.9f);
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                // Narrow body strip from nose to tail.
+                Vector3 rootFront = new Vector3(0.1f * side, 0f, 0.15f);
+                Vector3 rootBack = new Vector3(0.15f * side, 0f, -0.9f);
+                b.Tri(nose, rootFront, tail);
+                b.Tri(rootFront, rootBack, tail);
+
+                // Main wing, set back with a slight upward tip.
+                Vector3 tipFront = new Vector3(0.9f * side, 0.1f, -0.45f);
+                Vector3 tipBack = new Vector3(0.95f * side, 0.1f, -0.8f);
+                b.Tri(rootFront, tipFront, tipBack);
+                b.Tri(rootFront, tipBack, rootBack);
+
+                // The canard: a small delta wing near the nose.
+                Vector3 c1 = new Vector3(0.06f * side, 0.02f, 0.75f);
+                Vector3 c2 = new Vector3(0.38f * side, 0.06f, 0.5f);
+                Vector3 c3 = new Vector3(0.08f * side, 0.02f, 0.45f);
+                b.Tri(c1, c2, c3);
+            }
+
+            // Keel underneath for grip.
+            b.Tri(nose, tail, new Vector3(0f, -0.22f, -0.6f));
+            return b.Build("PaperCanard");
+        }
+
         class Builder
         {
             readonly List<Vector3> verts = new List<Vector3>();
