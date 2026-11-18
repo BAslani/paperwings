@@ -42,7 +42,8 @@ namespace PaperWings.UI
 
         void Start()
         {
-            if (route == null) route = FindAnyObjectByType<RaceRoute>();
+            // Include inactive: game modes switch the route on and off.
+            if (route == null) route = FindAnyObjectByType<RaceRoute>(FindObjectsInactive.Include);
             if (route != null) route.RingPassed += _ => ringFlash = 1f;
 
             if (plane != null) paper = plane.GetComponent<PaperDamage>();
@@ -67,6 +68,9 @@ namespace PaperWings.UI
 
         void OnAnyHit(PlaneController shooter, GameObject victim) { if (shooter == plane) hitFlash = 1f; }
         void OnKill(int kills) => killFlash = 1f;
+
+        /// <summary>True when the ring route exists and is switched on (e.g. in Ring Run mode).</summary>
+        bool RouteActive => route != null && route.isActiveAndEnabled && route.RingCount > 0;
 
         static readonly Color Green = new Color(0.45f, 1f, 0.35f);
         static readonly Color Yellow = new Color(1f, 0.82f, 0.3f);
@@ -101,7 +105,7 @@ namespace PaperWings.UI
             EnsureStyles();
 
             if (showPanel) DrawPanel();
-            if (route != null && route.RingCount > 0)
+            if (RouteActive)
             {
                 DrawRoutePanel();
                 DrawNextTargetPointer();
@@ -479,15 +483,22 @@ namespace PaperWings.UI
 
             DrawBossBar();
 
-            if (plane.State == PlaneState.Flying && gun != null) DrawReticle(cam);
-            if (plane.State == PlaneState.Flying && planeInput != null && planeInput.IsMouseAim) DrawMouseAimMarker(cam);
-            if (plane.State == PlaneState.Flying && pencils != null) DrawPencilLock(cam);
+            bool flying = plane.State == PlaneState.Flying;
+            if (flying && gun != null) DrawReticle(cam);
             else reticleValid = false;
+            if (flying && planeInput != null && planeInput.IsMouseAim) DrawMouseAimMarker(cam);
+            if (flying && pencils != null) DrawPencilLock(cam);
 
-            // Kills counter (top-right, under the route panel if there is one).
-            float ky = (route != null && route.RingCount > 0 ? 120 : 10) * scale;
-            GUI.Label(new Rect(Screen.width - 290 * scale, ky, 280 * scale, 30 * scale),
-                      $"<size={Px(20)}>Rivals shot down: <b>{CombatScore.Kills}</b></size>", panelText);
+            // Kills counter (top-right, under the route panel if there is one), only when there's
+            // something to fight.
+            bool enemiesAround = false;
+            foreach (var t in CombatTarget.All) if (!t.IsPlayerSide) { enemiesAround = true; break; }
+            if (enemiesAround)
+            {
+                float ky = (RouteActive ? 120 : 10) * scale;
+                GUI.Label(new Rect(Screen.width - 290 * scale, ky, 280 * scale, 30 * scale),
+                          $"<size={Px(20)}>Rivals shot down: <b>{CombatScore.Kills}</b></size>", panelText);
+            }
 
             if (killFlash > 0f)
             {

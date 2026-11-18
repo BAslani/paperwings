@@ -80,6 +80,18 @@ namespace PaperWings.Combat
         }
 
         void OnEnable() { Active = this; StartCoroutine(Brain()); }
+
+        /// <summary>Full health, jaw shut, attack loop restarted. Used when a Boss Fight begins.</summary>
+        public void ResetFight()
+        {
+            StopAllCoroutines();   // cancels any pending rematch timer or attack in progress
+            ResetBoss();
+            jawOpen01 = 0f;
+            wasAwake = false;
+            SlamWarning = false;
+            Waking = false;
+            if (isActiveAndEnabled) StartCoroutine(Brain());
+        }
         void OnDisable() { if (Active == this) Active = null; }
 
         void ResetBoss()

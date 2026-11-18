@@ -7,7 +7,8 @@ namespace PaperWings.Combat
     /// Spawns one rival plane here, already flying, and respawns it a few seconds after it goes
     /// down. If the player's staples caused it, the player scores a kill.
     /// Place the spawner where you want the rival to patrol (it circles this point).
-    /// To turn rivals off, just disable the spawners (or their parent "Combat" object).
+    /// To turn rivals off, disable the spawners (or their parent "Combat" object): the rival
+    /// is removed with it, and a fresh one appears when the spawner is enabled again.
     /// </summary>
     public class EnemySpawner : MonoBehaviour
     {
@@ -23,7 +24,9 @@ namespace PaperWings.Combat
         PaperDamage currentPaper;
         float respawnAt;
 
-        void Start()
+        // UNITY NOTE: OnEnable/OnDisable run every time the object is switched on/off (Start only
+        // runs once), so spawning here makes game modes able to toggle rivals cleanly.
+        void OnEnable()
         {
             if (rivalPrefab == null) { enabled = false; return; }
             var go = Instantiate(rivalPrefab, transform.position, transform.rotation);
@@ -38,9 +41,16 @@ namespace PaperWings.Combat
             respawnAt = Time.time + firstSpawnDelay;
         }
 
-        void OnDestroy()
+        void OnDisable()
         {
-            if (Current != null) Current.Downed -= OnRivalDowned;
+            // Take our rival with us (it's a separate object in the scene, not a child).
+            if (Current != null)
+            {
+                Current.Downed -= OnRivalDowned;
+                Destroy(Current.gameObject);
+            }
+            Current = null;
+            currentPaper = null;
         }
 
         void OnRivalDowned(bool crash)

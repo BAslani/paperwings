@@ -42,6 +42,9 @@ namespace PaperWings.Flight
         public bool InvertPitch => controls != null && controls.invertPitch;
         public bool IsMouseAim => controls != null && controls.scheme == ControlScheme.MouseAim;
 
+        /// <summary>Set by menus: keeps the cursor free while a menu is open.</summary>
+        public static bool CursorBlocked { get; set; }
+
         /// <summary>World direction the mouse is aiming (mouse-aim scheme).</summary>
         public Vector3 AimDirection => Quaternion.Euler(-aimPitch, aimYaw, 0f) * Vector3.forward;
         public float AimYaw => aimYaw;
@@ -137,7 +140,7 @@ namespace PaperWings.Flight
                 controls.scheme = IsMouseAim ? ControlScheme.Classic : ControlScheme.MouseAim;
 
             UpdateMouseAim();
-            SetCursorCaptured(IsMouseAim && controls.lockCursor && Application.isFocused);
+            SetCursorCaptured(IsMouseAim && controls.lockCursor && Application.isFocused && !CursorBlocked);
         }
 
         void UpdateMouseAim()

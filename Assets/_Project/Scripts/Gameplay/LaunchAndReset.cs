@@ -34,6 +34,16 @@ namespace PaperWings.Gameplay
         [Tooltip("After a successful landing, auto-reset after this long (or press Throw to go again sooner).")]
         [SerializeField] float resetDelayAfterLanding = 6.0f;
 
+        // Set by menus. Stays blocked for one extra frame after unblocking, so the key that
+        // closed the menu can't also start a throw.
+        static bool inputBlocked;
+        static int unblockFrame = -1;
+        public static bool InputBlocked
+        {
+            get => inputBlocked || Time.frameCount <= unblockFrame;
+            set { if (inputBlocked && !value) unblockFrame = Time.frameCount + 1; inputBlocked = value; }
+        }
+
         public float Charge01 { get; private set; }
         public bool IsCharging { get; private set; }
 
@@ -64,6 +74,8 @@ namespace PaperWings.Gameplay
 
         void Update()
         {
+            if (InputBlocked) return;   // a menu is open
+
             if (input != null && input.ResetPressed)
             {
                 ResetToStart();
@@ -109,7 +121,8 @@ namespace PaperWings.Gameplay
             aimPitch = Mathf.Clamp(aimPitch + pitchDelta, -aimMaxPitch, aimMaxPitch);
 
             bool held = input != null && input.ThrowHeld;
-            if (held)
+            // Only a FRESH press starts a wind-up (a key still held from a menu shouldn't throw).
+            if (held && (IsCharging || input.ThrowPressed))
             {
                 IsCharging = true;
                 Charge01 = Mathf.MoveTowards(Charge01, 1f, Time.deltaTime / Mathf.Max(0.01f, s.throwChargeTime));
