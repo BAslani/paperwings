@@ -17,7 +17,7 @@ namespace PaperWings.Combat
         [SerializeField] TrailRenderer smokeTrail;
 
         public Phase CurrentPhase { get; private set; } = Phase.Mounted;
-        public PlaneController Target { get; private set; }
+        public CombatTarget Target { get; private set; }
 
         PlaneController owner;
         PencilSettings settings;
@@ -32,7 +32,7 @@ namespace PaperWings.Combat
         }
 
         /// <summary>Detach from the wing and go after 'target'.</summary>
-        public void Launch(PlaneController shooter, PlaneController target, PencilSettings pencilSettings)
+        public void Launch(PlaneController shooter, CombatTarget target, PencilSettings pencilSettings)
         {
             owner = shooter;
             Target = target;
@@ -70,57 +70,34 @@ namespace PaperWings.Combat
                 if (TargetAlive)
                 {
                     // Aim at the lead point and turn toward it, but only so fast.
-                    float travel = Vector3.Distance(transform.position, Target.transform.position) / Mathf.Max(speed, 1f);
-                    Vector3 lead = Target.transform.position + Target.Velocity * travel;
+                    float travel = Vector3.Distance(transform.position, Target.Position) / Mathf.Max(speed, 1f);
+                    Vector3 lead = Target.Position + Target.Velocity * travel;
                     Vector3 desired = (lead - transform.position).normalized;
                     forward = Vector3.RotateTowards(forward, desired, settings.turnRate * Mathf.Deg2Rad * dt, 0f);
                     transform.rotation = Quaternion.LookRotation(forward);
 
-                    if (Vector3.Distance(transform.position, Target.transform.position) < settings.proximityFuse)
+                    // Proximity fuse: near misses still count.
+                    if (Vector3.Distance(transform.position, Target.Position) < settings.proximityFuse)
                     {
-                        Hit(Target);
+                        Projectiles.ApplyHit(Target, settings.damage, owner, true);
+                        Destroy(gameObject);
                         return;
                     }
                 }
                 velocity = forward * speed;
             }
 
-            MoveAndCollide(velocity * dt);
-        }
-
-        bool TargetAlive => Target != null && Target.State == PlaneState.Flying;
-
-        /// <summary>Moves, raycasting along the way so fast pencils can't pass through things.</summary>
-        void MoveAndCollide(Vector3 step)
-        {
-            float dist = step.magnitude;
-            if (dist < 1e-5f) return;
-
-            var hits = Physics.RaycastAll(transform.position, step / dist, dist, ~0, QueryTriggerInteraction.Ignore);
-            float best = float.MaxValue;
-            Collider nearest = null;
-            foreach (var h in hits)
+            // Move, sweeping for anything in the way (the desk, a book, a plane, the boss...).
+            Vector3 step = velocity * dt;
+            if (Projectiles.SweepHit(transform.position, step, owner != null ? owner.transform : null, out RaycastHit hit))
             {
-                if (owner != null && h.collider.GetComponentInParent<PlaneController>() == owner) continue;
-                if (h.distance < best) { best = h.distance; nearest = h.collider; }
-            }
-
-            if (nearest != null)
-            {
-                var victim = nearest.GetComponentInParent<PlaneController>();
-                if (victim != null) Hit(victim);
-                else Destroy(gameObject);   // hit the desk, a book, the floor...
+                Projectiles.ApplyHit(hit.collider, settings.damage, owner, true);
+                Destroy(gameObject);
                 return;
             }
             transform.position += step;
         }
 
-        void Hit(PlaneController victim)
-        {
-            var paper = victim.GetComponent<PaperDamage>();
-            if (paper != null) paper.ApplyDamage(settings.damage, owner);
-            CombatScore.ReportHit(owner, victim);
-            Destroy(gameObject);
-        }
+        bool TargetAlive => Target != null && Target.IsAlive;
     }
 }

@@ -62,9 +62,10 @@ namespace PaperWings.UI
             // Static events outlive this object: always unsubscribe.
             CombatScore.AnyHit -= OnAnyHit;
             CombatScore.KillScored -= OnKill;
+            if (boss != null) { boss.Damaged -= OnBossDamaged; boss.Defeated -= OnBossDefeated; }
         }
 
-        void OnAnyHit(PlaneController shooter, PlaneController victim) { if (shooter == plane) hitFlash = 1f; }
+        void OnAnyHit(PlaneController shooter, GameObject victim) { if (shooter == plane) hitFlash = 1f; }
         void OnKill(int kills) => killFlash = 1f;
 
         static readonly Color Green = new Color(0.45f, 1f, 0.35f);
@@ -81,6 +82,8 @@ namespace PaperWings.UI
             hitFlash = Mathf.MoveTowards(hitFlash, 0f, Time.deltaTime * 4f);
             killFlash = Mathf.MoveTowards(killFlash, 0f, Time.deltaTime * 0.8f);
             noLockFlash = Mathf.MoveTowards(noLockFlash, 0f, Time.deltaTime * 1.5f);
+            bossHitFlash = Mathf.MoveTowards(bossHitFlash, 0f, Time.deltaTime * 2.5f);
+            bossDefeatFlash = Mathf.MoveTowards(bossDefeatFlash, 0f, Time.deltaTime * 0.3f);
         }
 
         float HeightAboveSurface()
@@ -250,10 +253,10 @@ namespace PaperWings.UI
             // Brackets around the locked rival itself (the ring sits on the lead point, ahead of it).
             if (locked)
             {
-                Vector3 tp = cam.WorldToScreenPoint(gun.LockTarget.transform.position);
+                Vector3 tp = cam.WorldToScreenPoint(gun.LockTarget.Position);
                 if (tp.z > 0f)
                 {
-                    float dist = Vector3.Distance(cam.transform.position, gun.LockTarget.transform.position);
+                    float dist = Vector3.Distance(cam.transform.position, gun.LockTarget.Position);
                     float half = Mathf.Clamp(900f / dist, 14f, 60f) * scale;
                     DrawBrackets(new Vector2(tp.x, Screen.height - tp.y), half, c);
                 }
@@ -272,6 +275,75 @@ namespace PaperWings.UI
 
         string AmmoText() => gun.Unlimited ? "" : $"<color=#DDDDDD>{gun.Ammo}</color>";
 
+        // ------------------------------------------------------------------ boss
+
+        StaplerBoss boss;
+        float bossHitFlash, lastBossHit, bossDefeatFlash;
+        bool lastBossHitWeak;
+
+        void HookBoss()
+        {
+            if (boss != null || StaplerBoss.Active == null) return;
+            boss = StaplerBoss.Active;
+            boss.Damaged += OnBossDamaged;
+            boss.Defeated += OnBossDefeated;
+        }
+
+        void OnBossDamaged(float dealt, bool weak) { bossHitFlash = 1f; lastBossHit = dealt; lastBossHitWeak = weak; }
+        void OnBossDefeated() => bossDefeatFlash = 1f;
+
+        /// <summary>
+        /// Boss health bar across the top: name, phase markers, and a status line that teaches the
+        /// fight ("ARMORED", "WEAK SPOT OPEN!", "SLAM INCOMING!"). Hit pops show x2 vs CLINK.
+        /// </summary>
+        void DrawBossBar()
+        {
+            HookBoss();
+            if (boss == null || boss.Settings == null) return;
+            BossSettings bs = boss.Settings;
+
+            bool near = Vector3.Distance(plane.transform.position, boss.transform.position) < bs.aggroRange * 1.3f;
+            if (bossDefeatFlash > 0f)
+            {
+                GUI.color = new Color(1f, 0.85f, 0.3f, Mathf.Clamp01(bossDefeatFlash * 2f));
+                GUI.Label(new Rect(0, Screen.height * 0.36f, Screen.width, 70 * scale), $"<size={Px(56)}><b>BOSS DEFEATED!</b></size>", big);
+                GUI.color = Color.white;
+            }
+            if (boss.IsDefeated || !(boss.IsAwake || near)) return;
+
+            float w = 620 * scale;
+            float x = (Screen.width - w) * 0.5f, y = 64 * scale;
+            GUI.Label(new Rect(x, y, w, 30 * scale),
+                      $"<size={Px(22)}><b><color=#FF9030>{bs.displayName}</color></b>  <color=#BBB>{bs.title}</color>   <color=#888>phase {boss.Phase}</color></size>", big);
+            y += 30 * scale;
+
+            Color barColor = boss.WeakSpotOpen ? new Color(1f, 0.8f, 0.2f) : new Color(0.9f, 0.4f, 0.2f);
+            if (bossHitFlash > 0f) barColor = Color.Lerp(barColor, Color.white, bossHitFlash * 0.7f);
+            // Phase markers show where the fight escalates.
+            Bar(ref y, x, w, boss.Health01, barColor, bs.phase2At, Color.white, bs.phase3At, Color.white, 14);
+
+            string status;
+            if (boss.Waking)
+                status = "<color=#FF9030><b>IT'S WAKING UP...</b></color>";
+            else if (boss.SlamWarning)
+                status = $"<color=#FF4030><b>SLAM INCOMING!  get clear!</b></color>";
+            else if (boss.WeakSpotOpen)
+                status = $"<color=#FFD040><b>WEAK SPOT OPEN!  x{bs.weakSpotMultiplier:0}</b></color>";
+            else
+                status = "<color=#AAAAAA>ARMORED: dodge, then hit it when the jaw opens</color>";
+            GUI.Label(new Rect(x, y, w, 26 * scale), $"<size={Px(17)}>{status}</size>", big);
+
+            // Hit pop to the right of the bar.
+            if (bossHitFlash > 0f)
+            {
+                string pop = lastBossHitWeak ? $"<color=#FFD040><b>-{Mathf.RoundToInt(lastBossHit)}  x2!</b></color>" : "<color=#999999><b>CLINK</b></color>";
+                GUI.color = new Color(1f, 1f, 1f, bossHitFlash);
+                GUI.Label(new Rect(x + w + 10 * scale, 90 * scale - 20 * scale * (1f - bossHitFlash), 200 * scale, 30 * scale),
+                          $"<size={Px(22)}>{pop}</size>", panelText);
+                GUI.color = Color.white;
+            }
+        }
+
         /// <summary>
         /// Pencil lock-on: a yellow box that closes in on the rival while locking, then snaps
         /// tight and turns red with "LOCKED" when you can fire. "NO LOCK" flashes if you fire too early.
@@ -280,7 +352,7 @@ namespace PaperWings.UI
         {
             if (pencils.Candidate != null)
             {
-                Vector3 tp = cam.WorldToScreenPoint(pencils.Candidate.transform.position);
+                Vector3 tp = cam.WorldToScreenPoint(pencils.Candidate.Position);
                 if (tp.z > 0f)
                 {
                     Vector2 c = new Vector2(tp.x, Screen.height - tp.y);
@@ -364,22 +436,25 @@ namespace PaperWings.UI
             Camera cam = Camera.main;
             if (cam == null) return;
 
-            // Rival markers (only while you're flying or about to throw).
+            // Enemy markers (only while you're flying or about to throw): rivals in red, the boss in orange.
             if (plane.State == PlaneState.Flying || plane.State == PlaneState.Held)
             {
-                foreach (var other in PlaneController.All)
+                foreach (var t in CombatTarget.All)
                 {
-                    if (other.IsPlayer || other.State != PlaneState.Flying) continue;
-                    float dist = Vector3.Distance(plane.transform.position, other.transform.position);
-                    Vector2? gui = DrawWorldMarker(cam, other.transform.position, "#FF5040", $"[  ]  {dist:0}", $"RIVAL  {dist:0}", -14f);
-                    var otherPaper = other.GetComponent<PaperDamage>();
-                    if (gui.HasValue && otherPaper != null)
+                    if (t.IsPlayerSide || !t.IsAlive) continue;
+                    float dist = Vector3.Distance(plane.transform.position, t.Position);
+                    string color = t.IsBoss ? "#FF9030" : "#FF5040";
+                    string tag = t.IsBoss ? "BOSS" : "RIVAL";
+                    Vector2? gui = DrawWorldMarker(cam, t.Position, color, $"[  ]  {dist:0}", $"{tag}  {dist:0}", -14f);
+                    if (gui.HasValue && !t.IsBoss)   // boss health lives in the big bar at the top
                     {
                         float bw = 60 * scale, by = gui.Value.y + 18 * scale;
-                        Bar(ref by, gui.Value.x - bw * 0.5f, bw, otherPaper.Integrity01, Red, 0f, Color.clear, 0f, Color.clear, 5);
+                        Bar(ref by, gui.Value.x - bw * 0.5f, bw, t.Health01, Red, 0f, Color.clear, 0f, Color.clear, 5);
                     }
                 }
             }
+
+            DrawBossBar();
 
             if (plane.State == PlaneState.Flying && gun != null) DrawReticle(cam);
             if (plane.State == PlaneState.Flying && pencils != null) DrawPencilLock(cam);

@@ -15,7 +15,7 @@ namespace PaperWings.Flight
     /// It never touches FlightSettings. It writes PlaneController.Modifiers each frame instead.
     /// </summary>
     [RequireComponent(typeof(PlaneController))]
-    public class PaperDamage : MonoBehaviour
+    public class PaperDamage : MonoBehaviour, Combat.IDamageable
     {
         [SerializeField] PaperSettings settings;
         [Tooltip("The dart's visual mesh (on the 'Visual' child). It gets crumpled at runtime.")]
@@ -27,6 +27,10 @@ namespace PaperWings.Flight
 
         public float Integrity01 => settings != null ? integrity / settings.maxIntegrity : 1f;
         public float Wetness01 => wetness;
+
+        // IDamageable: lets staples, pencils and bosses hurt paper planes.
+        public bool IsAlive => plane != null && plane.State == PlaneState.Flying;
+        public float Health01 => Integrity01;
 
         PlaneController plane;
         Renderer visualRenderer;

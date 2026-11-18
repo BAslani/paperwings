@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 8872655972308962824}
   - component: {fileID: 6583826741200295474}
   - component: {fileID: 3473368317618758421}
+  - component: {fileID: 1006694002379090355}
   m_Layer: 0
   m_Name: RivalDart
   m_TagString: Untagged
@@ -161,6 +162,21 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: aa31a8b333d92784490ba6f26f2c6406, type: 2}
   visualMesh: {fileID: 1898401565762347649}
   tearBits: {fileID: 2422815779728345543}
+--- !u!114 &1006694002379090355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1710425629290548815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f78fa6cc054cc634abdc257e0f8a5fa3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.CombatTarget
+  displayName: Rival
+  isBoss: 0
+  aimPoint: {fileID: 0}
 --- !u!1 &2425711353659723294
 GameObject:
   m_ObjectHideFlags: 0

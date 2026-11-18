@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 2539436628238235410}
   - component: {fileID: 1872271842463635514}
   - component: {fileID: 1148123210511282326}
+  - component: {fileID: 7061810030671369210}
   m_Layer: 0
   m_Name: PaperDart
   m_TagString: Untagged
@@ -215,6 +216,21 @@ MonoBehaviour:
   - {fileID: 7334378487651302228}
   - {fileID: 4491184639697930855}
   - {fileID: 427749294207264927}
+--- !u!114 &7061810030671369210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 326196553689726882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f78fa6cc054cc634abdc257e0f8a5fa3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.CombatTarget
+  displayName: You
+  isBoss: 0
+  aimPoint: {fileID: 0}
 --- !u!1 &741871919941375625
 GameObject:
   m_ObjectHideFlags: 0

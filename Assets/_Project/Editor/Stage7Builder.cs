@@ -25,7 +25,7 @@ namespace PaperWings.EditorTools
         const string PlanePrefabPath = "Assets/_Project/Prefabs/PaperDart.prefab";
         static readonly string[] Scenes = { "Assets/_Project/Scenes/FlightTest.unity", "Assets/_Project/Scenes/DeskPrototype.unity" };
 
-        [MenuItem("PaperWings/Build Stage 7 (Folds)")]
+        [MenuItem("PaperWings/Build Stage 7 (Folds)", priority = 107)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

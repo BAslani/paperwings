@@ -31,7 +31,7 @@ namespace PaperWings.EditorTools
         const string RivalPrefabPath = P + "RivalDart.prefab";
         const string PlanePrefabPath = P + "PaperDart.prefab";
 
-        [MenuItem("PaperWings/Build Stage 8 (Combat)")]
+        [MenuItem("PaperWings/Build Stage 8 (Combat)", priority = 108)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

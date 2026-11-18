@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f74b383a3195244d95bf6fb129a2c7b, type: 3}
   m_Name: Controls
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.ControlSettings
-  invertPitch: 1
+  invertPitch: 0

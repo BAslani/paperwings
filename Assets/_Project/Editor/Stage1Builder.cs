@@ -30,7 +30,7 @@ namespace PaperWings.EditorTools
         const string PrefabPath = Root + "/Prefabs/PaperDart.prefab";
         const string ScenePath = Root + "/Scenes/FlightTest.unity";
 
-        [MenuItem("PaperWings/Build Stage 1 (Flight Test Scene)")]
+        [MenuItem("PaperWings/Build Stage 1 (Flight Test Scene)", priority = 101)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

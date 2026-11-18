@@ -30,7 +30,7 @@ namespace PaperWings.EditorTools
         const float DeskTop = 30f;
         const float CeilingY = 95f;
 
-        [MenuItem("PaperWings/Build Stage 5 (Steam, Vent, Ring Route)")]
+        [MenuItem("PaperWings/Build Stage 5 (Steam, Vent, Ring Route)", priority = 105)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(DeskScene) == null)
@@ -210,7 +210,7 @@ namespace PaperWings.EditorTools
             Ring(ringPrefab, routeGo.transform, "Ring1_ThermalEntry", P(-21f, 6f, -8f), 76f);
             Ring(ringPrefab, routeGo.transform, "Ring2_ThermalTop", P(-14f, 33f, 3f), 90f);
             Ring(ringPrefab, routeGo.transform, "Ring3_OverMonitor", P(8f, 22f, 14f), 90f);
-            Ring(ringPrefab, routeGo.transform, "Ring4_FanStream", P(18f, 6.5f, 6f), 150f);
+            Ring(ringPrefab, routeGo.transform, "Ring4_FanStream", P(18f, 6f, 1f), 150f);   // clear of the boss jaw (Stage 10)
             Ring(ringPrefab, routeGo.transform, "Ring5_SteamTop", P(9f, 28f, -4f), 90f);
 
             EditorSceneManager.SaveScene(scene);

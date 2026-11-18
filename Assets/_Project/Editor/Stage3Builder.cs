@@ -32,7 +32,7 @@ namespace PaperWings.EditorTools
 
         const float DeskTop = 30f;
 
-        [MenuItem("PaperWings/Build Stage 3 (Desk Prototype Scene)")]
+        [MenuItem("PaperWings/Build Stage 3 (Desk Prototype Scene)", priority = 103)]
         public static void Build()
         {
             var planePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlanePrefabPath);

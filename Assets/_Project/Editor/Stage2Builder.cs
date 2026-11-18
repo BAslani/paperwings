@@ -23,7 +23,7 @@ namespace PaperWings.EditorTools
         const string ThermalPrefabPath = Root + "/Prefabs/LaptopThermal.prefab";
         const string FlightTestScene = Root + "/Scenes/FlightTest.unity";
 
-        [MenuItem("PaperWings/Build Stage 2 (Air Sources in Flight Test)")]
+        [MenuItem("PaperWings/Build Stage 2 (Air Sources in Flight Test)", priority = 102)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(FlightTestScene) == null)

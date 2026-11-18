@@ -21,8 +21,8 @@ namespace PaperWings.Combat
         public bool Unlimited => settings != null && settings.clipSize <= 0;
 
         // ---- Aim info, updated every frame (the HUD reticle reads these) ----
-        /// <summary>The rival aim assist is currently locked onto (null if none).</summary>
-        public PlaneController LockTarget { get; private set; }
+        /// <summary>The target aim assist is currently locked onto (null if none): a rival, a boss...</summary>
+        public CombatTarget LockTarget { get; private set; }
         /// <summary>Where a staple fired now would go: the lead point on the locked target, or straight ahead.</summary>
         public Vector3 AimPoint { get; private set; }
         /// <summary>Distance at which the unlocked reticle is drawn ahead of the nose.</summary>
@@ -92,39 +92,29 @@ namespace PaperWings.Combat
 
             // Straight ahead, or at the lead point if aim assist has a target.
             Vector3 origin = MuzzlePosition;
-            PlaneController target = FindAssistTarget(origin);
+            CombatTarget target = FindAssistTarget(origin);
             Vector3 dir = target != null ? (LeadPoint(origin, target) - origin).normalized : plane.transform.forward;
             dir = Quaternion.Euler(Random.Range(-settings.spread, settings.spread), Random.Range(-settings.spread, settings.spread), 0f) * dir;
 
             var staple = Instantiate(projectilePrefab, origin, Quaternion.LookRotation(dir));
-            staple.Launch(plane, plane.Velocity + dir * settings.projectileSpeed, settings.damage, settings.projectileLifetime);
+            staple.Launch(plane, plane.transform, plane.IsPlayer,
+                          plane.Velocity + dir * settings.projectileSpeed, settings.damage, settings.projectileLifetime);
             return true;
         }
 
-        /// <summary>The closest-to-the-nose opponent inside the assist cone and range, or null.</summary>
-        PlaneController FindAssistTarget(Vector3 origin)
+        /// <summary>The closest-to-the-nose opponent (plane or boss) inside the assist cone and range, or null.</summary>
+        CombatTarget FindAssistTarget(Vector3 origin)
         {
             if (settings.aimAssistAngle <= 0f || plane.State != PlaneState.Flying) return null;
-            Vector3 forward = plane.transform.forward;
-
-            PlaneController best = null;
-            float bestAngle = settings.aimAssistAngle;
-            foreach (var other in PlaneController.All)
-            {
-                if (other == plane || other.IsPlayer == plane.IsPlayer || other.State != PlaneState.Flying) continue;
-                Vector3 to = other.transform.position - origin;
-                if (to.magnitude > settings.aimAssistRange) continue;
-                float angle = Vector3.Angle(forward, to);
-                if (angle < bestAngle) { bestAngle = angle; best = other; }
-            }
-            return best;
+            return CombatTarget.FindBestInCone(origin, plane.transform.forward, settings.aimAssistAngle,
+                                               settings.aimAssistRange, wantPlayerSide: !plane.IsPlayer);
         }
 
         /// <summary>Where the target WILL be when a staple gets there (its position + velocity x travel time).</summary>
-        Vector3 LeadPoint(Vector3 origin, PlaneController target)
+        Vector3 LeadPoint(Vector3 origin, CombatTarget target)
         {
-            float travelTime = Vector3.Distance(origin, target.transform.position) / settings.projectileSpeed;
-            return target.transform.position + target.Velocity * travelTime;
+            float travelTime = Vector3.Distance(origin, target.Position) / settings.projectileSpeed;
+            return target.Position + target.Velocity * travelTime;
         }
     }
 }

@@ -21,8 +21,8 @@ namespace PaperWings.Combat
         [Tooltip("Mount points under the wings, in firing order (alternate sides so it stays balanced).")]
         [SerializeField] Transform[] slots;
 
-        /// <summary>The rival being locked (or locked). Null if none in front of you.</summary>
-        public PlaneController Candidate { get; private set; }
+        /// <summary>The target being locked (or locked): a rival or a boss. Null if none in front of you.</summary>
+        public CombatTarget Candidate { get; private set; }
         /// <summary>0..1 lock progress on the Candidate.</summary>
         public float LockProgress { get; private set; }
         public bool IsLocked => Candidate != null && LockProgress >= 1f;
@@ -85,23 +85,15 @@ namespace PaperWings.Combat
             LockProgress = 0f;
         }
 
-        PlaneController FindCandidate()
-        {
-            PlaneController best = null;
-            float bestAngle = settings.lockAngle;
-            foreach (var other in PlaneController.All)
-            {
-                if (other == plane || other.IsPlayer || !InCone(other, settings.lockAngle)) continue;
-                float angle = Vector3.Angle(plane.transform.forward, other.transform.position - plane.transform.position);
-                if (angle < bestAngle) { bestAngle = angle; best = other; }
-            }
-            return best;
-        }
+        // Any enemy-side CombatTarget can be locked: rival planes, bosses...
+        CombatTarget FindCandidate() =>
+            CombatTarget.FindBestInCone(plane.transform.position, plane.transform.forward,
+                                        settings.lockAngle, settings.lockRange, wantPlayerSide: false);
 
-        bool InCone(PlaneController other, float angle)
+        bool InCone(CombatTarget other, float angle)
         {
-            if (other == null || other.State != PlaneState.Flying) return false;
-            Vector3 to = other.transform.position - plane.transform.position;
+            if (other == null || !other.IsAlive) return false;
+            Vector3 to = other.Position - plane.transform.position;
             return to.magnitude <= settings.lockRange && Vector3.Angle(plane.transform.forward, to) <= angle;
         }
 

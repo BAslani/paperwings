@@ -14,7 +14,7 @@ namespace PaperWings.Combat
         public static event Action<int> KillScored;
 
         /// <summary>Fired whenever any projectile (staple, pencil...) hits a plane. Args: shooter, victim.</summary>
-        public static event Action<Flight.PlaneController, Flight.PlaneController> AnyHit;
+        public static event Action<Flight.PlaneController, GameObject> AnyHit;
 
         public static void AddKill()
         {
@@ -22,7 +22,7 @@ namespace PaperWings.Combat
             KillScored?.Invoke(Kills);
         }
 
-        public static void ReportHit(Flight.PlaneController shooter, Flight.PlaneController victim) => AnyHit?.Invoke(shooter, victim);
+        public static void ReportHit(Flight.PlaneController shooter, GameObject victim) => AnyHit?.Invoke(shooter, victim);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()

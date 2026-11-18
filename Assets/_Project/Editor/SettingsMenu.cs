@@ -46,6 +46,8 @@ namespace PaperWings.EditorTools
         // Combat
         [MenuItem("PaperWings/Settings/Combat - Player Staples", priority = 40)]
         static void PlayerWeapon() => Open("Weapon_PlayerStaples.asset");
+        [MenuItem("PaperWings/Settings/Combat - Boss (The Stapler)", priority = 39)]
+        static void Boss() => Open("Boss_Stapler.asset");
         [MenuItem("PaperWings/Settings/Combat - Pencil Missiles", priority = 40)]
         static void Pencils() => Open("Pencils.asset");
         [MenuItem("PaperWings/Settings/Combat - Rival Staples", priority = 41)]
