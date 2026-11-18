@@ -58,6 +58,7 @@ namespace PaperWings.Combat
                 if (phaseTimer <= 0f)
                 {
                     CurrentPhase = Phase.Homing;
+                    Audio.AudioFx.PlayAt(Audio.Sfx.PencilLaunch, transform.position, 1f);   // ignition whoosh
                     speed = velocity.magnitude;
                     if (smokeTrail != null) { smokeTrail.Clear(); smokeTrail.emitting = true; }
                 }
@@ -79,7 +80,7 @@ namespace PaperWings.Combat
                     // Proximity fuse: near misses still count.
                     if (Vector3.Distance(transform.position, Target.Position) < settings.proximityFuse)
                     {
-                        Projectiles.ApplyHit(Target, settings.damage, owner, true);
+                        Projectiles.ApplyHit(Target, settings.damage, owner, true, Audio.Sfx.PencilImpact);
                         Destroy(gameObject);
                         return;
                     }
@@ -91,7 +92,8 @@ namespace PaperWings.Combat
             Vector3 step = velocity * dt;
             if (Projectiles.SweepHit(transform.position, step, owner != null ? owner.transform : null, out RaycastHit hit))
             {
-                Projectiles.ApplyHit(hit.collider, settings.damage, owner, true);
+                if (!Projectiles.ApplyHit(hit.collider, settings.damage, owner, true, Audio.Sfx.PencilImpact))
+                    Audio.AudioFx.PlayAt(Audio.Sfx.PencilImpact, hit.point, 0.6f, 0.85f);   // thudded into the scenery
                 Destroy(gameObject);
                 return;
             }

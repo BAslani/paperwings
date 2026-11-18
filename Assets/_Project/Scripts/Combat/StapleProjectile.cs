@@ -69,7 +69,8 @@ namespace PaperWings.Combat
         }
 
         /// <summary>Damages what was hit if it's damageable and on the other side. Returns true if it took damage.</summary>
-        public static bool ApplyHit(Component hit, float damage, PlaneController shooterPlane, bool firedByPlayerSide)
+        public static bool ApplyHit(Component hit, float damage, PlaneController shooterPlane, bool firedByPlayerSide,
+                                    Audio.Sfx hitSound = Audio.Sfx.StapleHit)
         {
             var damageable = hit.GetComponentInParent<IDamageable>();
             if (damageable == null || !damageable.IsAlive) return false;
@@ -78,6 +79,7 @@ namespace PaperWings.Combat
             if (side.HasValue && side.Value == firedByPlayerSide) return false;   // no friendly fire
 
             damageable.ApplyDamage(damage, shooterPlane);
+            Audio.AudioFx.PlayAt(hitSound, ((Component)damageable).transform.position, 0.9f);
             CombatScore.ReportHit(shooterPlane, ((Component)damageable).gameObject);
             return true;
         }

@@ -97,6 +97,9 @@ namespace PaperWings.Combat
             dir = Quaternion.Euler(Random.Range(-settings.spread, settings.spread), Random.Range(-settings.spread, settings.spread), 0f) * dir;
 
             var staple = Instantiate(projectilePrefab, origin, Quaternion.LookRotation(dir));
+            // Sound: your own gun in your ears, rivals' guns from where they are.
+            if (plane.IsPlayer) Audio.AudioFx.Play(Audio.Sfx.StapleFire, 0.45f);
+            else Audio.AudioFx.PlayAt(Audio.Sfx.StapleFire, origin, 0.9f, 0.85f);
             staple.Launch(plane, plane.transform, plane.IsPlayer,
                           plane.Velocity + dir * settings.projectileSpeed, settings.damage, settings.projectileLifetime);
             return true;

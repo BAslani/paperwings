@@ -60,6 +60,7 @@ namespace PaperWings.UI
         void Choose(int index)
         {
             selected = index;
+            Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
             director.StartMode(Modes[index]);
             Show(Screen.None);
         }
@@ -94,6 +95,7 @@ namespace PaperWings.UI
                     bool down = (kb != null && (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame)) || (pad != null && pad.dpad.down.wasPressedThisFrame);
                     if (up) selected = (selected + Modes.Length - 1) % Modes.Length;
                     if (down) selected = (selected + 1) % Modes.Length;
+                    if (up || down) Audio.AudioFx.PlayUi(Audio.Sfx.UiMove);
                     if (kb != null)
                     {
                         if (kb.digit1Key.wasPressedThisFrame) { Choose(0); break; }

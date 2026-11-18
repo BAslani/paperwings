@@ -212,6 +212,51 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3479678568607705953, guid: b6dee3c8f7353ae4394505ea83ee9d31, type: 3}
   m_PrefabInstance: {fileID: 61246063}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &77202327
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 77202329}
+  - component: {fileID: 77202328}
+  m_Layer: 0
+  m_Name: Audio
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &77202328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 77202327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dce600531b75fb041a471187bec9c3e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Audio.AudioDirector
+  settings: {fileID: 11400000, guid: 3791d8fc15c198545a518492b73f23ed, type: 2}
+--- !u!4 &77202329
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 77202327}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &240974978
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9956,3 +10001,4 @@ SceneRoots:
   - {fileID: 1876056065}
   - {fileID: 1742149957}
   - {fileID: 1142706492}
+  - {fileID: 77202329}

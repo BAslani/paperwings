@@ -153,7 +153,9 @@ namespace PaperWings.Combat
             while (Time.time < end && !IsDefeated)
             {
                 // Chatter the jaw open and shut: "clack-clack-clack".
-                jawTarget = Mathf.Repeat(Time.time, 0.25f) < 0.125f ? 0.18f : 0f;
+                float target = Mathf.Repeat(Time.time, 0.25f) < 0.125f ? 0.18f : 0f;
+                if (target > 0f && jawTarget == 0f) Audio.AudioFx.PlayAt(Audio.Sfx.BossClack, transform.position, 0.8f);
+                jawTarget = target;
                 yield return null;
             }
             jawTarget = 0f;
@@ -165,12 +167,14 @@ namespace PaperWings.Combat
             // Open up (the warning), fire one fan (two from phase 2), linger open (your window), close.
             jawSpeed = settings.jawSpeed;
             jawTarget = 1f;
+            Audio.AudioFx.PlayAt(Audio.Sfx.BossClank, transform.position, 0.9f);   // jaw opening
             yield return new WaitForSeconds(settings.openTelegraph);
 
             int fans = Phase >= 2 ? 2 : 1;
             for (int i = 0; i < fans && !IsDefeated; i++)
             {
                 FireFan(player);
+                Audio.AudioFx.PlayAt(Audio.Sfx.StapleFire, muzzle != null ? muzzle.position : transform.position, 1f, 0.6f);   // big, low "CHUNK"
                 yield return new WaitForSeconds(0.35f);
             }
 
@@ -194,6 +198,7 @@ namespace PaperWings.Combat
             SlamWarning = false;
             if (IsDefeated) yield break;
             if (slamAir != null) slamAir.Pulse(settings.slamDuration);
+            Audio.AudioFx.PlayAt(Audio.Sfx.BossSlam, transform.position, 1f, 1f, 0f);
             if (slamBurst != null) slamBurst.Play();
             yield return new WaitForSeconds(1f);
         }
@@ -231,6 +236,7 @@ namespace PaperWings.Combat
             health = Mathf.Max(0f, health - dealt);
             flash = weak ? 1f : 0.4f;
             Damaged?.Invoke(dealt, weak);
+            if (!weak) Audio.AudioFx.PlayAt(Audio.Sfx.BossClack, transform.position, 0.6f, 2f);   // armor "clink"
 
             if (health <= 0f) Defeat();
         }
@@ -242,6 +248,7 @@ namespace PaperWings.Combat
             jawSpeed = 1.5f;
             jawTarget = 1f;   // slumps open
             if (defeatBurst != null) defeatBurst.Play();
+            Audio.AudioFx.PlayAt(Audio.Sfx.BossDefeated, transform.position, 1f, 1f, 0f);
             if (reinforcements != null) reinforcements.SetActive(false);
             CombatScore.AddKill();
             Defeated?.Invoke();

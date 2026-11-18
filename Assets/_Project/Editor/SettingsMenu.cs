@@ -15,6 +15,9 @@ namespace PaperWings.EditorTools
         [MenuItem("PaperWings/Settings/Controls  - invert pitch", priority = 0)]
         static void Controls() => Open("Controls.asset");
 
+        [MenuItem("PaperWings/Settings/Audio  - volume, mute", priority = 1)]
+        static void AudioMix() => Open("Audio.asset");
+
         [MenuItem("PaperWings/Settings/Camera Feel", priority = 1)]
         static void Camera() => Open("CameraFeel_Chase.asset");
 
