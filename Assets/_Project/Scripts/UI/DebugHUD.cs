@@ -28,11 +28,17 @@ namespace PaperWings.UI
         float scale;
         float ringFlash;   // >0 briefly after passing a ring
         LandingZone landingZone;
+        PaperDamage paper;
+        float damageFlash;      // >0 briefly after taking damage
+        float lastDamage;
 
         void Start()
         {
             if (route == null) route = FindAnyObjectByType<RaceRoute>();
             if (route != null) route.RingPassed += _ => ringFlash = 1f;
+
+            if (plane != null) paper = plane.GetComponent<PaperDamage>();
+            if (paper != null) paper.Damaged += amount => { damageFlash = 1f; lastDamage = amount; };
         }
 
         static readonly Color Green = new Color(0.45f, 1f, 0.35f);
@@ -45,6 +51,7 @@ namespace PaperWings.UI
             // Debug-only shortcut, read straight from the keyboard.
             if (Keyboard.current != null && Keyboard.current.f1Key.wasPressedThisFrame) showPanel = !showPanel;
             ringFlash = Mathf.MoveTowards(ringFlash, 0f, Time.deltaTime * 1.5f);
+            damageFlash = Mathf.MoveTowards(damageFlash, 0f, Time.deltaTime * 1.5f);
         }
 
         float HeightAboveSurface()
@@ -164,7 +171,7 @@ namespace PaperWings.UI
             float h = HeightAboveSurface();
             float boostCd = plane.BoostCooldownRemaining;
 
-            Rect panel = R(10, 10, 440, 330);
+            Rect panel = R(10, 10, 440, 390);
             GUI.color = new Color(0f, 0f, 0f, 0.55f);
             GUI.DrawTexture(panel, Texture2D.whiteTexture);
             GUI.color = Color.white;
@@ -191,6 +198,19 @@ namespace PaperWings.UI
             // Boost cooldown.
             Label(ref y, x, w, line, boostCd <= 0f ? "Boost  <color=#7CFC00><b>READY</b></color>" : $"Boost  {boostCd:0.0}s");
             Bar(ref y, x, w, 1f - boostCd / Mathf.Max(0.01f, s.boostCooldown), boostCd <= 0f ? Green : Cyan);
+
+            // Paper condition: integrity (green -> red) and wetness (blue).
+            if (paper != null)
+            {
+                float p = paper.Integrity01;
+                float wet = paper.Wetness01;
+                string wetText = wet > 0.01f ? $"   <color=#7FB2FF>wet {Mathf.RoundToInt(wet * 100)}%</color>" : "";
+                Label(ref y, x, w, line, $"Paper  <b>{Mathf.RoundToInt(p * 100)}%</b>{wetText}");
+                Color pc = p > 0.6f ? Green : (p > 0.3f ? Yellow : Red);
+                if (damageFlash > 0f) pc = Color.Lerp(pc, Color.white, damageFlash);
+                Bar(ref y, x, w, p, pc);
+                if (wet > 0.01f) Bar(ref y, x, w, wet, new Color(0.5f, 0.7f, 1f), 0f, Color.clear, 0f, Color.clear, 5);
+            }
 
             var air = plane.Air;
             string airText = !air.InThermal && !air.InDraft && !air.InDowndraft ? "calm" :
@@ -249,6 +269,20 @@ namespace PaperWings.UI
                         GUI.Label(center, "STALL!  nose dropping to regain speed", big);
                         GUI.color = Color.white;
                     }
+
+                    // Damage pop: "RIP! -14" floats up and fades.
+                    if (damageFlash > 0f)
+                    {
+                        GUI.color = new Color(1f, 0.45f, 0.35f, damageFlash);
+                        Rect pop = new Rect(0, center.yMax + (20f + 40f * (1f - damageFlash)) * scale, Screen.width, 40 * scale);
+                        GUI.Label(pop, $"<size={Px(30)}><b>RIP!  -{Mathf.RoundToInt(lastDamage)}</b></size>", big);
+                        GUI.color = Color.white;
+                    }
+
+                    // Gentle hint while soggy.
+                    if (paper != null && paper.Wetness01 > 0.5f)
+                        GUI.Label(new Rect(0, Screen.height * 0.72f, Screen.width, 30 * scale),
+                                  $"<size={Px(20)}><color=#7FB2FF>Soggy paper! Dry off in the laptop's heat</color></size>", big);
                     break;
                 }
 

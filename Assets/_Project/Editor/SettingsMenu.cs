@@ -15,6 +15,9 @@ namespace PaperWings.EditorTools
         [MenuItem("PaperWings/Settings/Flight (Dart)  - controls, invert pitch, speed, turning", priority = 0)]
         static void Flight() => Open("FlightSettings_Dart.asset");
 
+        [MenuItem("PaperWings/Settings/Paper (Dart)  - damage, wetness", priority = 1)]
+        static void Paper() => Open("Paper_Dart.asset");
+
         [MenuItem("PaperWings/Settings/Camera Feel", priority = 1)]
         static void Camera() => Open("CameraFeel_Chase.asset");
 

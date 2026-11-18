@@ -13,6 +13,9 @@ namespace PaperWings.Air
     {
         public abstract AirKind Kind { get; }
 
+        /// <summary>How wet this air is, 0 (dry) to 1 (steam). Wet air makes paper soggy.</summary>
+        public virtual float Moisture => 0f;
+
         /// <summary>Wind velocity at a world position. influence = 0 means "outside my zone".</summary>
         public abstract Vector3 GetWind(Vector3 worldPosition, out float influence);
 

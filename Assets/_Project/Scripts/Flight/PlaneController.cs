@@ -63,6 +63,14 @@ namespace PaperWings.Flight
         public event Action<bool> Downed;
         /// <summary>Fired when a boost fires (for effects).</summary>
         public event Action Boosted;
+        /// <summary>Fired on a glancing bump that didn't end the flight. Argument: impact speed into the surface.</summary>
+        public event Action<float> Bumped;
+
+        /// <summary>
+        /// Runtime multipliers on top of FlightSettings (paper damage, sogginess...).
+        /// Other systems write these; the flight model reads them every tick.
+        /// </summary>
+        public FlightModifiers Modifiers { get; } = new FlightModifiers();
 
         /// <summary>
         /// Smoothed velocity of the air around the plane, sampled from the AirField.
@@ -170,7 +178,7 @@ namespace PaperWings.Flight
 
             // Slow planes respond sluggishly. 0..1 between stall speed and cruise speed.
             float speed01 = Mathf.InverseLerp(settings.stallSpeed, settings.cruiseSpeed, speed);
-            float authority = Mathf.Lerp(settings.lowSpeedAuthority, 1f, speed01);
+            float authority = Mathf.Lerp(settings.lowSpeedAuthority, 1f, speed01) * Modifiers.controlScale;
 
             UpdateAir(dt);
             LandingAssist assist = LandingZone.GetAssist(rb.position, yaw);
@@ -229,7 +237,8 @@ namespace PaperWings.Flight
         {
             // Bank goes to a TARGET angle set by the stick, not a free roll rate.
             // No barrel rolls, no inverted flight. Release the stick and wings level.
-            float targetBank = rollInput * settings.maxBank;
+            // rollBias = a bent wing: with no input the plane settles into a slight bank and drifts.
+            float targetBank = Mathf.Clamp(rollInput * settings.maxBank + Modifiers.rollBias, -settings.maxBank, settings.maxBank);
             float response = Mathf.Abs(rollInput) > 0.01f ? settings.bankResponse : settings.rollAutoLevel;
             bank = Mathf.Lerp(bank, targetBank, 1f - Mathf.Exp(-response * dt));
         }
@@ -290,7 +299,8 @@ namespace PaperWings.Flight
 
         float CurrentSinkRate(float speed01)
         {
-            float sink = settings.CruiseSinkRate;                              // base glide
+            float sink = settings.cruiseSpeed / (settings.glideRatio * Modifiers.glideScale); // base glide
+            sink += Modifiers.extraSink;                                       // e.g. soggy paper
             sink += settings.slowSinkExtra * (1f - speed01);                   // mushy when slow
             sink += settings.turnSinkExtra * Mathf.Abs(bank) / settings.maxBank; // turns cost height
             sink += settings.stallExtraSink * stallBlend;                      // stalls drop you
@@ -338,6 +348,7 @@ namespace PaperWings.Flight
             {
                 // Glancing hit on a wall: just scrub some speed and keep flying.
                 speed *= settings.bumpSpeedKeep;
+                Bumped?.Invoke(impactSpeed);   // paper damage, camera kick, etc.
             }
             else
             {

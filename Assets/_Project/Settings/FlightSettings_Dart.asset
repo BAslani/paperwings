@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8599d63f09e9f04bafde920515dd157, type: 3}
   m_Name: FlightSettings_Dart
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.FlightSettings
-  invertPitch: 0
+  invertPitch: 1
   cruiseSpeed: 14
   maxSpeed: 45
   diveSpeedGain: 18

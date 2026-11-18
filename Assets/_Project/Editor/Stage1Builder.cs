@@ -95,7 +95,8 @@ namespace PaperWings.EditorTools
             BuilderUtil.SetRef(controller, "input", input);
             BuilderUtil.SetRef(wobble, "plane", controller);
             BuilderUtil.SetRef(wobble, "visual", visual.transform);
-            PlaneFxBuilder.AddTrails(root);   // wingtip trails (Stage 4)
+            PlaneFxBuilder.AddTrails(root);        // wingtip trails (Stage 4)
+            PlaneFxBuilder.AddPaperDamage(root);   // paper damage + sogginess (Stage 6)
 
             var prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             Object.DestroyImmediate(root);

@@ -21,6 +21,10 @@ namespace PaperWings.Air
         public float draft;
         /// <summary>Strongest downdraft influence here, 0 (none) to 1 (core).</summary>
         public float downdraft;
+        /// <summary>How wet the air is here, 0..1 (strongest moisture x influence of any source).</summary>
+        public float moisture;
+        /// <summary>Strongest DRY thermal here, 0..1 (e.g. the laptop, not steam). Dries paper out.</summary>
+        public float dryHeat;
 
         public bool InThermal => thermal > 0.05f;
         public bool InDraft => draft > 0.05f;
@@ -57,9 +61,13 @@ namespace PaperWings.Air
                 if (influence <= 0f) continue;
 
                 result.wind += wind;
+                result.moisture = Mathf.Max(result.moisture, s.Moisture * influence);
                 switch (s.Kind)
                 {
-                    case AirKind.Thermal:   result.thermal = Mathf.Max(result.thermal, influence); break;
+                    case AirKind.Thermal:
+                        result.thermal = Mathf.Max(result.thermal, influence);
+                        result.dryHeat = Mathf.Max(result.dryHeat, influence * (1f - s.Moisture));   // steam isn't dry heat
+                        break;
                     case AirKind.Downdraft: result.downdraft = Mathf.Max(result.downdraft, influence); break;
                     default:                result.draft = Mathf.Max(result.draft, influence); break;
                 }

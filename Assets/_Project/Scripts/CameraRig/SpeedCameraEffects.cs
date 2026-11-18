@@ -47,6 +47,7 @@ namespace PaperWings.CameraRig
             if (plane == null) return;
             plane.Boosted += OnBoost;
             plane.Downed += OnDowned;
+            plane.Bumped += OnBumped;
         }
 
         void OnDisable()
@@ -54,6 +55,14 @@ namespace PaperWings.CameraRig
             if (plane == null) return;
             plane.Boosted -= OnBoost;
             plane.Downed -= OnDowned;
+            plane.Bumped -= OnBumped;
+        }
+
+        void OnBumped(float impact)
+        {
+            // A jolt that scales with how hard you hit (between boost and crash strength).
+            float t = Mathf.InverseLerp(0f, plane.Settings.bumpTolerance, impact);
+            kickShake = Mathf.Max(kickShake, Mathf.Lerp(settings.boostShake, settings.crashShake * 0.6f, t));
         }
 
         void OnBoost()

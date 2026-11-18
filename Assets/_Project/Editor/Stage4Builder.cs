@@ -178,6 +178,48 @@ namespace PaperWings.EditorTools
     /// <summary>Visual extras on the plane prefab (shared by the Stage 1 and Stage 4 builders).</summary>
     public static class PlaneFxBuilder
     {
+        public const string PaperSettingsPath = "Assets/_Project/Settings/Paper_Dart.asset";
+
+        /// <summary>Adds (or rebuilds) PaperDamage and its tear-bits particles on the plane root.</summary>
+        public static void AddPaperDamage(GameObject planeRoot)
+        {
+            var settings = Stage2Builder.LoadOrCreate<PaperSettings>(PaperSettingsPath);
+
+            var old = planeRoot.transform.Find("TearBits");
+            if (old != null) Object.DestroyImmediate(old.gameObject);
+
+            // Little white paper flakes, emitted in bursts by PaperDamage when you take a hit.
+            var bitsGo = new GameObject("TearBits");
+            bitsGo.transform.SetParent(planeRoot.transform, false);
+            var mat = Stage2Builder.ParticleMaterial("M_PaperBits", null, additive: false);
+            var bits = Stage2Builder.AddParticles(bitsGo, mat, stretched: false, sizeMin: 0.08f, sizeMax: 0.18f);
+            var main = bits.main;
+            main.loop = false;
+            main.prewarm = false;
+            main.playOnAwake = false;
+            main.startSpeed = new ParticleSystem.MinMaxCurve(2f, 6f);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.8f, 1.6f);
+            main.gravityModifier = 0.6f;
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.startColor = new Color(0.95f, 0.94f, 0.9f, 1f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;   // flakes stay behind as you fly on
+            var emission = bits.emission;
+            emission.rateOverTime = 0f;
+            var shape = bits.shape;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.5f;
+            var rot = bits.rotationOverLifetime;
+            rot.enabled = true;
+            rot.z = new ParticleSystem.MinMaxCurve(-8f, 8f);
+
+            var damage = planeRoot.GetComponent<PaperDamage>();
+            if (damage == null) damage = planeRoot.AddComponent<PaperDamage>();
+            var visual = planeRoot.transform.Find("Visual");
+            BuilderUtil.SetRef(damage, "settings", settings);
+            BuilderUtil.SetRef(damage, "visualMesh", visual != null ? visual.GetComponent<MeshFilter>() : null);
+            BuilderUtil.SetRef(damage, "tearBits", bits);
+        }
+
         /// <summary>Adds (or rebuilds) wingtip trails under the plane's Visual child.</summary>
         public static void AddTrails(GameObject planeRoot)
         {

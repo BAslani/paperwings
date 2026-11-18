@@ -15,6 +15,7 @@ namespace PaperWings.Air
         [SerializeField] ParticleSystem steam;
 
         public override AirKind Kind => AirKind.Thermal;
+        public override float Moisture => 1f;   // steam is wet: great lift, soggy paper
 
         float seed;
 
