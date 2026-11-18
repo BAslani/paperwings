@@ -141,9 +141,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PlaneTrails
   plane: {fileID: 1085125706397382876}
   trails:
-  - {fileID: 3689118058968307733}
-  - {fileID: 5472112244870452110}
---- !u!1 &3756260305635417871
+  - {fileID: 2666423645737459836}
+  - {fileID: 4359542052658097711}
+--- !u!1 &1610387525328900265
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -151,38 +151,38 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1284775709825665772}
-  - component: {fileID: 5472112244870452110}
+  - component: {fileID: 5939119521715512785}
+  - component: {fileID: 2666423645737459836}
   m_Layer: 0
-  m_Name: TrailRight
+  m_Name: TrailLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1284775709825665772
+--- !u!4 &5939119521715512785
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3756260305635417871}
+  m_GameObject: {fileID: 1610387525328900265}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.68, y: 0.1, z: -0.95}
+  m_LocalPosition: {x: -0.68, y: 0.1, z: -0.95}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2928604117616042270}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!96 &5472112244870452110
+--- !u!96 &2666423645737459836
 TrailRenderer:
   serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3756260305635417871}
+  m_GameObject: {fileID: 1610387525328900265}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -294,7 +294,7 @@ TrailRenderer:
   m_Autodestruct: 0
   m_Emitting: 0
   m_ApplyActiveColorSpace: 1
---- !u!1 &4515634311846242814
+--- !u!1 &4425259156534626768
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -302,38 +302,38 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4455402401410302553}
-  - component: {fileID: 3689118058968307733}
+  - component: {fileID: 7869938739776561036}
+  - component: {fileID: 4359542052658097711}
   m_Layer: 0
-  m_Name: TrailLeft
+  m_Name: TrailRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4455402401410302553
+--- !u!4 &7869938739776561036
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4515634311846242814}
+  m_GameObject: {fileID: 4425259156534626768}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.68, y: 0.1, z: -0.95}
+  m_LocalPosition: {x: 0.68, y: 0.1, z: -0.95}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2928604117616042270}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!96 &3689118058968307733
+--- !u!96 &4359542052658097711
 TrailRenderer:
   serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4515634311846242814}
+  m_GameObject: {fileID: 4425259156534626768}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -476,8 +476,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4455402401410302553}
-  - {fileID: 1284775709825665772}
+  - {fileID: 5939119521715512785}
+  - {fileID: 7869938739776561036}
   m_Father: {fileID: 1475133575674396421}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1415266289065176907
