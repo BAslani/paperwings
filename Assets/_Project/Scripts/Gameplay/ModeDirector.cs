@@ -58,7 +58,10 @@ namespace PaperWings.Gameplay
         [SerializeField] LaunchAndReset launcher;
         [SerializeField] PlaneController player;
 
-        [Header("Scene groups (switched on/off per mode)")]
+        [Header("Rooms (Stage 21). Each has its own throw point and mode groups. Empty = the groups below.")]
+        [SerializeField] Room[] rooms;
+
+        [Header("Scene groups (used only if there are no Rooms)")]
         [SerializeField] GameObject routeGroup;
         [SerializeField] GameObject combatGroup;
         [SerializeField] GameObject bossGroup;
@@ -99,16 +102,48 @@ namespace PaperWings.Gameplay
         public int DefaultSquadronTarget => squadronKillTarget;
         public int KillsThisRun => CombatScore.Kills - killBaseline;
         public int TeamKillsThisRun => CombatScore.TeamKills - teamKillBaseline;
-        public RaceRoute Route { get; private set; }
-        public StaplerBoss Boss { get; private set; }
         public ModeResult LastResult { get; private set; }
+        public bool PlayerFlying => player != null && player.State == PlaneState.Flying;
+        public float PlayerFlightTime => player != null ? player.FlightTime : 0f;
 
         public event Action<ModeResult> Completed;
 
         int killBaseline;
         int teamKillBaseline;
-        bool landingPending;
         ProgressionApplier applier;
+        RaceRoute[] routes;          // per room
+        StaplerBoss[] bosses;        // per room
+
+        // ------------------------------------------------------------------ rooms
+
+        /// <summary>The room being played (or picked last).</summary>
+        public int RoomIndex { get; private set; }
+        public int RoomCount => rooms != null && rooms.Length > 0 ? rooms.Length : 1;
+        public Room RoomAt(int i) => rooms != null && i >= 0 && i < rooms.Length ? rooms[i] : null;
+        public Room CurrentRoom => RoomAt(RoomIndex);
+        public string RoomName(int i) => RoomAt(i) != null ? RoomAt(i).displayName : "Office";
+
+        GameObject RouteGroupOf(int i) => RoomAt(i) != null ? RoomAt(i).routeGroup : routeGroup;
+        GameObject CombatGroupOf(int i) => RoomAt(i) != null ? RoomAt(i).combatGroup : combatGroup;
+        GameObject BossGroupOf(int i) => RoomAt(i) != null ? RoomAt(i).bossGroup : bossGroup;
+        GameObject SquadronGroupOf(int i) => RoomAt(i) != null ? RoomAt(i).squadronGroup : squadronGroup;
+
+        public bool RoomSupports(int room, GameMode m) => m switch
+        {
+            GameMode.FreeFlight => true,
+            GameMode.RingRun => RouteGroupOf(room) != null,
+            GameMode.Dogfight => CombatGroupOf(room) != null,
+            GameMode.Squadron => CombatGroupOf(room) != null && SquadronGroupOf(room) != null,
+            _ => BossGroupOf(room) != null
+        };
+
+        public RaceRoute RouteOf(int room) => routes != null && room >= 0 && room < routes.Length ? routes[room] : null;
+        /// <summary>The current room's ring route.</summary>
+        public RaceRoute Route => RouteOf(RoomIndex);
+        public StaplerBoss Boss => bosses != null && RoomIndex < bosses.Length ? bosses[RoomIndex] : null;
+
+        /// <summary>Medals are kept per mode and room (the office keeps the plain mode number, so old medals stay).</summary>
+        public static int MedalKey(GameMode m, int room) => (int)m + 100 * room;
 
         public static string ModeName(GameMode m) => m switch
         {
@@ -119,30 +154,45 @@ namespace PaperWings.Gameplay
             _ => "Boss Fight"
         };
 
-        static string BestKey(GameMode m) => $"PaperWings.Best.{m}";
-        public float BestTime(GameMode m) => PlayerPrefs.GetFloat(BestKey(m), 0f);
+        static string BestKey(GameMode m, int room) => room == 0 ? $"PaperWings.Best.{m}" : $"PaperWings.Best.R{room}.{m}";
+        public float BestTime(GameMode m) => BestTime(m, RoomIndex);
+        public float BestTime(GameMode m, int room) => PlayerPrefs.GetFloat(BestKey(m, room), 0f);
 
         void Awake()
         {
-            if (routeGroup != null) Route = routeGroup.GetComponentInChildren<RaceRoute>(true);
-            if (bossGroup != null) Boss = bossGroup.GetComponentInChildren<StaplerBoss>(true);
+            routes = new RaceRoute[RoomCount];
+            bosses = new StaplerBoss[RoomCount];
+            for (int i = 0; i < RoomCount; i++)
+            {
+                if (RouteGroupOf(i) != null) routes[i] = RouteGroupOf(i).GetComponentInChildren<RaceRoute>(true);
+                if (BossGroupOf(i) != null) bosses[i] = BossGroupOf(i).GetComponentInChildren<StaplerBoss>(true);
+            }
+            RoomIndex = Mathf.Clamp(PlayerPrefs.GetInt("PaperWings.LastRoom", 0), 0, RoomCount - 1);
             if (launcher != null) applier = launcher.GetComponent<ProgressionApplier>();
             // Until a mode is chosen, nothing hostile is running.
-            SetGroups(route: false, combat: false, boss: false);
+            AllGroupsOff();
+        }
+
+        void Start()
+        {
+            // Put the plane in the remembered room's hand (LaunchAndReset.Start holds it at its spawn point).
+            if (launcher != null && CurrentRoom != null)
+            {
+                launcher.SetSpawnPoint(CurrentRoom.spawnPoint);
+                if (RoomIndex != 0) { launcher.ResetToStart(); SnapCameras(); }
+            }
         }
 
         void OnEnable()
         {
-            LandingZone.AnyLanded += OnLanded;
             CombatScore.KillScored += OnPlayerKill;
-            if (Boss != null) Boss.Defeated += OnBossDefeated;
+            if (bosses != null) foreach (var b in bosses) if (b != null) b.Defeated += OnBossDefeated;
         }
 
         void OnDisable()
         {
-            LandingZone.AnyLanded -= OnLanded;
             CombatScore.KillScored -= OnPlayerKill;
-            if (Boss != null) Boss.Defeated -= OnBossDefeated;
+            if (bosses != null) foreach (var b in bosses) if (b != null) b.Defeated -= OnBossDefeated;
             AirField.WindScale = 1f;
         }
 
@@ -152,36 +202,42 @@ namespace PaperWings.Gameplay
             if (progression != null && HasMode) Gameplay.Progression.AddClips(progression.clipsPerKill, "shot down");
         }
 
-        /// <summary>Starts (or restarts) a free-play mode from scratch.</summary>
-        public void StartMode(GameMode mode)
+        /// <summary>Starts (or restarts) a free-play mode from scratch, in a room (-1 = the current one).</summary>
+        public void StartMode(GameMode mode, int room = -1)
         {
             NightIndex = -1;
-            Begin(mode);
+            Begin(mode, room < 0 ? RoomIndex : room);
             PlayerPrefs.SetInt("PaperWings.LastMode", (int)mode);
         }
 
-        /// <summary>Starts (or restarts) a campaign night: its mode plus tonight's twist.</summary>
+        /// <summary>Starts (or restarts) a campaign night: its mode and room plus tonight's twist.</summary>
         public void StartNight(int index)
         {
             if (campaign == null || campaign.Get(index) == null) return;
             NightIndex = index;
-            Begin(Night.mode);
+            Begin(Night.mode, Night.room);
             PlayerPrefs.SetInt("PaperWings.LastNight", index);
         }
 
-        /// <summary>Right groups on, twists applied, plane back in hand, timer reset.</summary>
-        void Begin(GameMode mode)
+        /// <summary>Right room, right groups on, twists applied, plane back in hand, timer reset.</summary>
+        void Begin(GameMode mode, int room)
         {
+            room = Mathf.Clamp(room, 0, RoomCount - 1);
+            if (!RoomSupports(room, mode)) room = 0;   // e.g. a Boss Fight asked for in a room without a boss
+            bool moved = room != RoomIndex;
+            RoomIndex = room;
+            PlayerPrefs.SetInt("PaperWings.LastRoom", room);
+            if (launcher != null && CurrentRoom != null) launcher.SetSpawnPoint(CurrentRoom.spawnPoint);
+
             Mode = mode;
             HasMode = true;
             RunStarted = false;
             RunComplete = false;
             RunTime = 0f;
             LastResult = null;
-            landingPending = false;
 
             // Toggling a group off and on again gives a clean slate (spawners respawn their rivals).
-            SetGroups(route: false, combat: false, boss: false);
+            AllGroupsOff();
             LimitRivals(0);   // all regular spawners back on (while their group is off, so nothing spawns yet)
             // Squadron = the solo-dogfight rivals PLUS the squadron group (extra rivals and your wingmen).
             SetGroups(route: mode == GameMode.RingRun,
@@ -201,24 +257,51 @@ namespace PaperWings.Gameplay
             killBaseline = CombatScore.Kills;
             teamKillBaseline = CombatScore.TeamKills;
             if (launcher != null) launcher.ResetToStart();   // in hand: the pencil launcher re-arms to the new limit
+            if (moved) SnapCameras();
+        }
+
+        /// <summary>
+        /// The plane just jumped to another room: tell the cameras not to glide all the way there.
+        /// UNITY NOTE: Cinemachine cameras smooth their movement using last frame's state;
+        /// PreviousStateIsValid = false makes them cut straight to the new spot instead.
+        /// </summary>
+        static void SnapCameras()
+        {
+            foreach (var cam in FindObjectsByType<Unity.Cinemachine.CinemachineVirtualCameraBase>(FindObjectsSortMode.None))
+                cam.PreviousStateIsValid = false;
         }
 
         /// <summary>Keeps only the first <paramref name="max"/> regular rival spawners running (0 = all).</summary>
         void LimitRivals(int max)
         {
-            if (combatGroup == null) return;
-            var spawners = combatGroup.GetComponentsInChildren<EnemySpawner>(true);
+            var group = CombatGroupOf(RoomIndex);
+            if (group == null) return;
+            var spawners = group.GetComponentsInChildren<EnemySpawner>(true);
             for (int i = 0; i < spawners.Length; i++)
                 spawners[i].enabled = max <= 0 || i < max;   // disabling a spawner removes its rival
         }
 
+        void AllGroupsOff()
+        {
+            for (int i = 0; i < RoomCount; i++)
+            {
+                Toggle(RouteGroupOf(i), false);
+                Toggle(CombatGroupOf(i), false);
+                Toggle(BossGroupOf(i), false);
+                Toggle(SquadronGroupOf(i), false);
+            }
+        }
+
+        /// <summary>Switches the current room's groups.</summary>
         void SetGroups(bool route, bool combat, bool boss, bool squadron = false)
         {
-            if (routeGroup != null) routeGroup.SetActive(route);
-            if (combatGroup != null) combatGroup.SetActive(combat);
-            if (bossGroup != null) bossGroup.SetActive(boss);
-            if (squadronGroup != null) squadronGroup.SetActive(squadron);
+            Toggle(RouteGroupOf(RoomIndex), route);
+            Toggle(CombatGroupOf(RoomIndex), combat);
+            Toggle(BossGroupOf(RoomIndex), boss);
+            Toggle(SquadronGroupOf(RoomIndex), squadron);
         }
+
+        static void Toggle(GameObject go, bool on) { if (go != null) go.SetActive(on); }
 
         void Update()
         {
@@ -233,40 +316,38 @@ namespace PaperWings.Gameplay
             if (Mode == GameMode.Dogfight && KillsThisRun >= DogfightTarget)
                 CompleteTimed("DOGFIGHT WON!", $"{DogfightTarget} rivals shot down in");
 
-            // Landings are checked a frame later so the route has finished its own bookkeeping.
-            if (landingPending)
+            // Ring Run: the last ring stops the clock (the route records the time and best).
+            if (Mode == GameMode.RingRun && Route != null && Route.AllRingsPassed)
             {
-                landingPending = false;
-                if (Mode == GameMode.RingRun && Route != null && Route.AllRingsPassed)
+                float t = Route.LastTime;
+                bool best = !InCampaign && Route.LastWasNewBest;
+                Finish(new ModeResult
                 {
-                    float t = player.FlightTime;
-                    Finish(new ModeResult
-                    {
-                        mode = Mode,
-                        title = "RING RUN COMPLETE!",
-                        detail = $"All rings and a mug landing in {t:0.00}s" + (!InCampaign && Route.BestTime > 0f ? $"   (best {Route.BestTime:0.00}s)" : ""),
-                        newBest = !InCampaign && Route.LastWasNewBest,
-                        time = t
-                    });
-                }
-                else if (Mode == GameMode.FreeFlight && InCampaign)
+                    mode = Mode,
+                    title = "RING RUN COMPLETE!",
+                    detail = $"All {Route.RingCount} rings in {t:0.00}s" + (!InCampaign && !best && Route.BestTime > 0f ? $"   (best {Route.BestTime:0.00}s)" : ""),
+                    newBest = best,
+                    time = t
+                });
+            }
+
+            // Free Flight nights: stay in the air long enough in one flight. Stars go by the total clock,
+            // so fewer failed throws = more stars.
+            if (Mode == GameMode.FreeFlight && InCampaign && Night.airTimeTarget > 0f
+                && player.State == PlaneState.Flying && player.FlightTime >= Night.airTimeTarget)
+            {
+                Finish(new ModeResult
                 {
-                    // Free Flight nights are won by landing on the mug.
-                    float t = player.FlightTime;
-                    Finish(new ModeResult { mode = Mode, title = "TOUCHDOWN!", detail = $"Landed on the mug after {t:0.0}s of flight", time = t });
-                }
+                    mode = Mode,
+                    title = "STILL FLYING!",
+                    detail = $"{Night.airTimeTarget:0}s in the air in one flight ({RunTime:0.0}s on the clock)",
+                    time = RunTime
+                });
             }
 
             // Out of time? (Checked last so a win on the final frame still counts.)
             if (!RunComplete && TimeLeft == 0f)
                 Fail("OUT OF TIME", $"The clock ran out at {Night.timeLimit:0}s.");
-        }
-
-        void OnLanded(PlaneController plane, string message)
-        {
-            if (plane != player || !HasMode || RunComplete) return;
-            if (progression != null) Gameplay.Progression.AddClips(progression.clipsPerMugLanding, "mug landing");
-            if (Mode == GameMode.RingRun || (Mode == GameMode.FreeFlight && InCampaign)) landingPending = true;
         }
 
         void OnBossDefeated()
@@ -280,7 +361,7 @@ namespace PaperWings.Gameplay
             // Campaign twists change the rules, so nights don't touch the free-play best times.
             float best = BestTime(Mode);
             bool newBest = !InCampaign && (best <= 0f || RunTime < best);
-            if (newBest) { PlayerPrefs.SetFloat(BestKey(Mode), RunTime); PlayerPrefs.Save(); }
+            if (newBest) { PlayerPrefs.SetFloat(BestKey(Mode, RoomIndex), RunTime); PlayerPrefs.Save(); }
             Finish(new ModeResult
             {
                 mode = Mode,
@@ -315,12 +396,12 @@ namespace PaperWings.Gameplay
         void AwardRun(ModeResult result)
         {
             if (progression == null) return;
-            result.medal = progression.MedalFor(result.mode, result.time);
-            int previous = Gameplay.Progression.GetMedal(result.mode);
+            result.medal = progression.MedalFor(result.mode, result.time, CurrentRoom != null && result.mode == GameMode.RingRun ? CurrentRoom.ringRunMedals : Vector3.zero);
+            int previous = Gameplay.Progression.GetMedal(MedalKey(result.mode, RoomIndex));
             int clips = progression.clipsPerCompletedRun;
             for (int tier = previous + 1; tier <= result.medal; tier++)
                 clips += progression.medalBonus[Mathf.Clamp(tier - 1, 0, progression.medalBonus.Length - 1)];
-            result.newMedal = Gameplay.Progression.RecordMedal(result.mode, result.medal);
+            result.newMedal = Gameplay.Progression.RecordMedal(MedalKey(result.mode, RoomIndex), result.medal);
             result.clipsEarned = clips;
             Gameplay.Progression.AddClips(clips, "run complete");
         }

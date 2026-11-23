@@ -80,6 +80,9 @@ namespace PaperWings.EditorTools
         [MenuItem("PaperWings/Settings/Air - Laptop Thermal", priority = 20)]
         static void Thermal() => Open("Thermal_Laptop.asset");
 
+        [MenuItem("PaperWings/Settings/Air - Microwave (Break Room)", priority = 20)]
+        static void Microwave() => Open("Thermal_Microwave.asset");
+
         [MenuItem("PaperWings/Settings/Air - Tea Steam", priority = 21)]
         static void Steam() => Open("Steam_Tea.asset");
 

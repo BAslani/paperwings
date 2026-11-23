@@ -12,7 +12,7 @@ namespace PaperWings.Audio
     {
         [SerializeField] GameAudioSettings settings;
 
-        RaceRoute route;
+
         ModeDirector modes;
 
         void Awake() => AudioFx.Settings = settings;
@@ -22,16 +22,16 @@ namespace PaperWings.Audio
             // Synthesize every sound now (a few milliseconds), so nothing hitches mid-fight later.
             foreach (Sfx s in System.Enum.GetValues(typeof(Sfx))) SoundBank.Get(s);
 
-            route = FindAnyObjectByType<RaceRoute>(FindObjectsInactive.Include);
+
             modes = FindAnyObjectByType<ModeDirector>();
-            if (route != null) route.RingPassed += OnRing;
+            RaceRoute.AnyRingPassed += OnRing;   // every room's route
             if (modes != null) modes.Completed += OnModeComplete;
             CombatScore.KillScored += OnKill;
         }
 
         void OnDestroy()
         {
-            if (route != null) route.RingPassed -= OnRing;
+            RaceRoute.AnyRingPassed -= OnRing;
             if (modes != null) modes.Completed -= OnModeComplete;
             CombatScore.KillScored -= OnKill;
             AudioListener.pause = false;

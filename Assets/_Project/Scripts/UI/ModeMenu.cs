@@ -21,7 +21,9 @@ namespace PaperWings.UI
 
         public static bool IsOpen { get; private set; }
 
-        enum Screen { Menu, Results, None, Unlocks, Campaign }
+        enum Screen { Menu, Results, None, Unlocks, Campaign, Options }
+        int roomSelected;   // free-play room picked on the main menu
+        int optSelected;
         int shopSelected;
         string shopMessage = "";
         int nightSelected;
@@ -44,7 +46,12 @@ namespace PaperWings.UI
             // New players land on the campaign; returning players on what they played last.
             selected = Offset == 1 && !PlayerPrefs.HasKey("PaperWings.LastMode") ? 0 : Mathf.Max(0, mode) + Offset;
             nightSelected = FirstUnclearedNight();
-            if (director != null) director.Completed += _ => Show(Screen.Results);
+            if (director != null)
+            {
+                roomSelected = director.RoomIndex;
+                director.Completed += _ => { roomSelected = director.RoomIndex; Show(Screen.Results); };
+            }
+            GameOptions.Init();   // saved volume, controls and brightness
             Show(Screen.Menu);
         }
 
@@ -73,14 +80,17 @@ namespace PaperWings.UI
         void Choose(int index)
         {
             selected = index;
-            Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
             if (index < Offset)
             {
+                Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
                 nightSelected = FirstUnclearedNight();
                 Show(Screen.Campaign);
                 return;
             }
-            director.StartMode(Modes[index - Offset]);
+            GameMode mode = Modes[index - Offset];
+            if (!director.RoomSupports(roomSelected, mode)) { Audio.AudioFx.PlayUi(Audio.Sfx.NoLock); return; }   // e.g. no boss in the break room
+            Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
+            director.StartMode(mode, roomSelected);
             Show(Screen.None);
         }
 
@@ -120,6 +130,7 @@ namespace PaperWings.UI
             bool down = (kb != null && (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame)) || (pad != null && pad.dpad.down.wasPressedThisFrame);
             bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
             bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && pad.dpad.right.wasPressedThisFrame);
+            bool optionsKey = (kb != null && kb.oKey.wasPressedThisFrame) || (pad != null && pad.selectButton.wasPressedThisFrame);
 
             switch (screen)
             {
@@ -135,6 +146,7 @@ namespace PaperWings.UI
                     if (up) selected = (selected + EntryCount - 1) % EntryCount;
                     if (down) selected = (selected + 1) % EntryCount;
                     if (up || down) Audio.AudioFx.PlayUi(Audio.Sfx.UiMove);
+                    if (left || right) ChangeRoom(right ? 1 : -1);
                     if (kb != null)
                     {
                         int digit = DigitPressed(kb);
@@ -143,6 +155,11 @@ namespace PaperWings.UI
                     if (confirm) Choose(selected);
                     else if ((menuKey || back) && director.HasMode && !director.RunComplete) Show(Screen.None);   // resume
                     else if (unlocksKey && director.ProgressionConfig != null) OpenUnlocks();
+                    else if (optionsKey) OpenOptions();
+                    break;
+
+                case Screen.Options:
+                    UpdateOptions(up, down, left, right, confirm, menuKey || back || optionsKey);
                     break;
 
                 case Screen.Campaign:
@@ -273,6 +290,7 @@ namespace PaperWings.UI
                 GUI.Label(new Rect(row.x + 14 * scale, row.y + 6 * scale, 330 * scale, 32 * scale),
                           $"<color={nameColor}><b>NIGHT {i + 1}</b>   {night.title}</color>", button);
                 string goal = open ? night.Goal(director.DefaultDogfightTarget, director.DefaultSquadronTarget) : "";
+                if (open && night.room > 0) goal = $"<color=#80C8FF>{director.RoomName(night.room)}:</color> {goal}";
                 GUI.Label(new Rect(row.x + 340 * scale, row.y + 10 * scale, row.width - 470 * scale, 28 * scale),
                           $"<color=#AAAAAA>{goal}</color>", new GUIStyle(small) { alignment = TextAnchor.UpperLeft, wordWrap = false, clipping = TextClipping.Clip });
                 string right = !open ? "<color=#666666>LOCKED</color>" : (stars > 0 ? StarText(stars) : "<color=#FFE080><b>NEW</b></color>");
@@ -474,13 +492,15 @@ namespace PaperWings.UI
                 case Screen.None: DrawObjective(); break;
                 case Screen.Unlocks: DrawUnlocks(); break;
                 case Screen.Campaign: DrawCampaign(); break;
+                case Screen.Options: DrawOptions(); break;
             }
         }
 
         void DrawMenu()
         {
             Dim(0.65f);
-            float w = 760 * scale, h = (230 + EntryCount * 102) * scale;
+            bool rooms = director.RoomCount > 1;
+            float w = 760 * scale, h = (230 + (rooms ? 56 : 0) + EntryCount * 102) * scale;
             Rect panel = Centered(w, h);
             Box(panel, 0.85f);
 
@@ -490,12 +510,31 @@ namespace PaperWings.UI
             GUI.Label(new Rect(panel.x, y, w, 30 * scale), "<color=#BBBBBB>The Night Shift War</color>", body);
             y += 50 * scale;
 
+            // Room picker (free play): Left/Right, or click the arrows.
+            if (rooms)
+            {
+                Rect bar = new Rect(panel.x + 40 * scale, y, w - 80 * scale, 46 * scale);
+                GUI.color = new Color(0.4f, 0.7f, 1f, 0.16f);
+                GUI.DrawTexture(bar, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+                var room = director.RoomAt(roomSelected);
+                string desc = room != null && room.description.Length > 0 ? $"   <color=#AAAAAA>{room.description}</color>" : "";
+                GUI.Label(bar, $"<b>ROOM:  {director.RoomName(roomSelected).ToUpper()}</b>{desc}", new GUIStyle(small) { wordWrap = false, clipping = TextClipping.Clip });
+                Rect leftArrow = new Rect(bar.x, bar.y, 46 * scale, bar.height), rightArrow = new Rect(bar.xMax - 46 * scale, bar.y, 46 * scale, bar.height);
+                GUI.Label(leftArrow, "<b>◀</b>", body);
+                GUI.Label(rightArrow, "<b>▶</b>", body);
+                if (GUI.Button(leftArrow, GUIContent.none, GUIStyle.none)) ChangeRoom(-1);
+                if (GUI.Button(rightArrow, GUIContent.none, GUIStyle.none)) ChangeRoom(+1);
+                y += 56 * scale;
+            }
+
             for (int i = 0; i < EntryCount; i++)
             {
                 Rect card = new Rect(panel.x + 40 * scale, y, w - 80 * scale, 92 * scale);
                 bool sel = i == selected;
                 bool isCampaign = i < Offset;
-                GUI.color = sel ? new Color(1f, 0.85f, 0.3f, 0.35f) : (isCampaign ? new Color(1f, 0.85f, 0.3f, 0.12f) : new Color(1f, 1f, 1f, 0.06f));
+                bool available = isCampaign || director.RoomSupports(roomSelected, Modes[i - Offset]);
+                GUI.color = sel ? new Color(1f, 0.85f, 0.3f, available ? 0.35f : 0.15f) : (isCampaign ? new Color(1f, 0.85f, 0.3f, 0.12f) : new Color(1f, 1f, 1f, 0.06f));
                 GUI.DrawTexture(card, Texture2D.whiteTexture);
                 GUI.color = Color.white;
 
@@ -513,11 +552,22 @@ namespace PaperWings.UI
                 {
                     GameMode m = Modes[i - Offset];
                     heading = ModeDirector.ModeName(m).ToUpper();
-                    description = Describe(m);
-                    right = director.BestTime(m) > 0f ? $"Best {director.BestTime(m):0.0}s" : "";
-                    if (m == GameMode.RingRun && director.Route != null && director.Route.BestTime > 0f) right = $"Best {director.Route.BestTime:0.00}s";
-                    int medal = Progression.GetMedal(m);
-                    if (medal > 0) right = $"<color={ProgressionSettings.MedalColor(medal)}>{ProgressionSettings.MedalName(medal)}</color>   " + right;
+                    if (!available)
+                    {
+                        heading = $"<color=#666666>{heading}</color>";
+                        description = $"<color=#777777>Not in the {director.RoomName(roomSelected)}.</color>";
+                        right = "";
+                    }
+                    else
+                    {
+                        description = Describe(m);
+                        float best = director.BestTime(m, roomSelected);
+                        right = best > 0f ? $"Best {best:0.0}s" : "";
+                        var route = director.RouteOf(roomSelected);
+                        if (m == GameMode.RingRun && route != null && route.BestTime > 0f) right = $"Best {route.BestTime:0.00}s";
+                        int medal = Progression.GetMedal(ModeDirector.MedalKey(m, roomSelected));
+                        if (medal > 0) right = $"<color={ProgressionSettings.MedalColor(medal)}>{ProgressionSettings.MedalName(medal)}</color>   " + right;
+                    }
                 }
 
                 GUI.Label(new Rect(card.x + 18 * scale, card.y + 8 * scale, card.width, 36 * scale), $"<b>{i + 1}.  {heading}</b>", button);
@@ -532,10 +582,18 @@ namespace PaperWings.UI
             }
 
             string resume = director.HasMode && !director.RunComplete ? "    Esc / M: resume" : "";
+            string roomHint = rooms ? "  Left/Right: room." : "";
             GUI.Label(new Rect(panel.x, panel.yMax - 44 * scale, w, 30 * scale),
-                      $"<color=#999999>Up/Down or W/S, Enter / Space to start, or 1-{EntryCount}, or click.{resume}</color>", small);
+                      $"<color=#999999>Up/Down, Enter / Space to start, 1-{EntryCount}, or click.{roomHint}{resume}</color>", small);
 
-            // Paper clips + the way into the unlock shop.
+            // Top-left: options. Top-right: paper clips + the way into the unlock shop.
+            Rect opt = new Rect(panel.x + 20 * scale, panel.y + 18 * scale, 200 * scale, 30 * scale);
+            GUI.color = new Color(1f, 1f, 1f, 0.12f);
+            GUI.DrawTexture(opt, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            GUI.Label(opt, "<b>O / (Select): OPTIONS</b>", small);
+            if (GUI.Button(opt, GUIContent.none, GUIStyle.none)) OpenOptions();
+
             if (director.ProgressionConfig != null)
             {
                 GUI.Label(new Rect(panel.xMax - 260 * scale, panel.y + 18 * scale, 240 * scale, 28 * scale),
@@ -547,6 +605,149 @@ namespace PaperWings.UI
                 GUI.Label(btn, "<b>U / (Y): UNLOCKS</b>", small);
                 if (GUI.Button(btn, GUIContent.none, GUIStyle.none)) OpenUnlocks();
             }
+        }
+
+        void ChangeRoom(int dir)
+        {
+            int n = director.RoomCount;
+            if (n < 2) return;
+            roomSelected = (roomSelected + dir + n) % n;
+            Audio.AudioFx.PlayUi(Audio.Sfx.UiMove);
+        }
+
+        // ------------------------------------------------------------------ options
+
+        enum Opt { Master, Effects, Ambience, Scheme, Invert, MouseSens, Brightness, Quality, Window, Resolution, Back, Quit }
+        static readonly Opt[] OptRows = (Opt[])System.Enum.GetValues(typeof(Opt));
+
+        void OpenOptions()
+        {
+            optSelected = 0;
+            Audio.AudioFx.PlayUi(Audio.Sfx.UiMove);
+            Show(Screen.Options);
+        }
+
+        void UpdateOptions(bool up, bool down, bool left, bool right, bool confirm, bool leave)
+        {
+            if (leave) { Show(Screen.Menu); return; }
+            int n = OptRows.Length;
+            if (up) optSelected = (optSelected + n - 1) % n;
+            if (down) optSelected = (optSelected + 1) % n;
+            if (up || down) Audio.AudioFx.PlayUi(Audio.Sfx.UiMove);
+            if (left || right) { Adjust(OptRows[optSelected], right ? 1 : -1); Audio.AudioFx.PlayUi(Audio.Sfx.UiMove); }
+            else if (confirm) Activate(OptRows[optSelected]);
+        }
+
+        /// <summary>Enter on a row: toggles flip, Back / Quit act, sliders step up.</summary>
+        void Activate(Opt o)
+        {
+            if (o == Opt.Back) { Show(Screen.Menu); return; }
+            if (o == Opt.Quit) { GameOptions.Quit(); return; }
+            Adjust(o, 1);
+            Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
+        }
+
+        void Adjust(Opt o, int dir)
+        {
+            var c = GameOptions.Controls;
+            switch (o)
+            {
+                case Opt.Master: GameOptions.SetVolume("Master", Step(GameOptions.GetVolume("Master"), 0.1f * dir)); break;
+                case Opt.Effects: GameOptions.SetVolume("Effects", Step(GameOptions.GetVolume("Effects"), 0.1f * dir)); break;
+                case Opt.Ambience: GameOptions.SetVolume("Ambience", Step(GameOptions.GetVolume("Ambience"), 0.1f * dir)); break;
+                case Opt.Scheme:
+                    if (c != null) GameOptions.SetScheme(c.scheme == Flight.ControlScheme.Classic ? Flight.ControlScheme.MouseAim : Flight.ControlScheme.Classic);
+                    break;
+                case Opt.Invert: if (c != null) GameOptions.SetInvert(!c.invertPitch); break;
+                case Opt.MouseSens: if (c != null) GameOptions.SetMouseSensitivity(Mathf.Round((c.mouseSensitivity + 0.02f * dir) * 100f) / 100f); break;
+                case Opt.Brightness: GameOptions.Brightness = Mathf.Clamp(GameOptions.Brightness + 0.25f * dir, -1f, 2f); break;
+                case Opt.Quality:
+                    int q = QualitySettings.names.Length;
+                    if (q > 0) GameOptions.SetQuality((QualitySettings.GetQualityLevel() + dir + q) % q);
+                    break;
+                case Opt.Window: GameOptions.SetFullscreen(UnityEngine.Screen.fullScreenMode == FullScreenMode.Windowed); break;
+                case Opt.Resolution:
+                    var res = GameOptions.Resolutions();
+                    int cur = System.Array.IndexOf(res, new Vector2Int(UnityEngine.Screen.width, UnityEngine.Screen.height));
+                    GameOptions.SetResolution(res[((cur < 0 ? res.Length - 1 : cur) + dir + res.Length) % res.Length]);
+                    break;
+            }
+            PlayerPrefs.Save();
+        }
+
+        static float Step(float v, float d) => Mathf.Clamp01(Mathf.Round((v + d) * 10f) / 10f);
+
+        string OptLabel(Opt o) => o switch
+        {
+            Opt.Master => "Master volume",
+            Opt.Effects => "Effects volume",
+            Opt.Ambience => "Wind & ambience volume",
+            Opt.Scheme => "Controls",
+            Opt.Invert => "Invert pitch",
+            Opt.MouseSens => "Mouse sensitivity (mouse aim)",
+            Opt.Brightness => "Brightness",
+            Opt.Quality => "Graphics quality",
+            Opt.Window => "Display",
+            Opt.Resolution => "Resolution",
+            Opt.Back => "Back",
+            _ => "Quit to desktop"
+        };
+
+        string OptValue(Opt o)
+        {
+            var c = GameOptions.Controls;
+            string Bar(float v) => $"{new string('|', Mathf.RoundToInt(v * 10f))}<color=#444444>{new string('|', 10 - Mathf.RoundToInt(v * 10f))}</color>  {Mathf.RoundToInt(v * 100f)}%";
+            return o switch
+            {
+                Opt.Master => Bar(GameOptions.GetVolume("Master")),
+                Opt.Effects => Bar(GameOptions.GetVolume("Effects")),
+                Opt.Ambience => Bar(GameOptions.GetVolume("Ambience")),
+                Opt.Scheme => c == null ? "-" : (c.scheme == Flight.ControlScheme.Classic ? "Classic (keys / stick)" : "Mouse aim"),
+                Opt.Invert => c == null ? "-" : (c.invertPitch ? "On" : "Off"),
+                Opt.MouseSens => c == null ? "-" : $"{c.mouseSensitivity:0.00}",
+                Opt.Brightness => GameOptions.Brightness == 0f ? "Normal" : $"{GameOptions.Brightness:+0.00;-0.00}",
+                Opt.Quality => QualitySettings.names.Length > 0 ? QualitySettings.names[QualitySettings.GetQualityLevel()] : "-",
+                Opt.Window => UnityEngine.Screen.fullScreenMode == FullScreenMode.Windowed ? "Windowed" : "Fullscreen",
+                Opt.Resolution => $"{UnityEngine.Screen.width} x {UnityEngine.Screen.height}",
+                _ => ""
+            };
+        }
+
+        void DrawOptions()
+        {
+            Dim(0.7f);
+            float w = 760 * scale, rowStep = 46 * scale;
+            float h = (170 + OptRows.Length * 46) * scale;
+            Rect panel = Centered(w, h);
+            Box(panel, 0.9f);
+
+            float y = panel.y + 20 * scale;
+            GUI.Label(new Rect(panel.x, y, w, 44 * scale), "OPTIONS", title);
+            y += 60 * scale;
+
+            for (int i = 0; i < OptRows.Length; i++)
+            {
+                var o = OptRows[i];
+                Rect row = new Rect(panel.x + 30 * scale, y, w - 60 * scale, rowStep - 6 * scale);
+                GUI.color = i == optSelected ? new Color(1f, 0.85f, 0.3f, 0.3f) : new Color(1f, 1f, 1f, 0.05f);
+                GUI.DrawTexture(row, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+                string color = o == Opt.Quit ? "#FF9080" : "#FFFFFF";
+                GUI.Label(new Rect(row.x + 14 * scale, row.y + 4 * scale, 330 * scale, 32 * scale), $"<color={color}>{OptLabel(o)}</color>", button);
+                string value = OptValue(o);
+                if (value.Length > 0)
+                    GUI.Label(new Rect(row.x + 340 * scale, row.y + 6 * scale, row.width - 354 * scale, 30 * scale),
+                              $"<color=#FFD040>◀</color>  {value}  <color=#FFD040>▶</color>", new GUIStyle(body) { alignment = TextAnchor.UpperRight });
+
+                // Mouse: left half steps down, right half steps up (or activates buttons).
+                Rect leftHalf = new Rect(row.x, row.y, row.width * 0.5f, row.height), rightHalf = new Rect(row.center.x, row.y, row.width * 0.5f, row.height);
+                if (GUI.Button(leftHalf, GUIContent.none, GUIStyle.none)) { optSelected = i; if (value.Length > 0) Adjust(o, -1); else Activate(o); }
+                if (GUI.Button(rightHalf, GUIContent.none, GUIStyle.none)) { optSelected = i; if (value.Length > 0) Adjust(o, +1); else Activate(o); }
+                y += rowStep;
+            }
+
+            GUI.Label(new Rect(panel.x, panel.yMax - 40 * scale, w, 28 * scale),
+                      "<color=#999999>Up/Down to pick, Left/Right to change (or click).    Esc / (B): back</color>", small);
         }
 
         void DrawResults()
@@ -609,8 +810,10 @@ namespace PaperWings.UI
             var night = director.Night;
             string obj = m switch
             {
-                GameMode.FreeFlight => night != null ? "Land on the coffee mug." : "Free flight: no objective. Ride the air, practise landings.",
-                GameMode.RingRun => "Fly through every ring, then land on the mug.",
+                GameMode.FreeFlight => night != null && night.airTimeTarget > 0f
+                    ? $"Stay up {night.airTimeTarget:0}s in one flight   Air time <b>{(director.PlayerFlying ? director.PlayerFlightTime : 0f):0.0}s</b>"
+                    : "Free flight: no objective. Ride the air.",
+                GameMode.RingRun => "Fly through every ring.",
                 GameMode.Dogfight => $"Rivals shot down  <b>{director.KillsThisRun} / {director.DogfightTarget}</b>",
                 GameMode.Squadron => $"Squadron kills  <b>{director.TeamKillsThisRun} / {director.SquadronTarget}</b>   <color=#AAAAAA>(yours {director.KillsThisRun})</color>",
                 _ => "Defeat THE STAPLER. Hit the glowing mouth when the jaw opens."
@@ -621,6 +824,7 @@ namespace PaperWings.UI
             string bestText = timed && best > 0f && night == null ? $"    <color=#AAAAAA>Best {best:0.0}s</color>" : "";
 
             string label = ModeDirector.ModeName(m).ToUpper();
+            if (director.RoomCount > 1 && director.RoomIndex > 0) label += $" · {director.RoomName(director.RoomIndex).ToUpper()}";
             if (night != null)
             {
                 label = $"NIGHT {director.NightIndex + 1}: {night.title.ToUpper()}";
@@ -641,10 +845,10 @@ namespace PaperWings.UI
         static string Describe(GameMode m) => m switch
         {
             GameMode.FreeFlight => "Just you, the desk and the air. No enemies, no clock.",
-            GameMode.RingRun => "Thread all five sticky-note rings, then land on the coffee mug. Race the clock.",
+            GameMode.RingRun => "Thread all five sticky-note rings as fast as you can. The last ring stops the clock.",
             GameMode.Dogfight => "Accounting's rival planes are up. Shoot down five of them as fast as you can.",
             GameMode.Squadron => "Fly with two Marketing wingmen against four rivals. Your squadron needs eight kills.",
-            _ => "THE STAPLER guards the mug. Dodge its staple fans and slams, hit the open jaw.",
+            _ => "THE STAPLER guards the desk. Dodge its staple fans and slams, hit the open jaw.",
         };
 
         // ------------------------------------------------------------------ helpers

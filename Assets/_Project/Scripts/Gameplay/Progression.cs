@@ -45,19 +45,23 @@ namespace PaperWings.Gameplay
         public static int PaperClips => Data.paperClips;
         public static bool IsUnlocked(string id) => string.IsNullOrEmpty(id) || Data.unlocked.Contains(id);
 
-        public static int GetMedal(GameMode mode)
+        public static int GetMedal(GameMode mode) => GetMedal((int)mode);
+        public static bool RecordMedal(GameMode mode, int medal) => RecordMedal((int)mode, medal);
+
+        /// <summary>Medal for a key (ModeDirector.MedalKey: mode + 100 x room).</summary>
+        public static int GetMedal(int mode)
         {
-            int i = Data.medalModes.IndexOf((int)mode);
+            int i = Data.medalModes.IndexOf(mode);
             return i >= 0 ? Data.medals[i] : 0;
         }
 
         /// <summary>Records a medal if it beats the previous one. Returns true if it's a new best tier.</summary>
-        public static bool RecordMedal(GameMode mode, int medal)
+        public static bool RecordMedal(int mode, int medal)
         {
             if (medal <= GetMedal(mode)) return false;
-            int i = Data.medalModes.IndexOf((int)mode);
+            int i = Data.medalModes.IndexOf(mode);
             if (i >= 0) Data.medals[i] = medal;
-            else { Data.medalModes.Add((int)mode); Data.medals.Add(medal); }
+            else { Data.medalModes.Add(mode); Data.medals.Add(medal); }
             SaveAndNotify();
             return true;
         }

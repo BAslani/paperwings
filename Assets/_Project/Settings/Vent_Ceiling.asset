@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Air.VentSettings
   windSpeed: 9
   size: {x: 12, y: 10}
-  range: 55
+  range: 85
   distanceFalloff: 0.6
   edgeSoftness: 0.35
   streakRate: 40

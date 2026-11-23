@@ -61,6 +61,9 @@ namespace PaperWings.Gameplay
             ResetToStart();
         }
 
+        /// <summary>Moves the hand to another throw point (rooms). Takes effect on the next reset.</summary>
+        public void SetSpawnPoint(Transform point) { if (point != null) spawnPoint = point; }
+
         public void ResetToStart()
         {
             aimYaw = aimPitch = 0f;

@@ -48,6 +48,19 @@ namespace PaperWings.Gameplay
         void OnEnable() => zones.Add(this);
         void OnDisable() => zones.Remove(this);
 
+        /// <summary>The landing target closest to a point (each room has its own mug).</summary>
+        public static LandingZone Nearest(Vector3 position)
+        {
+            LandingZone best = null;
+            float bestSq = float.MaxValue;
+            foreach (var z in zones)
+            {
+                float d = (z.transform.position - position).sqrMagnitude;
+                if (d < bestSq) { bestSq = d; best = z; }
+            }
+            return best;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics() => zones.Clear();
 

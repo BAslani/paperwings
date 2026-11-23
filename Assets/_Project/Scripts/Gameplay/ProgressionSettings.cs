@@ -94,14 +94,13 @@ namespace PaperWings.Gameplay
 
         [Header("Earning paper clips")]
         public int clipsPerKill = 3;
-        public int clipsPerMugLanding = 5;
         [Tooltip("For finishing a Ring Run, Dogfight, Squadron Battle or Boss Fight.")]
         public int clipsPerCompletedRun = 20;
         [Tooltip("Extra clips for a NEW best medal in a mode (bronze, silver, gold). Paid once per medal tier.")]
         public int[] medalBonus = { 15, 30, 60 };
 
         [Header("Medal times (seconds; beat them for bronze / silver / gold)")]
-        public Vector3 ringRunMedals = new Vector3(75f, 55f, 40f);
+        public Vector3 ringRunMedals = new Vector3(60f, 45f, 32f);
         public Vector3 dogfightMedals = new Vector3(140f, 100f, 70f);
         public Vector3 squadronMedals = new Vector3(200f, 140f, 100f);
         public Vector3 bossMedals = new Vector3(180f, 130f, 90f);
@@ -160,7 +159,10 @@ namespace PaperWings.Gameplay
         }
 
         /// <summary>0 = none, 1 = bronze, 2 = silver, 3 = gold.</summary>
-        public int MedalFor(GameMode mode, float time)
+        public int MedalFor(GameMode mode, float time) => MedalFor(mode, time, Vector3.zero);
+
+        /// <summary>Same, with room-specific times (zero = the defaults above).</summary>
+        public int MedalFor(GameMode mode, float time, Vector3 overrideTimes)
         {
             Vector3 t = mode switch
             {
@@ -170,6 +172,7 @@ namespace PaperWings.Gameplay
                 GameMode.BossFight => bossMedals,
                 _ => Vector3.zero
             };
+            if (overrideTimes != Vector3.zero) t = overrideTimes;
             if (t == Vector3.zero) return 0;
             if (time <= t.z) return 3;
             if (time <= t.y) return 2;

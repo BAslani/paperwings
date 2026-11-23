@@ -28,7 +28,7 @@ namespace PaperWings.UI
         bool showPanel = true;
         float scale;
         float ringFlash;   // >0 briefly after passing a ring
-        LandingZone landingZone;
+
         PaperDamage paper;
         PlaneInput planeInput;
         FoldSelector folds;
@@ -48,7 +48,7 @@ namespace PaperWings.UI
         {
             // Include inactive: game modes switch the route on and off.
             if (route == null) route = FindAnyObjectByType<RaceRoute>(FindObjectsInactive.Include);
-            if (route != null) route.RingPassed += _ => ringFlash = 1f;
+            RaceRoute.AnyRingPassed += OnRing;
 
             if (plane != null) paper = plane.GetComponent<PaperDamage>();
             if (plane != null) planeInput = plane.GetComponent<PlaneInput>();
@@ -71,16 +71,25 @@ namespace PaperWings.UI
             CombatScore.KillScored -= OnKill;
             CombatScore.AllyKillScored -= OnAllyKill;
             Progression.ClipsEarned -= OnClips;
+            RaceRoute.AnyRingPassed -= OnRing;
             if (boss != null) { boss.Damaged -= OnBossDamaged; boss.Defeated -= OnBossDefeated; }
         }
 
         void OnAnyHit(PlaneController shooter, GameObject victim) { if (shooter == plane) hitFlash = 1f; }
         void OnKill(int kills) => killFlash = 1f;
+        void OnRing(Checkpoint ring) => ringFlash = 1f;
         void OnAllyKill(int teamKills) => allyKillFlash = 1f;
         void OnClips(int amount, string reason) { clipFlash = 1f; lastClips = amount; lastClipReason = reason; }
 
         /// <summary>True when the ring route exists and is switched on (e.g. in Ring Run mode).</summary>
-        bool RouteActive => route != null && route.isActiveAndEnabled && route.RingCount > 0;
+        bool RouteActive
+        {
+            get
+            {
+                if (RaceRoute.Active != null) route = RaceRoute.Active;   // follow whichever room's route is on
+                return route != null && route.isActiveAndEnabled && route.RingCount > 0;
+            }
+        }
 
         static readonly Color Green = new Color(0.45f, 1f, 0.35f);
         static readonly Color Yellow = new Color(1f, 0.82f, 0.3f);
@@ -138,7 +147,7 @@ namespace PaperWings.UI
 
             float x = panel.x + 12 * scale, y = panel.y + 8 * scale, w = panel.width - 24 * scale, line = 26 * scale;
             string rings = route.AllRingsPassed
-                ? $"<color=#60FF80><b>All {route.RingCount} rings!</b></color>  land on the mug"
+                ? $"<color=#60FF80><b>All {route.RingCount} rings!</b></color>"
                 : $"Rings  <b>{route.NextIndex} / {route.RingCount}</b>";
             Label(ref y, x, w, line, rings);
             Label(ref y, x, w, line, $"Time   <b>{plane.FlightTime:0.00}s</b>");
@@ -155,7 +164,7 @@ namespace PaperWings.UI
         }
 
         /// <summary>
-        /// Points at the next ring (or the mug once all rings are done): a marker over it when it's
+        /// Points at the next ring: a marker over it when it's
         /// on screen, an arrow at the screen edge when it isn't. Readability over realism!
         /// </summary>
         void DrawNextTargetPointer()
@@ -166,14 +175,9 @@ namespace PaperWings.UI
 
             Vector3 target;
             string label;
-            if (!route.AllRingsPassed) { target = route.NextRing.transform.position; label = $"{route.NextIndex + 1}"; }
-            else
-            {
-                if (landingZone == null) landingZone = FindAnyObjectByType<LandingZone>();
-                if (landingZone == null) return;
-                target = landingZone.SurfaceCenter;
-                label = "LAND";
-            }
+            if (route.AllRingsPassed) return;   // route done: nothing left to point at
+            target = route.NextRing.transform.position;
+            label = $"{route.NextIndex + 1}";
 
             float dist = Vector3.Distance(plane.transform.position, target);
             string color = route.AllRingsPassed ? "#60FF80" : "#FFE040";

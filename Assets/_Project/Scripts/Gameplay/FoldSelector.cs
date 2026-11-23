@@ -83,7 +83,7 @@ namespace PaperWings.Gameplay
 
         void Update()
         {
-            if (AvailableCount < 2 || input == null || plane.State != PlaneState.Held) return;
+            if (AvailableCount < 2 || input == null || plane.State != PlaneState.Held || LaunchAndReset.InputBlocked) return;   // not while a menu is open
             if (input.FoldNextPressed) Cycle(+1);
             else if (input.FoldPrevPressed) Cycle(-1);
         }

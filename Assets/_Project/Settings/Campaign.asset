@@ -16,39 +16,45 @@ MonoBehaviour:
   nights:
   - title: First Flight
     memo: 'MEMO from Marketing: Welcome to the night shift, rookie. Hold Throw to
-      wind up, let go to fly. Dive for speed, climb to slow down. Bring it down gently
-      on the coffee mug.'
+      wind up, let go to fly. Dive for speed, climb to slow down, ride the laptop''s
+      heat. Stay up for fifteen seconds in one flight.'
     mode: 0
+    room: 0
     killTarget: 0
     maxRivals: 0
     timeLimit: 0
+    airTimeTarget: 15
     windScale: 1
     noPencils: 0
-    twoStarTime: 20
-    threeStarTime: 12
+    twoStarTime: 25
+    threeStarTime: 16
     rewardClips: 30
     rewardUnlockId: 
   - title: The Ring Route
     memo: 'MEMO: The sticky-note rings mark our patrol route. Ride the laptop''s
-      heat to climb, boost when you need speed, and finish on the mug.'
+      heat to climb, boost when you need speed, and thread every ring.'
     mode: 1
+    room: 0
     killTarget: 0
     maxRivals: 0
     timeLimit: 0
+    airTimeTarget: 0
     windScale: 1
     noPencils: 0
-    twoStarTime: 70
-    threeStarTime: 50
+    twoStarTime: 55
+    threeStarTime: 40
     rewardClips: 40
     rewardUnlockId: 
   - title: Trespasser
     memo: 'MEMO: One of Accounting''s planes is snooping round our desks. It keeps
-      coming back for more, so shoot it down twice. Supply is sending you a bigger
-      staple magazine.'
+      coming back for more, so shoot it down twice. Supply is sending your Dart a
+      bigger staple magazine.'
     mode: 2
+    room: 0
     killTarget: 2
     maxRivals: 1
     timeLimit: 0
+    airTimeTarget: 0
     windScale: 1
     noPencils: 0
     twoStarTime: 60
@@ -59,22 +65,26 @@ MonoBehaviour:
     memo: 'MEMO: Someone set every fan and vent to MAX. Fly the ring route anyway.
       The air pushes harder tonight, so use it, don''t fight it.'
     mode: 1
+    room: 0
     killTarget: 0
     maxRivals: 0
     timeLimit: 120
+    airTimeTarget: 0
     windScale: 1.6
     noPencils: 0
-    twoStarTime: 80
-    threeStarTime: 60
+    twoStarTime: 70
+    threeStarTime: 50
     rewardClips: 50
     rewardUnlockId: 
   - title: Pencil Pushers
     memo: 'MEMO: Accounting is out in force. Down four of them and we''ll requisition
-      you a pair of lock-on pencil missiles.'
+      you a pair of lock-on pencil missiles for your Dart.'
     mode: 2
+    room: 0
     killTarget: 4
     maxRivals: 0
     timeLimit: 0
+    airTimeTarget: 0
     windScale: 1
     noPencils: 0
     twoStarTime: 110
@@ -82,25 +92,29 @@ MonoBehaviour:
     rewardClips: 20
     rewardUnlockId: dart:pencils
   - title: Against the Clock
-    memo: 'MEMO: The cleaners come at dawn. Run the whole route and land in under
-      a minute. Do it and R&D will teach you the Glider fold.'
+    memo: 'MEMO: The cleaners come at dawn. Run the whole route in under a minute.
+      Do it and R&D will teach you the Glider fold.'
     mode: 1
+    room: 0
     killTarget: 0
     maxRivals: 0
     timeLimit: 60
+    airTimeTarget: 0
     windScale: 1
     noPencils: 0
-    twoStarTime: 50
-    threeStarTime: 40
+    twoStarTime: 42
+    threeStarTime: 32
     rewardClips: 30
     rewardUnlockId: fold_glider
   - title: Backup
     memo: 'MEMO: You''re not alone any more. Two Marketing wingmen fly with you tonight.
       Together, down six of Accounting''s planes.'
     mode: 4
+    room: 0
     killTarget: 6
     maxRivals: 0
     timeLimit: 0
+    airTimeTarget: 0
     windScale: 1
     noPencils: 0
     twoStarTime: 130
@@ -109,12 +123,14 @@ MonoBehaviour:
     rewardUnlockId: 
   - title: Staples Only
     memo: 'MEMO: Pencil audit tonight, so they stay in the drawer. Five kills with
-      staples alone, before the clock runs out. Survive it and you get the heavy
+      staples alone, before the clock runs out. Survive it and your Dart gets heavy
       paper.'
     mode: 2
+    room: 0
     killTarget: 5
     maxRivals: 0
     timeLimit: 160
+    airTimeTarget: 0
     windScale: 1
     noPencils: 1
     twoStarTime: 120
@@ -125,9 +141,11 @@ MonoBehaviour:
     memo: 'MEMO: Accounting''s whole squadron is up, and the air is rough. Ten kills
       between you and your wingmen takes the office back.'
     mode: 4
+    room: 0
     killTarget: 10
     maxRivals: 0
     timeLimit: 0
+    airTimeTarget: 0
     windScale: 1.3
     noPencils: 0
     twoStarTime: 190
@@ -135,16 +153,65 @@ MonoBehaviour:
     rewardClips: 80
     rewardUnlockId: 
   - title: The Stapler
-    memo: 'FINAL MEMO: Accounting''s secret weapon has woken up on the mug desk.
-      Dodge its staple fans and slams, and hit the glowing mouth when the jaw opens.
-      End the Night Shift War.'
+    memo: 'FINAL MEMO: Accounting''s secret weapon has woken up on the desk. Dodge
+      its staple fans and slams, and hit the glowing mouth when the jaw opens. End
+      the Night Shift War.'
     mode: 3
+    room: 0
     killTarget: 0
     maxRivals: 0
     timeLimit: 0
+    airTimeTarget: 0
     windScale: 1
     noPencils: 0
     twoStarTime: 150
     threeStarTime: 100
     rewardClips: 150
     rewardUnlockId: fold_canard
+  - title: 'Overtime: Coffee Break'
+    memo: 'OVERTIME MEMO: The war is won, but nobody goes home. Head to the break
+      room and stay up for twenty-five seconds. The microwave''s heat keeps you aloft;
+      the vent over the sink doesn''t.'
+    mode: 0
+    room: 1
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 25
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 40
+    threeStarTime: 28
+    rewardClips: 50
+    rewardUnlockId: 
+  - title: Microwave Express
+    memo: 'MEMO: Someone left popcorn in the microwave and the heat is rising. Ride
+      it up through the break room rings. Finish and the Dart gets its own pusher
+      propeller.'
+    mode: 1
+    room: 1
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 50
+    threeStarTime: 35
+    rewardClips: 30
+    rewardUnlockId: dart:propeller
+  - title: Break Room Brawl
+    memo: 'MEMO: Accounting is regrouping by the vending machine. Four kills between
+      the cupboards and the fridge, and R&D hands over the Stunt fold.'
+    mode: 2
+    room: 1
+    killTarget: 4
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 100
+    threeStarTime: 70
+    rewardClips: 100
+    rewardUnlockId: fold_stunt

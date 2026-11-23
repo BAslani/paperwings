@@ -136,8 +136,11 @@ namespace PaperWings.Flight
             // FixedUpdate (per physics tick). Queue the press so it's never missed.
             if (boost.WasPressedThisFrame()) boostQueued = true;
 
-            if (toggleControls != null && toggleControls.WasPressedThisFrame() && controls != null)
+            if (toggleControls != null && toggleControls.WasPressedThisFrame() && controls != null && !CursorBlocked)
+            {
                 controls.scheme = IsMouseAim ? ControlScheme.Classic : ControlScheme.MouseAim;
+                UnityEngine.PlayerPrefs.SetInt("PaperWings.Opt.Scheme", (int)controls.scheme);   // remembered (see GameOptions)
+            }
 
             UpdateMouseAim();
             SetCursorCaptured(IsMouseAim && controls.lockCursor && Application.isFocused && !CursorBlocked);

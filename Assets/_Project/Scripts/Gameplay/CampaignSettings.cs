@@ -13,8 +13,10 @@ namespace PaperWings.Gameplay
         public string title = "New Night";
         [Tooltip("The briefing memo shown on the campaign screen.")]
         [TextArea(2, 4)] public string memo = "";
-        [Tooltip("Which mode this night is built on. Free Flight nights are won by landing on the mug.")]
+        [Tooltip("Which mode this night is built on. Free Flight nights are won by staying in the air (Air Time Target).")]
         public GameMode mode = GameMode.RingRun;
+        [Tooltip("Which room (0 = the office desk, 1 = the break room).")]
+        public int room = 0;
 
         [Header("Twist (0 / off = the mode's normal rules)")]
         [Tooltip("Dogfight / Squadron: kills needed. 0 = the mode's usual target.")]
@@ -23,6 +25,8 @@ namespace PaperWings.Gameplay
         public int maxRivals = 0;
         [Tooltip("Fail the night if the clock passes this (seconds). 0 = no limit.")]
         public float timeLimit = 0f;
+        [Tooltip("Free Flight nights: seconds to stay in the air in ONE flight to win.")]
+        public float airTimeTarget = 0f;
         [Tooltip("Strength of every fan, thermal and vent. 1 = normal, 1.6 = rough air.")]
         public float windScale = 1f;
         [Tooltip("Pencils stay in the drawer tonight, even if unlocked.")]
@@ -52,8 +56,8 @@ namespace PaperWings.Gameplay
         {
             string g = mode switch
             {
-                GameMode.FreeFlight => "Land on the coffee mug.",
-                GameMode.RingRun => "Fly through every ring, then land on the mug.",
+                GameMode.FreeFlight => $"Stay in the air for {airTimeTarget:0}s in one flight.",
+                GameMode.RingRun => "Fly through every ring.",
                 GameMode.Dogfight => $"Shoot down {(killTarget > 0 ? killTarget : defaultKillTarget)} rivals.",
                 GameMode.Squadron => $"Your squadron needs {(killTarget > 0 ? killTarget : defaultSquadronTarget)} kills.",
                 _ => "Defeat THE STAPLER."
@@ -76,21 +80,24 @@ namespace PaperWings.Gameplay
         [Tooltip("Extra paper clips for each NEW star beyond the first (2nd star, 3rd star).")]
         public int[] starBonus = { 15, 30 };
 
-        public CampaignNight[] nights =
+        public CampaignNight[] nights = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Concat(MainNights(), OvertimeNights()));
+
+        /// <summary>The ten office nights, ending with the boss.</summary>
+        static CampaignNight[] MainNights() => new[]
         {
             new CampaignNight
             {
-                title = "First Flight", mode = GameMode.FreeFlight, rewardClips = 30,
-                twoStarTime = 20f, threeStarTime = 12f,
+                title = "First Flight", mode = GameMode.FreeFlight, airTimeTarget = 15f, rewardClips = 30,
+                twoStarTime = 25f, threeStarTime = 16f,
                 memo = "MEMO from Marketing: Welcome to the night shift, rookie. Hold Throw to wind up, let go to fly. " +
-                       "Dive for speed, climb to slow down. Bring it down gently on the coffee mug."
+                       "Dive for speed, climb to slow down, ride the laptop's heat. Stay up for fifteen seconds in one flight."
             },
             new CampaignNight
             {
                 title = "The Ring Route", mode = GameMode.RingRun, rewardClips = 40,
-                twoStarTime = 70f, threeStarTime = 50f,
+                twoStarTime = 55f, threeStarTime = 40f,
                 memo = "MEMO: The sticky-note rings mark our patrol route. Ride the laptop's heat to climb, " +
-                       "boost when you need speed, and finish on the mug."
+                       "boost when you need speed, and thread every ring."
             },
             new CampaignNight
             {
@@ -103,7 +110,7 @@ namespace PaperWings.Gameplay
             new CampaignNight
             {
                 title = "Rough Air", mode = GameMode.RingRun, windScale = 1.6f, timeLimit = 120f,
-                twoStarTime = 80f, threeStarTime = 60f, rewardClips = 50,
+                twoStarTime = 70f, threeStarTime = 50f, rewardClips = 50,
                 memo = "MEMO: Someone set every fan and vent to MAX. Fly the ring route anyway. " +
                        "The air pushes harder tonight, so use it, don't fight it."
             },
@@ -118,9 +125,9 @@ namespace PaperWings.Gameplay
             new CampaignNight
             {
                 title = "Against the Clock", mode = GameMode.RingRun, timeLimit = 60f,
-                twoStarTime = 50f, threeStarTime = 40f,
+                twoStarTime = 42f, threeStarTime = 32f,
                 rewardClips = 30, rewardUnlockId = UnlockIds.GliderFold,
-                memo = "MEMO: The cleaners come at dawn. Run the whole route and land in under a minute. " +
+                memo = "MEMO: The cleaners come at dawn. Run the whole route in under a minute. " +
                        "Do it and R&D will teach you the Glider fold."
             },
             new CampaignNight
@@ -150,8 +157,39 @@ namespace PaperWings.Gameplay
                 title = "The Stapler", mode = GameMode.BossFight,
                 twoStarTime = 150f, threeStarTime = 100f,
                 rewardClips = 150, rewardUnlockId = UnlockIds.CanardFold,
-                memo = "FINAL MEMO: Accounting's secret weapon has woken up on the mug desk. Dodge its staple fans " +
+                memo = "FINAL MEMO: Accounting's secret weapon has woken up on the desk. Dodge its staple fans " +
                        "and slams, and hit the glowing mouth when the jaw opens. End the Night Shift War."
+            },
+        };
+
+        /// <summary>
+        /// "Overtime": three nights in the break room, after the war is won. Kept after the boss so
+        /// adding them to an existing campaign doesn't shift anyone's saved stars.
+        /// </summary>
+        public static CampaignNight[] OvertimeNights() => new[]
+        {
+            new CampaignNight
+            {
+                title = "Overtime: Coffee Break", mode = GameMode.FreeFlight, room = 1, airTimeTarget = 25f,
+                twoStarTime = 40f, threeStarTime = 28f, rewardClips = 50,
+                memo = "OVERTIME MEMO: The war is won, but nobody goes home. Head to the break room " +
+                       "and stay up for twenty-five seconds. The microwave's heat keeps you aloft; the vent over the sink doesn't."
+            },
+            new CampaignNight
+            {
+                title = "Microwave Express", mode = GameMode.RingRun, room = 1,
+                twoStarTime = 50f, threeStarTime = 35f,
+                rewardClips = 30, rewardUnlockId = UnlockIds.ForFold("dart", UnlockIds.Propeller),
+                memo = "MEMO: Someone left popcorn in the microwave and the heat is rising. Ride it up through " +
+                       "the break room rings. Finish and the Dart gets its own pusher propeller."
+            },
+            new CampaignNight
+            {
+                title = "Break Room Brawl", mode = GameMode.Dogfight, room = 1, killTarget = 4,
+                twoStarTime = 100f, threeStarTime = 70f,
+                rewardClips = 100, rewardUnlockId = UnlockIds.StuntFold,
+                memo = "MEMO: Accounting is regrouping by the vending machine. Four kills between the cupboards " +
+                       "and the fridge, and R&D hands over the Stunt fold."
             },
         };
 
