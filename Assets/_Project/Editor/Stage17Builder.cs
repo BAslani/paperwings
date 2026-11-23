@@ -12,7 +12,7 @@ namespace PaperWings.EditorTools
     /// Menu: PaperWings > Build Stage 17 (Progression)
     ///
     ///  - Settings/Progression: unlock shop, rewards, medal times.
-    ///  - Tags the folds with unlock ids (Glider/Stunt/Canard folds, Canard propeller).
+    ///  - Tags the folds with unlock ids (Glider/Stunt/Canard folds).
     ///  - Adds a ProgressionApplier to GameFlow in both scenes; hooks rewards into the ModeDirector.
     /// New players start on the raw Dart with only the staple gun.
     /// Dev tools: PaperWings > Dev (reset progress, unlock everything, free paper clips).
@@ -29,10 +29,10 @@ namespace PaperWings.EditorTools
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
 
             Stage2Builder.LoadOrCreate<ProgressionSettings>(SettingsPath);
-            TagFold("Fold_Dart", "", "");
-            TagFold("Fold_Glider", UnlockIds.GliderFold, "");
-            TagFold("Fold_Stunt", UnlockIds.StuntFold, "");
-            TagFold("Fold_Canard", UnlockIds.CanardFold, UnlockIds.Propeller);
+            TagFold("Fold_Dart", "");
+            TagFold("Fold_Glider", UnlockIds.GliderFold);
+            TagFold("Fold_Stunt", UnlockIds.StuntFold);
+            TagFold("Fold_Canard", UnlockIds.CanardFold);
             AssetDatabase.SaveAssets();
 
             int wired = 0;
@@ -72,12 +72,11 @@ namespace PaperWings.EditorTools
                 "Testing: PaperWings > Dev > Reset Progress / Unlock Everything / +500 Paper Clips.", "Earn it!");
         }
 
-        static void TagFold(string foldName, string unlockId, string attachmentUnlockId)
+        static void TagFold(string foldName, string unlockId)
         {
             var fold = AssetDatabase.LoadAssetAtPath<PlaneFold>(S + foldName + ".asset");
             if (fold == null) return;
             fold.unlockId = unlockId;
-            fold.attachmentUnlockId = attachmentUnlockId;
             EditorUtility.SetDirty(fold);
         }
 
@@ -96,7 +95,7 @@ namespace PaperWings.EditorTools
         {
             var settings = AssetDatabase.LoadAssetAtPath<ProgressionSettings>(SettingsPath);
             if (settings == null) { Debug.LogWarning("Run Build Stage 17 first."); return; }
-            Progression.UnlockAll(settings.Shop().Select(u => u.id).Append(UnlockIds.Staples));
+            Progression.UnlockAll(settings.AllItems().Select(u => u.id).Append(UnlockIds.Staples));
             Debug.Log("PaperWings: everything unlocked.");
         }
 

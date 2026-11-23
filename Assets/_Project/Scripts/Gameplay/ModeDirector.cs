@@ -347,7 +347,7 @@ namespace PaperWings.Gameplay
                 if (!string.IsNullOrEmpty(night.rewardUnlockId))
                 {
                     var item = progression != null ? progression.Find(night.rewardUnlockId) : null;
-                    string name = item != null ? item.displayName : night.rewardUnlockId;
+                    string name = item != null ? item.LongName : night.rewardUnlockId;
                     if (Gameplay.Progression.GrantUnlock(night.rewardUnlockId))
                         result.reward = $"Unlocked: {name}!";
                     else

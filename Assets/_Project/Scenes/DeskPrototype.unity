@@ -666,6 +666,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 78b2f056777229344a1b434e8fad3dff, type: 2}
   - {fileID: 11400000, guid: 1a17399d3dbd93148864f878fbc841fb, type: 2}
   - {fileID: 11400000, guid: aed625f6a4aa1ee4e8145c559d5208f0, type: 2}
+  propellerPrefab: {fileID: 874460974202704955, guid: 98f06f8cf4a93164bb2858c833809272, type: 3}
 --- !u!114 &273746710
 MonoBehaviour:
   m_ObjectHideFlags: 0

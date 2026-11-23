@@ -118,6 +118,8 @@ namespace PaperWings.UI
             bool retryKey = (kb != null && kb.rKey.wasPressedThisFrame) || (pad != null && pad.buttonWest.wasPressedThisFrame);
             bool up = (kb != null && (kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame)) || (pad != null && pad.dpad.up.wasPressedThisFrame);
             bool down = (kb != null && (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame)) || (pad != null && pad.dpad.down.wasPressedThisFrame);
+            bool left = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame)) || (pad != null && pad.dpad.left.wasPressedThisFrame);
+            bool right = (kb != null && (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame)) || (pad != null && pad.dpad.right.wasPressedThisFrame);
 
             switch (screen)
             {
@@ -148,7 +150,7 @@ namespace PaperWings.UI
                     break;
 
                 case Screen.Unlocks:
-                    UpdateUnlocks(up, down, confirm, menuKey || back || unlocksKey);
+                    UpdateUnlocks(up, down, left, right, confirm, menuKey || back || unlocksKey);
                     break;
             }
         }
@@ -166,7 +168,10 @@ namespace PaperWings.UI
 
         void OpenUnlocks()
         {
-            shopMessage = "";
+            // Open on the tab of the fold you're holding.
+            if (foldSelector == null) foldSelector = FindAnyObjectByType<FoldSelector>();
+            int tab = foldSelector != null ? System.Array.IndexOf(ShopFolds(), foldSelector.Current) : -1;
+            SetTab(Mathf.Max(0, tab));
             Audio.AudioFx.PlayUi(Audio.Sfx.UiMove);
             Show(Screen.Unlocks);
         }
@@ -226,7 +231,7 @@ namespace PaperWings.UI
             if (!string.IsNullOrEmpty(night.rewardUnlockId))
             {
                 var item = director.ProgressionConfig != null ? director.ProgressionConfig.Find(night.rewardUnlockId) : null;
-                unlock = $"{(item != null ? item.displayName : night.rewardUnlockId)} + ";
+                unlock = $"{(item != null ? item.LongName : night.rewardUnlockId)} + ";
             }
             return $"{unlock}{night.rewardClips} clips";
         }
@@ -308,16 +313,53 @@ namespace PaperWings.UI
 
         // ------------------------------------------------------------------ unlocks
 
-        void UpdateUnlocks(bool up, bool down, bool confirm, bool leave)
-        {
-            var shop = director.ProgressionConfig != null ? director.ProgressionConfig.Shop() : null;
-            if (shop == null || shop.Length == 0 || leave) { Show(Screen.Menu); return; }
+        // The Unlocks screen has a tab per fold: each fold buys its own upgrades.
+        int foldTab;
+        FoldSelector foldSelector;
 
-            if (up) shopSelected = (shopSelected + shop.Length - 1) % shop.Length;
-            if (down) shopSelected = (shopSelected + 1) % shop.Length;
+        PlaneFold[] ShopFolds()
+        {
+            var cfg = director.ProgressionConfig;
+            if (cfg == null || cfg.folds == null) return new PlaneFold[0];
+            return System.Array.FindAll(cfg.folds, f => f != null);
+        }
+
+        PlaneFold TabFold()
+        {
+            var folds = ShopFolds();
+            if (folds.Length == 0) return null;
+            foldTab = Mathf.Clamp(foldTab, 0, folds.Length - 1);
+            return folds[foldTab];
+        }
+
+        void SetTab(int tab)
+        {
+            var folds = ShopFolds();
+            if (folds.Length == 0) return;
+            foldTab = (tab + folds.Length) % folds.Length;
+            shopSelected = 0;
+            shopMessage = "";
+        }
+
+        void UpdateUnlocks(bool up, bool down, bool left, bool right, bool confirm, bool leave)
+        {
+            var cfg = director.ProgressionConfig;
+            if (cfg == null || leave) { Show(Screen.Menu); return; }
+            if (left || right) { SetTab(foldTab + (right ? 1 : -1)); Audio.AudioFx.PlayUi(Audio.Sfx.UiMove); }
+
+            var shop = cfg.ShopFor(TabFold());
+            if (shop.Count == 0) return;
+            if (up) shopSelected = (shopSelected + shop.Count - 1) % shop.Count;
+            if (down) shopSelected = (shopSelected + 1) % shop.Count;
             if (up || down) { Audio.AudioFx.PlayUi(Audio.Sfx.UiMove); shopMessage = ""; }
-            shopSelected = Mathf.Clamp(shopSelected, 0, shop.Length - 1);
+            shopSelected = Mathf.Clamp(shopSelected, 0, shop.Count - 1);
             if (confirm) Buy(shop[shopSelected]);
+        }
+
+        string NameOf(string id)
+        {
+            var item = director.ProgressionConfig != null ? director.ProgressionConfig.Find(id) : null;
+            return item != null ? item.LongName : id;
         }
 
         void Buy(UnlockItem item)
@@ -326,15 +368,14 @@ namespace PaperWings.UI
             switch (result)
             {
                 case Progression.BuyResult.Bought:
-                    shopMessage = $"<color=#60FF80>Unlocked {item.displayName}!</color>";
+                    shopMessage = $"<color=#60FF80>Unlocked {item.LongName}!</color>";
                     Audio.AudioFx.PlayUi(Audio.Sfx.Victory, 0.7f);
                     break;
                 case Progression.BuyResult.AlreadyOwned:
                     shopMessage = "<color=#AAAAAA>Already yours.</color>";
                     break;
                 case Progression.BuyResult.NeedsRequirement:
-                    var req = director.ProgressionConfig.Find(item.requires);
-                    shopMessage = $"<color=#FF9050>Unlock {(req != null ? req.displayName : item.requires)} first.</color>";
+                    shopMessage = $"<color=#FF9050>Unlock {NameOf(item.requires)} first.</color>";
                     Audio.AudioFx.PlayUi(Audio.Sfx.NoLock);
                     break;
                 case Progression.BuyResult.TooExpensive:
@@ -344,16 +385,18 @@ namespace PaperWings.UI
             }
         }
 
-        /// <summary>The unlock shop: every upgrade with its price and status. Earn clips by playing modes.</summary>
+        /// <summary>The unlock shop: a tab per fold, each with the fold itself and its own upgrades.</summary>
         void DrawUnlocks()
         {
             var cfg = director.ProgressionConfig;
             if (cfg == null) { screen = Screen.Menu; return; }
-            var shop = cfg.Shop();
+            var folds = ShopFolds();
+            var fold = TabFold();
+            var shop = cfg.ShopFor(fold);
 
             Dim(0.7f);
-            float w = 780 * scale, rowH = 64 * scale;
-            float h = (190 + shop.Length * 70) * scale;
+            float w = 820 * scale, rowH = 64 * scale;
+            float h = (290 + shop.Count * 70) * scale;
             Rect panel = Centered(w, h);
             Box(panel, 0.9f);
 
@@ -361,9 +404,27 @@ namespace PaperWings.UI
             GUI.Label(new Rect(panel.x, y, w, 44 * scale), "UNLOCKS", title);
             y += 48 * scale;
             GUI.Label(new Rect(panel.x, y, w, 30 * scale), $"<color=#FFD040><b>{Progression.PaperClips}</b> paper clips</color>", body);
-            y += 40 * scale;
+            y += 42 * scale;
 
-            for (int i = 0; i < shop.Length; i++)
+            // Fold tabs.
+            if (folds.Length > 0)
+            {
+                float tabW = (w - 60 * scale) / folds.Length;
+                for (int t = 0; t < folds.Length; t++)
+                {
+                    Rect tab = new Rect(panel.x + 30 * scale + t * tabW, y, tabW - 6 * scale, 40 * scale);
+                    bool open = Progression.IsUnlocked(folds[t].unlockId);
+                    GUI.color = t == foldTab ? new Color(1f, 0.85f, 0.3f, 0.45f) : new Color(1f, 1f, 1f, 0.07f);
+                    GUI.DrawTexture(tab, Texture2D.whiteTexture);
+                    GUI.color = Color.white;
+                    string label = open ? folds[t].displayName.ToUpper() : $"<color=#888888>{folds[t].displayName.ToUpper()} (locked)</color>";
+                    GUI.Label(tab, $"<b>{label}</b>", body);
+                    if (GUI.Button(tab, GUIContent.none, GUIStyle.none)) SetTab(t);
+                }
+                y += 50 * scale;
+            }
+
+            for (int i = 0; i < shop.Count; i++)
             {
                 var item = shop[i];
                 Rect row = new Rect(panel.x + 30 * scale, y, w - 60 * scale, rowH);
@@ -375,17 +436,17 @@ namespace PaperWings.UI
 
                 string nameColor = state == Progression.BuyResult.AlreadyOwned ? "#80FF90" : (state == Progression.BuyResult.NeedsRequirement ? "#777777" : "#FFFFFF");
                 GUI.Label(new Rect(row.x + 14 * scale, row.y + 4 * scale, row.width, 30 * scale), $"<b><color={nameColor}>{item.displayName}</color></b>", button);
-                GUI.Label(new Rect(row.x + 14 * scale, row.y + 34 * scale, row.width - 200 * scale, 28 * scale),
+                GUI.Label(new Rect(row.x + 14 * scale, row.y + 34 * scale, row.width - 220 * scale, 28 * scale),
                           $"<color=#BBBBBB>{item.description}</color>", new GUIStyle(small) { alignment = TextAnchor.UpperLeft });
 
                 string status = state switch
                 {
                     Progression.BuyResult.AlreadyOwned => "<color=#80FF90><b>OWNED</b></color>",
-                    Progression.BuyResult.NeedsRequirement => $"<color=#888888>needs {(cfg.Find(item.requires)?.displayName ?? item.requires)}</color>",
+                    Progression.BuyResult.NeedsRequirement => $"<color=#888888>needs {NameOf(item.requires)}</color>",
                     Progression.BuyResult.TooExpensive => $"<color=#FF9050>{item.cost} clips</color>",
                     _ => $"<color=#FFD040><b>{item.cost} clips</b></color>"
                 };
-                GUI.Label(new Rect(row.xMax - 210 * scale, row.y + 6 * scale, 196 * scale, 30 * scale), status,
+                GUI.Label(new Rect(row.xMax - 250 * scale, row.y + 6 * scale, 236 * scale, 30 * scale), status,
                           new GUIStyle(small) { alignment = TextAnchor.UpperRight });
 
                 if (GUI.Button(row, GUIContent.none, GUIStyle.none)) { shopSelected = i; Buy(item); }
@@ -394,7 +455,7 @@ namespace PaperWings.UI
 
             GUI.Label(new Rect(panel.x, panel.yMax - 72 * scale, w, 28 * scale), shopMessage, body);
             GUI.Label(new Rect(panel.x, panel.yMax - 40 * scale, w, 28 * scale),
-                      "<color=#999999>Up/Down, Enter / Space / (A) or click to unlock.    U / Esc / (B): back</color>", small);
+                      "<color=#999999>Left/Right or A/D: fold.   Up/Down, Enter / Space / (A) or click to unlock.   U / Esc / (B): back</color>", small);
         }
 
         // ------------------------------------------------------------------ drawing

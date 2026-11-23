@@ -39,6 +39,8 @@ MonoBehaviour:
   stallExtraSink: 3
   boostSpeed: 9
   boostCooldown: 3
+  boostLift: 8
+  boostLiftDuration: 1
   throwSpeedMin: 10
   throwSpeedMax: 16
   throwChargeTime: 0.6

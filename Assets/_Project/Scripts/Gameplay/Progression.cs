@@ -19,7 +19,7 @@ namespace PaperWings.Gameplay
         [Serializable]
         class SaveData
         {
-            public int version = 1;
+            public int version = 2;   // 2 = upgrades are per fold ("dart:pencils")
             public int paperClips;
             public int totalClipsEarned;
             public List<string> unlocked = new List<string>();
@@ -167,6 +167,24 @@ namespace PaperWings.Gameplay
             }
             data ??= new SaveData();
             data.nightStars ??= new List<int>();   // saves from before the campaign existed
+            data.unlocked ??= new List<string>();
+            if (data.version < 2) MigrateToPerFoldUpgrades();
+        }
+
+        /// <summary>
+        /// Version 1 saves had one set of upgrades for every fold. They become the Dart's upgrades
+        /// (the fold everyone flew), and the old Canard-only propeller stays on the Canard.
+        /// </summary>
+        static void MigrateToPerFoldUpgrades()
+        {
+            for (int i = 0; i < data.unlocked.Count; i++)
+            {
+                string id = data.unlocked[i];
+                if (Array.IndexOf(UnlockIds.LegacyUpgrades, id) < 0) continue;
+                data.unlocked[i] = UnlockIds.ForFold(id == UnlockIds.Propeller ? "canard" : "dart", id);
+            }
+            data.version = 2;
+            try { File.WriteAllText(SavePath, JsonUtility.ToJson(data, true)); } catch (Exception) { }
         }
 
         static void SaveAndNotify()

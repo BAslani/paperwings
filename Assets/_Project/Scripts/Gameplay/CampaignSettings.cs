@@ -37,7 +37,7 @@ namespace PaperWings.Gameplay
         [Header("Reward (first clear only)")]
         [Tooltip("Paper clips for the first clear.")]
         public int rewardClips = 30;
-        [Tooltip("Unlock id granted for free on the first clear (empty = none). If you already own it, you get its price in clips instead.")]
+        [Tooltip("Unlock id granted for free on the first clear (empty = none), e.g. 'fold_glider' or 'dart:pencils'. If you already own it, you get its price in clips instead.")]
         public string rewardUnlockId = "";
 
         public int StarsFor(float time)
@@ -96,9 +96,9 @@ namespace PaperWings.Gameplay
             {
                 title = "Trespasser", mode = GameMode.Dogfight, killTarget = 2, maxRivals = 1,
                 twoStarTime = 60f, threeStarTime = 35f,
-                rewardClips = 20, rewardUnlockId = UnlockIds.StapleMagazine,
+                rewardClips = 20, rewardUnlockId = "dart:" + UnlockIds.StapleMagazine,
                 memo = "MEMO: One of Accounting's planes is snooping round our desks. It keeps coming back for more, " +
-                       "so shoot it down twice. Supply is sending you a bigger staple magazine."
+                       "so shoot it down twice. Supply is sending your Dart a bigger staple magazine."
             },
             new CampaignNight
             {
@@ -111,9 +111,9 @@ namespace PaperWings.Gameplay
             {
                 title = "Pencil Pushers", mode = GameMode.Dogfight, killTarget = 4,
                 twoStarTime = 110f, threeStarTime = 75f,
-                rewardClips = 20, rewardUnlockId = UnlockIds.Pencils,
+                rewardClips = 20, rewardUnlockId = "dart:" + UnlockIds.Pencils,
                 memo = "MEMO: Accounting is out in force. Down four of them and we'll requisition you " +
-                       "a pair of lock-on pencil missiles."
+                       "a pair of lock-on pencil missiles for your Dart."
             },
             new CampaignNight
             {
@@ -134,9 +134,9 @@ namespace PaperWings.Gameplay
             {
                 title = "Staples Only", mode = GameMode.Dogfight, killTarget = 5, noPencils = true, timeLimit = 160f,
                 twoStarTime = 120f, threeStarTime = 85f,
-                rewardClips = 30, rewardUnlockId = UnlockIds.HeavyPaper,
+                rewardClips = 30, rewardUnlockId = "dart:" + UnlockIds.HeavyPaper,
                 memo = "MEMO: Pencil audit tonight, so they stay in the drawer. Five kills with staples alone, " +
-                       "before the clock runs out. Survive it and you get the heavy paper."
+                       "before the clock runs out. Survive it and your Dart gets heavy paper."
             },
             new CampaignNight
             {

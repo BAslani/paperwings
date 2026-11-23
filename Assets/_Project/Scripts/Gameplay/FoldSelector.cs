@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using PaperWings.Flight;
 
@@ -16,6 +17,8 @@ namespace PaperWings.Gameplay
         [SerializeField] PlaneController plane;
         [SerializeField] PlaneInput input;
         [SerializeField] PlaneFold[] folds;
+        [Tooltip("The pusher propeller upgrade. Any fold can carry it, at the fold's Propeller Mount.")]
+        [SerializeField] GameObject propellerPrefab;
 
         public event Action<PlaneFold> FoldChanged;
 
@@ -25,8 +28,10 @@ namespace PaperWings.Gameplay
 
         /// <summary>Which folds may be picked (set by progression). Null = all of them.</summary>
         public Func<PlaneFold, bool> FoldAvailable { get; set; }
-        /// <summary>Whether a fold's attachment is unlocked (set by progression). Null = always.</summary>
-        public Func<PlaneFold, bool> AttachmentAvailable { get; set; }
+        /// <summary>Whether a fold has its propeller (set by progression, per fold). Null = never.</summary>
+        public Func<PlaneFold, bool> PropellerAvailable { get; set; }
+        public bool HasPropeller => currentPropeller != null;
+        public IReadOnlyList<PlaneFold> Folds => folds;
         /// <summary>How many folds can currently be picked.</summary>
         public int AvailableCount
         {
@@ -37,7 +42,8 @@ namespace PaperWings.Gameplay
 
         const string PrefKey = "PaperWings.SelectedFold";
         int index;
-        GameObject currentAttachment;   // spawned part for the current fold (if any)
+        GameObject currentAttachment;   // spawned decoration for the current fold (if any)
+        GameObject currentPropeller;    // the propeller, if this fold has bought it
         bool started;
 
         void Start()
@@ -128,14 +134,21 @@ namespace PaperWings.Gameplay
                 }
             }
 
-            // Swap the fold's optional attachment (e.g. the Canard's propeller).
-            // Locked attachments don't appear, and don't give their bonus (the propeller's boost lift).
+            // Swap the fold's optional decoration.
+            Transform mount = visual != null ? visual : plane.transform;
             if (currentAttachment != null) Destroy(currentAttachment);
-            currentAttachment = null;
-            bool attachmentUnlocked = AttachmentAvailable == null || AttachmentAvailable(fold);
-            if (fold.attachment != null && attachmentUnlocked)
-                currentAttachment = Instantiate(fold.attachment, visual != null ? visual : plane.transform, false);
-            plane.BoostLiftScale = fold.attachment == null || attachmentUnlocked ? 1f : 0f;
+            currentAttachment = fold.attachment != null ? Instantiate(fold.attachment, mount, false) : null;
+
+            // The propeller is a per-fold upgrade: it sits on this fold's tail and gives its boost lift.
+            if (currentPropeller != null) Destroy(currentPropeller);
+            currentPropeller = null;
+            bool hasProp = propellerPrefab != null && PropellerAvailable != null && PropellerAvailable(fold);
+            if (hasProp)
+            {
+                currentPropeller = Instantiate(propellerPrefab, mount, false);
+                currentPropeller.transform.localPosition = fold.propellerMount;
+            }
+            plane.BoostLiftScale = hasProp ? 1f : 0f;   // no propeller = boost only adds speed
 
             FoldChanged?.Invoke(fold);
         }

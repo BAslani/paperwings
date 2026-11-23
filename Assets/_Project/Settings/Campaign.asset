@@ -54,7 +54,7 @@ MonoBehaviour:
     twoStarTime: 60
     threeStarTime: 35
     rewardClips: 20
-    rewardUnlockId: staples_plus
+    rewardUnlockId: dart:staples_plus
   - title: Rough Air
     memo: 'MEMO: Someone set every fan and vent to MAX. Fly the ring route anyway.
       The air pushes harder tonight, so use it, don''t fight it.'
@@ -80,7 +80,7 @@ MonoBehaviour:
     twoStarTime: 110
     threeStarTime: 75
     rewardClips: 20
-    rewardUnlockId: pencils
+    rewardUnlockId: dart:pencils
   - title: Against the Clock
     memo: 'MEMO: The cleaners come at dawn. Run the whole route and land in under
       a minute. Do it and R&D will teach you the Glider fold.'
@@ -120,7 +120,7 @@ MonoBehaviour:
     twoStarTime: 120
     threeStarTime: 85
     rewardClips: 30
-    rewardUnlockId: paper_tough
+    rewardUnlockId: dart:paper_tough
   - title: Full Squadron
     memo: 'MEMO: Accounting''s whole squadron is up, and the air is rough. Ten kills
       between you and your wingmen takes the office back.'

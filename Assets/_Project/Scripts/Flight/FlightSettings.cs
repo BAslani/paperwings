@@ -112,8 +112,7 @@ namespace PaperWings.Flight
         [Tooltip("Seconds between boosts.")]
         public float boostCooldown = 3f;
 
-        [Tooltip("Upward push (units/sec) a boost adds, fading over Boost Lift Duration. 0 = boost only adds speed. " +
-                 "Lets a fold 'hop' upward when boosting.")]
+        [Tooltip("Upward push (units/sec) a boost adds when this fold has the pusher propeller (none without it), fading over Boost Lift Duration.")]
         public float boostLift = 0f;
 
         [Tooltip("Seconds the boost lift takes to fade out.")]
