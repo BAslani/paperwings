@@ -19,52 +19,61 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aed625f6a4aa1ee4e8145c559d5208f0, type: 2}
   foldUnlocks:
   - id: fold_glider
-    displayName: Glider Fold
-    description: Wide wings that ride thermals and glide forever.
-    cost: 80
+    displayName: Crane Glider
+    description: Long feathered crane wings that ride thermals and glide forever.
+    cost: 450
     requires: 
+    requiresNight: 3
   - id: fold_stunt
-    displayName: Stunt Fold
-    description: A snappy delta for tight turns and big dives.
-    cost: 100
+    displayName: Manta Stunt
+    description: A snappy manta-ray delta for tight turns and big dives.
+    cost: 700
     requires: 
+    requiresNight: 6
   - id: fold_canard
-    displayName: Canard Fold
-    description: 'Little nose wings: glides far and climbs easily.'
-    cost: 150
+    displayName: Dragon Canard
+    description: 'A paper dragon: little nose wings, bat wings, glides far and climbs
+      easily.'
+    cost: 1000
     requires: 
+    requiresNight: 9
   foldUpgrades:
-  - id: pencils
-    displayName: Pencil Missiles
-    description: Two lock-on homing pencils under the wings.
-    cost: 60
-    requires: 
-  - id: pencils_plus
-    displayName: Pencil Rack
-    description: Carry four pencils instead of two.
-    cost: 120
-    requires: pencils
   - id: staples_plus
     displayName: Staple Magazine
     description: +15 staples per throw.
-    cost: 50
+    cost: 160
     requires: 
+    requiresNight: 0
+  - id: pencils
+    displayName: Pencil Missiles
+    description: Two lock-on homing pencils under the wings.
+    cost: 260
+    requires: 
+    requiresNight: 2
   - id: paper_tough
     displayName: Heavy Paper
     description: '+25% paper integrity: more bumps and hits before you crumple.'
-    cost: 70
+    cost: 320
     requires: 
+    requiresNight: 4
   - id: propeller
     displayName: Pusher Propeller
     description: 'A spinning prop on the tail: boosting lifts you up as well as speeding
       you up.'
-    cost: 90
+    cost: 420
     requires: 
+    requiresNight: 7
+  - id: pencils_plus
+    displayName: Pencil Rack
+    description: Carry four pencils instead of two.
+    cost: 550
+    requires: pencils
+    requiresNight: 10
   staplesAreAnUnlock: 0
   staplesCost: 40
   clipsPerKill: 3
-  clipsPerCompletedRun: 20
-  medalBonus: 0f0000001e0000003c000000
+  clipsPerCompletedRun: 10
+  medalBonus: 0a0000001400000028000000
   ringRunMedals: {x: 60, y: 45, z: 32}
   dogfightMedals: {x: 140, y: 100, z: 70}
   squadronMedals: {x: 200, y: 140, z: 100}

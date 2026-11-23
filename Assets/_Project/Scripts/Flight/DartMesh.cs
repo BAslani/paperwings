@@ -4,36 +4,39 @@ using UnityEngine;
 namespace PaperWings.Flight
 {
     /// <summary>
-    /// Builds a low-poly paper dart mesh in code: two flat delta wings with a slight
-    /// upward dihedral, and a folded keel underneath. About 2 units long, nose at +Z.
-    /// Every face is double-sided (paper has two sides!) and flat-shaded.
+    /// Builds the Dart ("Arrowhead", Stage 29) in code: swallow-cut delta wings with a slight upward
+    /// dihedral and drooped tips, twin tail fins, a little folded canopy and a keel underneath.
+    /// About 2 units long, nose at +Z. Every face is double-sided (paper has two sides!) and flat-shaded.
     /// </summary>
     public static class DartMesh
     {
         public static Mesh Build()
         {
-            // Key points (local space, nose points toward +Z).
-            Vector3 nose      = new Vector3(0f,     0f,    1.0f);
-            Vector3 tailSpine = new Vector3(0f,     0f,   -1.0f);
-            Vector3 leftTip   = new Vector3(-0.7f,  0.1f, -1.0f);   // y > 0 = dihedral
-            Vector3 rightTip  = new Vector3( 0.7f,  0.1f, -1.0f);
-            Vector3 keelLow   = new Vector3(0f,    -0.22f, -0.85f);
-
-            var verts = new List<Vector3>();
-            var normals = new List<Vector3>();
-            var tris = new List<int>();
-
-            AddDoubleSided(verts, normals, tris, nose, leftTip, tailSpine);   // left wing
-            AddDoubleSided(verts, normals, tris, nose, tailSpine, rightTip);  // right wing
-            AddDoubleSided(verts, normals, tris, nose, tailSpine, keelLow);   // keel (single fold)
-
-            var mesh = new Mesh { name = "PaperDart" };
-            mesh.SetVertices(verts);
-            mesh.SetNormals(normals);
-            mesh.SetTriangles(tris, 0);
-            ApplyPaperUVs(mesh);
-            mesh.RecalculateBounds();
-            return mesh;
+            var b = new FoldMeshes.Builder();
+            Vector3 nose = new Vector3(0f, 0f, 1.05f);
+            Vector3 spine = new Vector3(0f, 0f, -0.92f);
+            b.Mirror((s, m) =>
+            {
+                Vector3 tip = new Vector3(0.72f * s, 0.12f, -0.80f);
+                Vector3 notch = new Vector3(0.44f * s, 0.08f, -0.60f);
+                Vector3 trail = new Vector3(0.18f * s, 0.03f, -1.00f);
+                // Wing with a swallow-cut trailing edge.
+                m.Tri(nose, tip, notch);
+                m.Tri(nose, notch, trail);
+                m.Tri(nose, trail, spine);
+                // Drooped wingtip fold.
+                m.Tri(tip, new Vector3(0.74f * s, -0.10f, -0.84f), new Vector3(0.60f * s, 0.10f, -0.68f));
+                // Twin tail fin.
+                m.Tri(new Vector3(0.16f * s, 0.03f, -0.50f), new Vector3(0.17f * s, 0.03f, -0.95f), new Vector3(0.19f * s, 0.30f, -0.92f));
+                // Leading-edge crease: a thin raised strake along the front of the wing.
+                m.Tri(new Vector3(0.04f * s, 0.01f, 0.70f), new Vector3(0.40f * s, 0.10f, -0.20f), new Vector3(0.10f * s, 0.06f, 0.30f));
+                // Canopy: a little folded pyramid near the nose.
+                Vector3 apex = new Vector3(0f, 0.12f, 0.35f);
+                m.Tri(apex, new Vector3(0.08f * s, 0.02f, 0.55f), new Vector3(0.10f * s, 0.02f, 0.15f));
+                m.Tri(apex, new Vector3(0f, 0.01f, 0.62f), new Vector3(0.08f * s, 0.02f, 0.55f));
+            });
+            b.Tri(nose, spine, new Vector3(0f, -0.22f, -0.80f));   // keel (single fold)
+            return b.Build("PaperDart");
         }
 
         /// <summary>

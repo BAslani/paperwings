@@ -65,11 +65,11 @@ namespace PaperWings.Air
 
                 result.wind += wind * WindScale;
                 result.moisture = Mathf.Max(result.moisture, s.Moisture * influence);
-                switch (s.Kind)
+                switch (s.KindAt(position))
                 {
                     case AirKind.Thermal:
                         result.thermal = Mathf.Max(result.thermal, influence);
-                        result.dryHeat = Mathf.Max(result.dryHeat, influence * (1f - s.Moisture));   // steam isn't dry heat
+                        if (s.IsHeat) result.dryHeat = Mathf.Max(result.dryHeat, influence * (1f - s.Moisture));   // steam and fan upwash aren't dry heat
                         break;
                     case AirKind.Downdraft: result.downdraft = Mathf.Max(result.downdraft, influence); break;
                     default:                result.draft = Mathf.Max(result.draft, influence); break;

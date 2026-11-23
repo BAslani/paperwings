@@ -12,7 +12,10 @@ namespace PaperWings.Air
         [SerializeField] VentSettings settings;
         [SerializeField] ParticleSystem streaks;
 
-        public override AirKind Kind => transform.forward.y < -0.5f ? AirKind.Downdraft : AirKind.Draft;
+        // Pointing down = a downdraft, pointing up (a floor vent) = lift, anything else = a sideways draft.
+        public override AirKind Kind => transform.forward.y < -0.5f ? AirKind.Downdraft
+                                      : transform.forward.y > 0.5f ? AirKind.Thermal : AirKind.Draft;
+        public override bool IsHeat => false;   // vents blow cold air
 
         public override Vector3 GetWind(Vector3 worldPosition, out float influence)
         {
@@ -57,7 +60,7 @@ namespace PaperWings.Air
             main.startSpeed = settings.windSpeed;
             // Streaks die out partway, where the air has weakened.
             main.startLifetime = settings.range * 0.7f / Mathf.Max(1f, settings.windSpeed);
-            main.startColor = settings.streakColor;
+            main.startColor = AirPalette.Of(Look, settings.streakColor);
             main.simulationSpace = ParticleSystemSimulationSpace.Local;
 
             var shape = streaks.shape;

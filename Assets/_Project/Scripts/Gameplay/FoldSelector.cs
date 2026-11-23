@@ -32,6 +32,26 @@ namespace PaperWings.Gameplay
         public Func<PlaneFold, bool> PropellerAvailable { get; set; }
         public bool HasPropeller => currentPropeller != null;
         public IReadOnlyList<PlaneFold> Folds => folds;
+        /// <summary>The propeller prefab (for the hangar preview).</summary>
+        public GameObject PropellerPrefab => propellerPrefab;
+
+        /// <summary>
+        /// Switches to a fold directly (the Unlocks screen's "fly this fold"). Only while the plane is in
+        /// hand and the fold is unlocked. Returns true if it's now the current fold.
+        /// </summary>
+        public bool Select(PlaneFold fold)
+        {
+            if (fold == null || folds == null || plane == null || plane.State == PlaneState.Flying) return false;
+            int i = System.Array.IndexOf(folds, fold);
+            if (i < 0 || !IsAvailable(i)) return false;
+            if (i != index)
+            {
+                index = i;
+                PlayerPrefs.SetInt(PrefKey, index);
+                Apply();
+            }
+            return true;
+        }
         /// <summary>How many folds can currently be picked.</summary>
         public int AvailableCount
         {

@@ -204,7 +204,7 @@ namespace PaperWings.EditorTools
             Box("MonitorScreen", props, P(0f, 10f, 13f), new Vector3(24f, 14f, 0.8f), screen);
 
             Box("Keyboard", props, P(-1f, 0.3f, -6f), new Vector3(16f, 0.6f, 5f), plastic);
-            Box("Mouse", props, P(10f, 0.4f, -6f), new Vector3(1.4f, 0.8f, 2.2f), plastic);
+            Box("Mouse", props, P(10f, 0.55f, -6f), new Vector3(2.6f, 1.1f, 4.2f), plastic);   // ~6 x 10 cm (Stage 23)
             Box("PaperStack", props, P(-5f, 0.5f, 6f), new Vector3(9f, 1f, 6f), paper).transform.rotation = Quaternion.Euler(0f, 8f, 0f);
 
             // Pen cup with pens.

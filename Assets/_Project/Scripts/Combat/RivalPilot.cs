@@ -26,6 +26,8 @@ namespace PaperWings.Combat
         [SerializeField] StapleGun gun;
 
         public Goal CurrentGoal { get; private set; }
+        /// <summary>Its decision knobs (an ace night swaps in sharper ones).</summary>
+        public RivalPilotSettings Settings { get => settings; set => settings = value; }
         public Vector3 PatrolCenter { get; set; }
         /// <summary>Wingmen: the plane to fly formation with (the player). Null for rivals.</summary>
         public PlaneController Leader { get; set; }
@@ -176,7 +178,7 @@ namespace PaperWings.Combat
             float best = float.MaxValue;
             foreach (var source in AirField.Sources)
             {
-                if (source.Kind != AirKind.Thermal) continue;
+                if (!source.OffersLiftCenter) continue;
                 Vector3 p = source.transform.position;
                 float d = Vector3.Distance(new Vector3(p.x, 0f, p.z), new Vector3(transform.position.x, 0f, transform.position.z));
                 if (d < best) { best = d; center = p; }

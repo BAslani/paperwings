@@ -10,7 +10,9 @@ namespace PaperWings.Flight
     /// unlike edits to scene components. That makes it ideal for live tuning.
     /// Create more via: Project window > right-click > Create > PaperWings > Flight Settings.
     ///
-    /// World scale: 1 Unity unit = 10 cm in the fiction (the dart is ~2 units long).
+    /// World scale: the office is built at about 1 unit = 2.3 cm (the desk is 70 units = 160 cm), so the
+    /// dart (~2 units) is a small ~5 cm plane in a big room. That is deliberate: a full-bank turn
+    /// (~21 units across) fits over the desk. Keep new props at this scale (see Stage 23).
     /// Speeds are in units/second. Angles in degrees.
     /// </summary>
     [CreateAssetMenu(fileName = "FlightSettings", menuName = "PaperWings/Flight Settings")]

@@ -20,9 +20,12 @@ namespace PaperWings.Combat
         [SerializeField] bool isBoss;
         [Tooltip("Where to aim (e.g. a boss's weak spot). Defaults to the object's position.")]
         [SerializeField] Transform aimPoint;
+        [Tooltip("AI pilots attack this even though it isn't a plane (couriers, bombers, boss turrets).")]
+        [SerializeField] bool aiTarget;
 
-        public string DisplayName => displayName;
-        public Faction Faction => faction;
+        public string DisplayName { get => displayName; set => displayName = value; }
+        public Faction Faction { get => faction; set => faction = value; }
+        public bool AiTarget { get => aiTarget; set => aiTarget = value; }
         public bool IsBoss => isBoss;
         public PlaneController Plane { get; private set; }
         /// <summary>True for friendly AI planes on the player's faction (wingmen).</summary>
@@ -32,11 +35,13 @@ namespace PaperWings.Combat
         public const Faction PlayerFaction = Faction.Marketing;
 
         IDamageable health;
+        IMovingTarget mover;
 
         void Awake()
         {
             Plane = GetComponent<PlaneController>();
             health = GetComponent<IDamageable>();
+            mover = GetComponent<IMovingTarget>();
             if (Plane != null && Plane.IsPlayer) faction = PlayerFaction;   // the player is always Marketing
         }
 
@@ -47,7 +52,7 @@ namespace PaperWings.Combat
         static void ResetStatics() => All.Clear();
 
         public Vector3 Position => aimPoint != null ? aimPoint.position : transform.position;
-        public Vector3 Velocity => Plane != null ? Plane.Velocity : Vector3.zero;
+        public Vector3 Velocity => Plane != null ? Plane.Velocity : (mover != null ? mover.Velocity : Vector3.zero);
         /// <summary>True for anything on the player's faction (the player and wingmen).</summary>
         public bool IsPlayerSide => faction == PlayerFaction;
         public bool IsAlive => Plane != null ? Plane.State == PlaneState.Flying : (health == null || health.IsAlive);
@@ -63,7 +68,7 @@ namespace PaperWings.Combat
             float bestAngle = maxAngle;
             foreach (var t in All)
             {
-                if (t.faction == shooter || !t.IsAlive || (planesOnly && t.Plane == null)) continue;
+                if (t.faction == shooter || t.faction == Faction.Neutral || !t.IsAlive || (planesOnly && t.Plane == null)) continue;
                 Vector3 to = t.Position - origin;
                 if (to.magnitude > range) continue;
                 float angle = Vector3.Angle(forward, to);
@@ -72,14 +77,14 @@ namespace PaperWings.Combat
             return best;
         }
 
-        /// <summary>The nearest living enemy plane of 'shooter' within range (used by AI pilots).</summary>
+        /// <summary>The nearest living enemy plane (or AI target: courier, bomber) of 'shooter' within range (used by AI pilots).</summary>
         public static CombatTarget FindNearestEnemyPlane(Vector3 origin, Faction shooter, float range)
         {
             CombatTarget best = null;
             float bestDist = range;
             foreach (var t in All)
             {
-                if (t.faction == shooter || t.Plane == null || !t.IsAlive) continue;
+                if (t.faction == shooter || t.faction == Faction.Neutral || (t.Plane == null && !t.aiTarget) || !t.IsAlive) continue;
                 float d = Vector3.Distance(origin, t.Position);
                 if (d < bestDist) { bestDist = d; best = t; }
             }

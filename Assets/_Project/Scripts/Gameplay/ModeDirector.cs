@@ -83,6 +83,16 @@ namespace PaperWings.Gameplay
         [SerializeField] CampaignSettings campaign;
         public CampaignSettings Campaign => campaign;
 
+        [Header("Missions (Stage 29)")]
+        [Tooltip("Pilot settings for an Ace night's rival (sharper, more aggressive).")]
+        [SerializeField] RivalPilotSettings acePilot;
+
+        /// <summary>The director in the scene (rooms and HUD read it).</summary>
+        public static ModeDirector Current { get; private set; }
+        /// <summary>Tonight's mission objective (Standard in free play).</summary>
+        public NightObjective Objective => InCampaign && Mode == GameMode.Dogfight ? Night.objective : NightObjective.Standard;
+        public ConvoySpawner Convoy => ConvoySpawner.Active;
+
         public GameMode Mode { get; private set; }
         public bool HasMode { get; private set; }
         public bool RunStarted { get; private set; }
@@ -111,8 +121,12 @@ namespace PaperWings.Gameplay
         int killBaseline;
         int teamKillBaseline;
         ProgressionApplier applier;
-        RaceRoute[] routes;          // per room
-        StaplerBoss[] bosses;        // per room
+        RaceRoute[] routes;          // per room (its main route)
+        GameObject activeRouteGroup; // the route switched on for this run (a room can have several, Stage 27)
+        RaceRoute activeRoute;
+        Transform lastSpawn;
+        BossBase[] bosses;           // per room
+        GameObject activeExtraGroup; // tonight's mission group (Stage 29)
 
         // ------------------------------------------------------------------ rooms
 
@@ -138,9 +152,9 @@ namespace PaperWings.Gameplay
         };
 
         public RaceRoute RouteOf(int room) => routes != null && room >= 0 && room < routes.Length ? routes[room] : null;
-        /// <summary>The current room's ring route.</summary>
-        public RaceRoute Route => RouteOf(RoomIndex);
-        public StaplerBoss Boss => bosses != null && RoomIndex < bosses.Length ? bosses[RoomIndex] : null;
+        /// <summary>The ring route of this run (a campaign night may pick one of the room's extra routes).</summary>
+        public RaceRoute Route => activeRoute != null ? activeRoute : RouteOf(RoomIndex);
+        public BossBase Boss => bosses != null && RoomIndex < bosses.Length ? bosses[RoomIndex] : null;
 
         /// <summary>Medals are kept per mode and room (the office keeps the plain mode number, so old medals stay).</summary>
         public static int MedalKey(GameMode m, int room) => (int)m + 100 * room;
@@ -160,14 +174,16 @@ namespace PaperWings.Gameplay
 
         void Awake()
         {
+            Current = this;
             routes = new RaceRoute[RoomCount];
-            bosses = new StaplerBoss[RoomCount];
+            bosses = new BossBase[RoomCount];
             for (int i = 0; i < RoomCount; i++)
             {
                 if (RouteGroupOf(i) != null) routes[i] = RouteGroupOf(i).GetComponentInChildren<RaceRoute>(true);
-                if (BossGroupOf(i) != null) bosses[i] = BossGroupOf(i).GetComponentInChildren<StaplerBoss>(true);
+                if (BossGroupOf(i) != null) bosses[i] = BossGroupOf(i).GetComponentInChildren<BossBase>(true);
             }
             RoomIndex = Mathf.Clamp(PlayerPrefs.GetInt("PaperWings.LastRoom", 0), 0, RoomCount - 1);
+            if (campaign != null) Gameplay.Progression.SyncCampaign(campaign.version);
             if (launcher != null) applier = launcher.GetComponent<ProgressionApplier>();
             // Until a mode is chosen, nothing hostile is running.
             AllGroupsOff();
@@ -185,12 +201,16 @@ namespace PaperWings.Gameplay
 
         void OnEnable()
         {
+            Current = this;
+            ConvoySpawner.HostileDowned += OnFlyerDowned;
             CombatScore.KillScored += OnPlayerKill;
             if (bosses != null) foreach (var b in bosses) if (b != null) b.Defeated += OnBossDefeated;
         }
 
         void OnDisable()
         {
+            if (Current == this) Current = null;
+            ConvoySpawner.HostileDowned -= OnFlyerDowned;
             CombatScore.KillScored -= OnPlayerKill;
             if (bosses != null) foreach (var b in bosses) if (b != null) b.Defeated -= OnBossDefeated;
             AirField.WindScale = 1f;
@@ -201,6 +221,15 @@ namespace PaperWings.Gameplay
         {
             if (progression != null && HasMode) Gameplay.Progression.AddClips(progression.clipsPerKill, "shot down");
         }
+
+        void OnFlyerDowned(PathFlyer flyer, PlaneController by)
+        {
+            if (progression != null && HasMode && by != null && by.IsPlayer && Objective != NightObjective.Practice)
+                Gameplay.Progression.AddClips(progression.clipsPerKill, "courier down");
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => Current = null;
 
         /// <summary>Starts (or restarts) a free-play mode from scratch, in a room (-1 = the current one).</summary>
         public void StartMode(GameMode mode, int room = -1)
@@ -227,7 +256,18 @@ namespace PaperWings.Gameplay
             bool moved = room != RoomIndex;
             RoomIndex = room;
             PlayerPrefs.SetInt("PaperWings.LastRoom", room);
-            if (launcher != null && CurrentRoom != null) launcher.SetSpawnPoint(CurrentRoom.spawnPoint);
+
+            // Which route and throw point: a night can name one of the room's places.
+            var place = Night;
+            GameObject areaRoute = place != null && CurrentRoom != null ? CurrentRoom.RouteNamed(place.area) : null;
+            activeRouteGroup = areaRoute != null ? areaRoute : RouteGroupOf(room);
+            activeRoute = activeRouteGroup != null ? activeRouteGroup.GetComponentInChildren<RaceRoute>(true) : null;
+            Transform spawn = place != null && CurrentRoom != null ? CurrentRoom.SpawnNamed(place.spawn) : null;
+            if (spawn == null && areaRoute != null) spawn = areaRoute.transform.Find("Spawn");
+            if (spawn == null && CurrentRoom != null) spawn = CurrentRoom.spawnPoint;
+            if (launcher != null && spawn != null) launcher.SetSpawnPoint(spawn);
+            if (spawn != lastSpawn) moved = true;   // a different throw point in the same room still needs a camera cut
+            lastSpawn = spawn;
 
             Mode = mode;
             HasMode = true;
@@ -247,7 +287,12 @@ namespace PaperWings.Gameplay
 
             // Tonight's twist (free play = normal rules).
             var night = Night;
-            if (night != null && night.maxRivals > 0) LimitRivals(night.maxRivals);
+            if (night != null && night.maxRivals != 0) LimitRivals(night.maxRivals);
+
+            // Tonight's mission group (a convoy route...) and ace.
+            activeExtraGroup = night != null && CurrentRoom != null ? CurrentRoom.GroupNamed(night.group) : null;
+            Toggle(activeExtraGroup, true);
+            if (night != null && mode == GameMode.Dogfight && night.objective == NightObjective.Ace) MakeAce(night);
             AirField.WindScale = night != null ? Mathf.Max(0f, night.windScale) : 1f;
             if (applier != null) applier.PencilsBanned = night != null && night.noPencils;
 
@@ -271,14 +316,52 @@ namespace PaperWings.Gameplay
                 cam.PreviousStateIsValid = false;
         }
 
-        /// <summary>Keeps only the first <paramref name="max"/> regular rival spawners running (0 = all).</summary>
+        /// <summary>Keeps only the first <paramref name="max"/> regular rival spawners running (0 = all, -1 = none).</summary>
         void LimitRivals(int max)
         {
             var group = CombatGroupOf(RoomIndex);
             if (group == null) return;
             var spawners = group.GetComponentsInChildren<EnemySpawner>(true);
             for (int i = 0; i < spawners.Length; i++)
-                spawners[i].enabled = max <= 0 || i < max;   // disabling a spawner removes its rival
+                spawners[i].enabled = max == 0 || (max > 0 && i < max);   // disabling a spawner removes its rival
+        }
+
+        /// <summary>Ace night: the first running rival spawner sends a named ace instead.</summary>
+        void MakeAce(CampaignNight night)
+        {
+            var group = CombatGroupOf(RoomIndex);
+            if (group == null) return;
+            foreach (var sp in group.GetComponentsInChildren<EnemySpawner>(false))
+            {
+                if (!sp.enabled) continue;
+                sp.MakeAce(new EnemySpawner.AceStyle
+                {
+                    name = string.IsNullOrEmpty(night.aceName) ? "THE ACE" : night.aceName.ToUpperInvariant(),
+                    pilot = acePilot
+                });
+                return;
+            }
+        }
+
+        /// <summary>The objective line for the in-flight strip (null = let the menu describe the mode).</summary>
+        public string ObjectiveText()
+        {
+            var c = Convoy;
+            switch (Objective)
+            {
+                case NightObjective.Intercept:
+                    return c == null ? "Intercept the couriers" :
+                        $"Couriers down  <b>{c.Downed} / {Night.Target(DefaultDogfightTarget)}</b>   <color=#FF8060>escaped {c.Arrived} / {Night.allowedLosses}</color>";
+                case NightObjective.Escort:
+                    if (c == null) return "Protect the courier";
+                    string hp = c.Alive.Count > 0 && c.Alive[0] != null ? $"   courier paper <b>{c.Alive[0].Health01 * 100f:0}%</b>" : (c.Started ? "   <color=#AAAAAA>next courier coming</color>" : "   <color=#AAAAAA>throw to start</color>");
+                    return $"Couriers through  <b>{c.Arrived} / {Night.Target(1)}</b>   <color=#FF8060>lost {c.Lost} / {Night.allowedLosses}</color>{hp}";
+                case NightObjective.Practice:
+                    return c == null ? "Shoot the drones" : $"Drones down  <b>{c.Downed} / {Night.Target(DefaultDogfightTarget)}</b>";
+                case NightObjective.Ace:
+                    return $"{(string.IsNullOrEmpty(Night.aceName) ? "The ace" : Night.aceName)} shot down  <b>{KillsThisRun} / {Night.Target(1)}</b>   <color=#FFD040>gold trail</color>";
+            }
+            return null;
         }
 
         void AllGroupsOff()
@@ -289,13 +372,16 @@ namespace PaperWings.Gameplay
                 Toggle(CombatGroupOf(i), false);
                 Toggle(BossGroupOf(i), false);
                 Toggle(SquadronGroupOf(i), false);
+                var r = RoomAt(i);
+                if (r != null && r.extraRoutes != null) foreach (var g in r.extraRoutes) Toggle(g, false);
+                if (r != null && r.extraGroups != null) foreach (var g in r.extraGroups) Toggle(g, false);
             }
         }
 
         /// <summary>Switches the current room's groups.</summary>
         void SetGroups(bool route, bool combat, bool boss, bool squadron = false)
         {
-            Toggle(RouteGroupOf(RoomIndex), route);
+            Toggle(activeRouteGroup != null ? activeRouteGroup : RouteGroupOf(RoomIndex), route);
             Toggle(CombatGroupOf(RoomIndex), combat);
             Toggle(BossGroupOf(RoomIndex), boss);
             Toggle(SquadronGroupOf(RoomIndex), squadron);
@@ -313,8 +399,20 @@ namespace PaperWings.Gameplay
             if (Mode == GameMode.Squadron && TeamKillsThisRun >= SquadronTarget)
                 CompleteTimed("SQUADRON VICTORY!", $"Your squadron downed {SquadronTarget} rivals in");
 
-            if (Mode == GameMode.Dogfight && KillsThisRun >= DogfightTarget)
-                CompleteTimed("DOGFIGHT WON!", $"{DogfightTarget} rivals shot down in");
+            switch (Objective)
+            {
+                case NightObjective.Standard:
+                    if (Mode == GameMode.Dogfight && KillsThisRun >= DogfightTarget)
+                        CompleteTimed("DOGFIGHT WON!", $"{DogfightTarget} rivals shot down in");
+                    break;
+                case NightObjective.Ace:
+                    if (KillsThisRun >= Night.Target(1))
+                        CompleteTimed($"{(string.IsNullOrEmpty(Night.aceName) ? "THE ACE" : Night.aceName.ToUpperInvariant())} GROUNDED!", "Ace shot down in");
+                    break;
+                default:
+                    CheckConvoy();
+                    break;
+            }
 
             // Ring Run: the last ring stops the clock (the route records the time and best).
             if (Mode == GameMode.RingRun && Route != null && Route.AllRingsPassed)
@@ -350,10 +448,32 @@ namespace PaperWings.Gameplay
                 Fail("OUT OF TIME", $"The clock ran out at {Night.timeLimit:0}s.");
         }
 
+        void CheckConvoy()
+        {
+            var c = Convoy;
+            if (c == null) return;
+            var night = Night;
+            int target = night.Target(night.objective == NightObjective.Escort ? 1 : DefaultDogfightTarget);
+            switch (night.objective)
+            {
+                case NightObjective.Intercept:
+                    if (c.Downed >= target) CompleteTimed("INTERCEPTED!", $"{target} couriers shot down in");
+                    else if (c.Arrived >= night.allowedLosses) Fail("THEY GOT AWAY", $"{c.Arrived} couriers made it out. Catch them earlier: they always fly the same line.");
+                    break;
+                case NightObjective.Escort:
+                    if (c.Arrived >= target) CompleteTimed("DELIVERED!", target > 1 ? $"All {target} couriers through in" : "The courier got through in");
+                    else if (c.Lost >= night.allowedLosses) Fail("COURIER DOWN", "Stay close to it and shoot whatever chases it.");
+                    break;
+                case NightObjective.Practice:
+                    if (c.Downed >= target) CompleteTimed("TARGET PRACTICE DONE!", $"{target} drones down in");
+                    break;
+            }
+        }
+
         void OnBossDefeated()
         {
             if (HasMode && Mode == GameMode.BossFight && !RunComplete)
-                CompleteTimed("THE STAPLER IS DEFEATED!", "Boss down in");
+                CompleteTimed($"{(Boss != null ? Boss.DisplayName : "THE BOSS")} IS DEFEATED!", "Boss down in");
         }
 
         void CompleteTimed(string title, string lead)
@@ -425,6 +545,9 @@ namespace PaperWings.Gameplay
             if (firstClear)
             {
                 clips += night.rewardClips;
+                var blueprints = progression != null ? progression.BlueprintsFor(NightIndex) : null;
+                if (blueprints != null && blueprints.Count > 0)
+                    result.reward = $"New in the hangar: {string.Join(", ", blueprints)}";
                 if (!string.IsNullOrEmpty(night.rewardUnlockId))
                 {
                     var item = progression != null ? progression.Find(night.rewardUnlockId) : null;

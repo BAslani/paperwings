@@ -125,6 +125,137 @@ namespace PaperWings.EditorTools
             return trackpad ? new Color(0.36f, 0.36f, 0.4f) : new Color(0.3f, 0.3f, 0.33f);
         });
 
+        // ------------------------------------------------------------------ Stage 23: faction papers
+
+        /// <summary>Accounting's planes: green-bar ledger printout with tractor-feed holes and columns of figures.</summary>
+        public static Texture2D LedgerPaper() => Save("T_PaperLedger", 512, (x, y, s) =>
+        {
+            Color c = Fibres(x, y, s, new Color(0.97f, 0.97f, 0.93f), 0.03f);
+            if ((y / 24) % 2 == 0) c = Color.Lerp(c, new Color(0.72f, 0.9f, 0.74f), 0.55f);          // green bars
+            int margin = x % (s / 2);
+            if (margin < 18 && y % 20 > 6 && y % 20 < 14 && margin > 6) c *= 0.55f;                  // feed holes
+            int col = x / 40, row = y / 12;
+            bool digits = margin > 26 && y % 12 > 3 && y % 12 < 9 && x % 40 > 6 && x % 40 < 6 + Hash(col, row) * 28f && (x / 3) % 2 == 0;
+            if (digits) c = Color.Lerp(c, new Color(0.25f, 0.25f, 0.3f), 0.7f);
+            if (Hash(col, row) > 0.93f && digits) c = new Color(0.75f, 0.15f, 0.12f);                // red "overdue" figures
+            return Crease(c, x, s);
+        });
+
+        /// <summary>Marketing's planes: a glossy flyer with bold diagonal stripes and a halftone dot pattern.</summary>
+        public static Texture2D FlyerPaper() => Save("T_PaperFlyer", 512, (x, y, s) =>
+        {
+            int band = ((x + y) / 48) % 3;
+            Color c = band == 0 ? new Color(0.98f, 0.98f, 1f) : band == 1 ? new Color(0.78f, 0.88f, 1f) : new Color(1f, 0.92f, 0.6f);
+            float dx = (x % 12) - 6f, dy = (y % 12) - 6f;
+            float r = 1.5f + 3.5f * (y / (float)s);                                                  // halftone dots grow down the sheet
+            if (dx * dx + dy * dy < r * r && band != 0) c *= 0.88f;
+            return Crease(c, x, s);
+        });
+
+        // ------------------------------------------------------------------ Stage 25: new rooms
+
+        /// <summary>Server rack front: dark perforated panels with rows of little status lights.</summary>
+        public static Texture2D RackFront() => Save("T_RackFront", 256, (x, y, s) =>
+        {
+            Color c = new Color(0.09f, 0.1f, 0.12f);
+            if ((x % 6 < 2) && (y % 6 < 2)) c = new Color(0.05f, 0.05f, 0.06f);                      // perforations
+            if (y % 32 < 2) c = new Color(0.2f, 0.21f, 0.24f);                                       // rack unit lines
+            int unit = y / 32;
+            if (y % 32 > 24 && y % 32 < 28 && x % 16 > 10 && x % 16 < 14)
+            {
+                float h = Hash(x / 16, unit);
+                if (h > 0.45f) c = h > 0.9f ? new Color(1f, 0.5f, 0.1f) : (h > 0.7f ? new Color(0.2f, 0.6f, 1f) : new Color(0.2f, 1f, 0.35f));
+            }
+            return c;
+        });
+
+        /// <summary>Roof concrete: grey with mottled noise and expansion joints.</summary>
+        public static Texture2D Concrete() => Save("T_Concrete", 256, (x, y, s) =>
+        {
+            Color c = Fibres(x, y, s, new Color(0.5f, 0.5f, 0.52f), 0.18f);
+            if (x % 128 < 2 || y % 128 < 2) c *= 0.7f;
+            return c;
+        });
+
+        // ------------------------------------------------------------------ Stage 29: fantasy fold papers
+        // The planes' UVs lay the sheet flat from above: u across the wings (0.5 = centre crease),
+        // v from tail (0) to nose (1). These patterns are drawn to sit on that layout.
+
+        /// <summary>Dart "Arrowhead": white racing paper with red-orange chevrons down the spine and a checkered tail.</summary>
+        public static Texture2D ArrowPaper() => Save("T_PaperArrow", 512, (x, y, s) =>
+        {
+            float u = x / (float)s, v = y / (float)s;
+            Color c = Fibres(x, y, s, new Color(0.97f, 0.96f, 0.92f), 0.04f);
+            float chevron = Mathf.Repeat(v * 6f + Mathf.Abs(u - 0.5f) * 5f, 1f);
+            if (Mathf.Abs(u - 0.5f) < 0.22f && chevron < 0.28f) c = Color.Lerp(new Color(0.95f, 0.25f, 0.12f), new Color(1f, 0.6f, 0.1f), v);
+            if (v < 0.1f && ((x / 16 + y / 16) % 2 == 0)) c = new Color(0.12f, 0.12f, 0.14f);                  // checkered tail
+            if (Mathf.Abs(Mathf.Abs(u - 0.5f) - 0.27f) < 0.004f) c *= 0.75f;                                    // pinstripes
+            return Crease(c, x, s);
+        });
+
+        /// <summary>Glider "Crane": cream washi with indigo feather strokes and a red crown near the nose.</summary>
+        public static Texture2D CranePaper() => Save("T_PaperCrane", 512, (x, y, s) =>
+        {
+            float u = x / (float)s, v = y / (float)s;
+            Color c = Fibres(x, y, s, new Color(0.98f, 0.95f, 0.86f), 0.06f);
+            float d = Mathf.Abs(u - 0.5f);
+            // Feather strokes sweep back from the leading edge, darker toward the wingtips.
+            float stroke = Mathf.Repeat(d * 14f - v * 3f, 1f);
+            if (d > 0.08f && stroke < 0.08f) c = Color.Lerp(c, new Color(0.16f, 0.2f, 0.45f), Mathf.Clamp01(d * 2.2f));
+            if (d > 0.42f) c = Color.Lerp(c, new Color(0.1f, 0.12f, 0.3f), 0.6f);                               // dark tips
+            float cx = (u - 0.5f) * s, cy = (v - 0.93f) * s;
+            if (cx * cx + cy * cy < 240f) c = new Color(0.85f, 0.12f, 0.12f);                                   // red crown
+            return Crease(c, x, s);
+        });
+
+        /// <summary>Stunt "Manta": deep sea-blue with pale spots and a light rim.</summary>
+        public static Texture2D MantaPaper() => Save("T_PaperManta", 512, (x, y, s) =>
+        {
+            float u = x / (float)s, v = y / (float)s;
+            Color c = Fibres(x, y, s, new Color(0.22f, 0.32f, 0.48f), 0.12f);
+            float d = Mathf.Abs(u - 0.5f);
+            int cell = 28;
+            int gx = x / cell, gy = y / cell;
+            float ox = (Hash(gx, gy) - 0.5f) * 10f, oy = (Hash(gy, gx) - 0.5f) * 10f;
+            float px = (x % cell) - cell * 0.5f - ox, py = (y % cell) - cell * 0.5f - oy;
+            float r = 3f + Hash(gx + 7, gy) * 4f;
+            if (px * px + py * py < r * r && Hash(gx, gy + 3) > 0.35f) c = new Color(0.86f, 0.9f, 0.95f);       // spots
+            if (d > 0.3f) c = Color.Lerp(c, new Color(0.75f, 0.85f, 0.95f), Mathf.InverseLerp(0.3f, 0.5f, d) * 0.5f);   // pale rim
+            if (v > 0.9f) c = Color.Lerp(c, new Color(0.1f, 0.14f, 0.22f), 0.5f);
+            return Crease(c, x, s);
+        });
+
+        /// <summary>Canard "Dragon": green scales with gold edges and a darker spine.</summary>
+        public static Texture2D DragonPaper() => Save("T_PaperDragon", 512, (x, y, s) =>
+        {
+            float u = x / (float)s;
+            int sw = 22, sh = 16;
+            int row = y / sh;
+            int xs = x + (row % 2) * sw / 2;
+            float lx = (xs % sw) - sw * 0.5f, ly = (y % sh);
+            float scale = (lx * lx) / (sw * sw * 0.25f) + (ly * ly) / (sh * sh);   // a "U" scale shape
+            Color body = Color.Lerp(new Color(0.16f, 0.5f, 0.3f), new Color(0.28f, 0.7f, 0.38f), Hash(xs / sw, row));
+            Color c = Fibres(x, y, s, body, 0.08f);
+            if (scale > 0.85f && scale < 1.05f) c = new Color(0.9f, 0.75f, 0.3f);                                 // gold edges
+            if (Mathf.Abs(u - 0.5f) < 0.04f) c = Color.Lerp(c, new Color(0.08f, 0.22f, 0.14f), 0.7f);            // spine
+            return Crease(c, x, s);
+        });
+
+        /// <summary>Accounting's "Raven": charcoal ledger paper with faint green bars, feather lines and red audit stamps.</summary>
+        public static Texture2D RavenPaper() => Save("T_PaperRaven", 512, (x, y, s) =>
+        {
+            float u = x / (float)s, v = y / (float)s;
+            Color c = Fibres(x, y, s, new Color(0.2f, 0.2f, 0.23f), 0.15f);
+            if ((y / 24) % 2 == 0) c = Color.Lerp(c, new Color(0.2f, 0.32f, 0.22f), 0.35f);                     // faint green bars
+            float d = Mathf.Abs(u - 0.5f);
+            if (d > 0.1f && Mathf.Repeat(d * 18f + v * 2f, 1f) < 0.05f) c *= 0.6f;                               // feather lines
+            float sx = (d - 0.3f) * s, sy = (v - 0.55f) * s;
+            float ring = Mathf.Sqrt(sx * sx + sy * sy);
+            if (ring > 18f && ring < 24f) c = new Color(0.75f, 0.12f, 0.1f);                                     // red stamp ring on each wing
+            if (Mathf.Abs(sx - sy) < 2.5f && ring < 18f) c = new Color(0.75f, 0.12f, 0.1f);                      // and its slash
+            return Crease(c, x, s);
+        });
+
         // ------------------------------------------------------------------ helpers
 
         delegate Color Painter(int x, int y, int size);

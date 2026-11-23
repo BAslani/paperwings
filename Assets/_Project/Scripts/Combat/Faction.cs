@@ -8,6 +8,7 @@ namespace PaperWings.Combat
     public enum Faction
     {
         Marketing,    // the player and wingmen
-        Accounting    // rivals and The Stapler
+        Accounting,   // rivals and The Stapler
+        Neutral       // room hazards (vending-machine cans): they hit everybody, nobody targets them
     }
 }

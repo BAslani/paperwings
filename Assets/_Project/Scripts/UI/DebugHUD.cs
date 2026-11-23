@@ -322,14 +322,17 @@ namespace PaperWings.UI
 
         // ------------------------------------------------------------------ boss
 
-        StaplerBoss boss;
+        BossBase boss;
         float bossHitFlash, lastBossHit, bossDefeatFlash;
         bool lastBossHitWeak;
 
+        /// <summary>Follows whichever boss is switched on (each room can have its own).</summary>
         void HookBoss()
         {
-            if (boss != null || StaplerBoss.Active == null) return;
-            boss = StaplerBoss.Active;
+            if (boss == BossBase.Active) return;
+            if (boss != null) { boss.Damaged -= OnBossDamaged; boss.Defeated -= OnBossDefeated; }
+            boss = BossBase.Active;
+            if (boss == null) return;
             boss.Damaged += OnBossDamaged;
             boss.Defeated += OnBossDefeated;
         }
@@ -344,10 +347,9 @@ namespace PaperWings.UI
         void DrawBossBar()
         {
             HookBoss();
-            if (boss == null || boss.Settings == null) return;
-            BossSettings bs = boss.Settings;
+            if (boss == null) return;
 
-            bool near = Vector3.Distance(plane.transform.position, boss.transform.position) < bs.aggroRange * 1.3f;
+            bool near = Vector3.Distance(plane.transform.position, boss.transform.position) < boss.AggroRange * 1.3f;
             if (bossDefeatFlash > 0f)
             {
                 GUI.color = new Color(1f, 0.85f, 0.3f, Mathf.Clamp01(bossDefeatFlash * 2f));
@@ -359,23 +361,23 @@ namespace PaperWings.UI
             float w = 620 * scale;
             float x = (Screen.width - w) * 0.5f, y = 64 * scale;
             GUI.Label(new Rect(x, y, w, 30 * scale),
-                      $"<size={Px(22)}><b><color=#FF9030>{bs.displayName}</color></b>  <color=#BBB>{bs.title}</color>   <color=#888>phase {boss.Phase}</color></size>", big);
+                      $"<size={Px(22)}><b><color=#FF9030>{boss.DisplayName}</color></b>  <color=#BBB>{boss.Title}</color>   <color=#888>phase {boss.Phase}</color></size>", big);
             y += 30 * scale;
 
             Color barColor = boss.WeakSpotOpen ? new Color(1f, 0.8f, 0.2f) : new Color(0.9f, 0.4f, 0.2f);
             if (bossHitFlash > 0f) barColor = Color.Lerp(barColor, Color.white, bossHitFlash * 0.7f);
             // Phase markers show where the fight escalates.
-            Bar(ref y, x, w, boss.Health01, barColor, bs.phase2At, Color.white, bs.phase3At, Color.white, 14);
+            Bar(ref y, x, w, boss.Health01, barColor, boss.Phase2At, Color.white, boss.Phase3At, Color.white, 14);
 
             string status;
             if (boss.Waking)
                 status = "<color=#FF9030><b>IT'S WAKING UP...</b></color>";
-            else if (boss.SlamWarning)
-                status = $"<color=#FF4030><b>SLAM INCOMING!  get clear!</b></color>";
+            else if (boss.Warning)
+                status = $"<color=#FF4030><b>{boss.WarningText}</b></color>";
             else if (boss.WeakSpotOpen)
-                status = $"<color=#FFD040><b>WEAK SPOT OPEN!  x{bs.weakSpotMultiplier:0}</b></color>";
+                status = $"<color=#FFD040><b>{boss.WeakSpotText}  x{boss.WeakSpotMultiplier:0}</b></color>";
             else
-                status = "<color=#AAAAAA>ARMORED: dodge, then hit it when the jaw opens</color>";
+                status = $"<color=#AAAAAA>{boss.ArmoredHint}</color>";
             GUI.Label(new Rect(x, y, w, 26 * scale), $"<size={Px(17)}>{status}</size>", big);
 
             // Hit pop to the right of the bar.
@@ -491,11 +493,23 @@ namespace PaperWings.UI
                     {
                         // Wingmen: small green marker, on screen only (no edge arrows, to keep things tidy).
                         if (t.IsAlly) DrawWorldMarker(cam, t.Position, "#70FF80", "(W)", null, -14f, edgeArrow: false);
+                        // Couriers you're escorting: blue, with an edge arrow and their paper left.
+                        else if (t.Plane == null && t.AiTarget)
+                        {
+                            float cd = Vector3.Distance(plane.transform.position, t.Position);
+                            Vector2? cg = DrawWorldMarker(cam, t.Position, "#60B0FF", $"<  >  {cd:0}", $"PROTECT  {cd:0}", -14f);
+                            if (cg.HasValue)
+                            {
+                                float bw = 70 * scale, by = cg.Value.y + 18 * scale;
+                                Bar(ref by, cg.Value.x - bw * 0.5f, bw, t.Health01, new Color(0.4f, 0.7f, 1f), 0f, Color.clear, 0f, Color.clear, 5);
+                            }
+                        }
                         continue;
                     }
                     float dist = Vector3.Distance(plane.transform.position, t.Position);
-                    string color = t.IsBoss ? "#FF9030" : "#FF5040";
-                    string tag = t.IsBoss ? "BOSS" : "RIVAL";
+                    bool named = t.Plane != null && t.DisplayName != "Rival";   // an ace
+                    string color = t.IsBoss ? "#FF9030" : (named ? "#FFD040" : "#FF5040");
+                    string tag = t.IsBoss ? "BOSS" : (t.Plane == null || named ? t.DisplayName.ToUpperInvariant() : "RIVAL");
                     Vector2? gui = DrawWorldMarker(cam, t.Position, color, $"[  ]  {dist:0}", $"{tag}  {dist:0}", -14f);
                     if (gui.HasValue && !t.IsBoss)   // boss health lives in the big bar at the top
                     {
@@ -662,9 +676,15 @@ namespace PaperWings.UI
                 {
                     var air = plane.Air;
                     string zone = "";
-                    if (air.InThermal) zone += $"<color=#FFA040>^ THERMAL {Mathf.RoundToInt(air.thermal * 100)}%</color>     ";
-                    if (air.InDraft)   zone += $"<color=#60D8FF>>> DRAFT {Mathf.RoundToInt(air.draft * 100)}%</color>     ";
-                    if (air.InDowndraft) zone += $"<color=#A08CFF>v DOWNDRAFT {Mathf.RoundToInt(air.downdraft * 100)}%</color>";
+                    // Labels use the air palette (Stage 23): the same colours as the particles in the room.
+                    if (air.InThermal)
+                    {
+                        string lift = air.moisture > 0.2f ? "STEAM" : (air.dryHeat > 0.05f ? "THERMAL" : "UPDRAFT");
+                        var look = air.moisture > 0.2f ? Air.AirLook.Steam : (air.dryHeat > 0.05f ? Air.AirLook.Heat : Air.AirLook.Updraft);
+                        zone += $"<color={Air.AirPalette.Hex(look)}>^ {lift} {Mathf.RoundToInt(air.thermal * 100)}%</color>     ";
+                    }
+                    if (air.InDraft)   zone += $"<color={Air.AirPalette.Hex(Air.AirLook.Draft)}>>> DRAFT {Mathf.RoundToInt(air.draft * 100)}%</color>     ";
+                    if (air.InDowndraft) zone += $"<color={Air.AirPalette.Hex(Air.AirLook.Downdraft)}>v DOWNDRAFT {Mathf.RoundToInt(air.downdraft * 100)}%</color>";
                     if (zone.Length > 0)
                         GUI.Label(new Rect(0, 12 * scale, Screen.width, 50 * scale), $"<size={Px(30)}>{zone}</size>", big);
 
@@ -720,13 +740,25 @@ namespace PaperWings.UI
         /// Fold picker card (bottom-centre while the plane is in hand): name, blurb, and
         /// stat bars so you can compare folds at a glance.
         /// </summary>
+        PlanePreview preview;
+
         void DrawFoldCard(PlaneFold fold)
         {
-            float w = 460 * scale, h = 250 * scale;
+            // Stage 28: the card shows the fold on a turntable, with the upgrades it owns fitted.
+            if (preview == null) preview = FindAnyObjectByType<PlanePreview>();
+            bool showModel = preview != null && !ModeMenu.IsOpen;
+            float picW = showModel ? 250 * scale : 0f;
+            float w = 460 * scale + picW, h = 250 * scale;
             Rect card = new Rect((Screen.width - w) * 0.5f, Screen.height * 0.58f, w, h);
             GUI.color = new Color(0f, 0f, 0f, 0.6f);
             GUI.DrawTexture(card, Texture2D.whiteTexture);
             GUI.color = Color.white;
+            if (showModel)
+            {
+                preview.Request(fold, PlanePreview.OwnedLoadout(fold));
+                GUI.DrawTexture(new Rect(card.x, card.y, picW, h), preview.Texture, ScaleMode.ScaleAndCrop, false);
+                card = new Rect(card.x + picW, card.y, card.width - picW, card.height);
+            }
 
             float x = card.x + 16 * scale, y = card.y + 10 * scale, iw = card.width - 32 * scale;
             string arrows = folds.AvailableCount > 1 ? "<color=#888><   </color>" : "";

@@ -21,7 +21,7 @@ namespace PaperWings.Combat
     /// UNITY NOTE: a coroutine is a method that can pause ("yield return") and resume on later
     /// frames, which is handy for timed sequences like "open, wait, fire, wait, close".
     /// </summary>
-    public class StaplerBoss : MonoBehaviour, IDamageable
+    public class StaplerBoss : BossBase
     {
         [SerializeField] BossSettings settings;
         [Tooltip("The hinged top arm. Rotating it on X opens the jaw.")]
@@ -37,27 +37,27 @@ namespace PaperWings.Combat
         [SerializeField] ParticleSystem slamBurst;
         [SerializeField] ParticleSystem defeatBurst;
 
-        /// <summary>The boss currently in the scene (for the HUD). Null if none.</summary>
-        public static StaplerBoss Active { get; private set; }
-
         public BossSettings Settings => settings;
-        public float Health01 => settings != null ? health / settings.maxHealth : 0f;
-        public bool IsAlive => health > 0f;
-        public bool IsDefeated { get; private set; }
-        public bool IsAwake { get; private set; }
-        public int Phase => Health01 > settings.phase2At ? 1 : (Health01 > settings.phase3At ? 2 : 3);
+        public override string DisplayName => settings != null ? settings.displayName : "THE STAPLER";
+        public override string Title => settings != null ? settings.title : "";
+        public override float AggroRange => settings != null ? settings.aggroRange : 45f;
+        public override float Phase2At => settings != null ? settings.phase2At : 0.6f;
+        public override float Phase3At => settings != null ? settings.phase3At : 0.3f;
+        public override float WeakSpotMultiplier => settings != null ? settings.weakSpotMultiplier : 2f;
+        public override float Health01 => settings != null ? health / settings.maxHealth : 0f;
+        public override bool IsDefeated => defeated;
+        public override bool IsAwake => awake;
+        public override bool Waking => waking;
         /// <summary>True while the jaw is open enough to expose the weak spot.</summary>
-        public bool WeakSpotOpen => jawOpen01 > 0.45f && !IsDefeated;
+        public override bool WeakSpotOpen => jawOpen01 > 0.45f && !IsDefeated;
         /// <summary>True during the slam wind-up (for HUD warnings).</summary>
         public bool SlamWarning { get; private set; }
-        /// <summary>True while it's rattling awake (before its first attack).</summary>
-        public bool Waking { get; private set; }
+        public override bool Warning => SlamWarning;
+        public override string WarningText => "SLAM INCOMING!  get clear!";
+        public override string ArmoredHint => "ARMORED: dodge, then hit it when the jaw opens";
 
+        bool defeated, awake, waking;
         bool wasAwake;
-
-        /// <summary>Args: damage dealt, whether it hit the weak spot.</summary>
-        public event Action<float, bool> Damaged;
-        public event Action Defeated;
 
         float health;
         float jawOpen01, jawTarget, jawSpeed;
@@ -79,25 +79,24 @@ namespace PaperWings.Combat
             ResetBoss();
         }
 
-        void OnEnable() { Active = this; StartCoroutine(Brain()); }
+        protected override void OnEnable() { base.OnEnable(); StartCoroutine(Brain()); }
 
         /// <summary>Full health, jaw shut, attack loop restarted. Used when a Boss Fight begins.</summary>
-        public void ResetFight()
+        public override void ResetFight()
         {
             StopAllCoroutines();   // cancels any pending rematch timer or attack in progress
             ResetBoss();
             jawOpen01 = 0f;
             wasAwake = false;
             SlamWarning = false;
-            Waking = false;
+            waking = false;
             if (isActiveAndEnabled) StartCoroutine(Brain());
         }
-        void OnDisable() { if (Active == this) Active = null; }
 
         void ResetBoss()
         {
             health = settings != null ? settings.maxHealth : 1f;
-            IsDefeated = false;
+            defeated = false;
             jawTarget = 0f;
             jawSpeed = settings != null ? settings.jawSpeed : 3f;
             nextSlamTime = 0f;
@@ -111,14 +110,14 @@ namespace PaperWings.Combat
             while (true)
             {
                 // Beaten: leave the jaw slumped open until the rematch.
-                if (IsDefeated) { IsAwake = false; yield return null; continue; }
+                if (IsDefeated) { awake = false; yield return null; continue; }
 
                 PlaneController player = FindPlayer();
                 bool inRange = player != null &&
                                Vector3.Distance(transform.position, player.transform.position) < settings.aggroRange;
                 // Fairness: no attacks in the first few seconds after a throw.
                 bool graceOver = player != null && player.FlightTime >= settings.engageDelay;
-                IsAwake = inRange && graceOver;
+                awake = inRange && graceOver;
 
                 if (!IsAwake) { wasAwake = false; jawTarget = 0f; yield return null; continue; }
 
@@ -147,7 +146,7 @@ namespace PaperWings.Combat
 
         IEnumerator WakeUp()
         {
-            Waking = true;
+            waking = true;
             jawSpeed = 10f;
             float end = Time.time + settings.wakeUpTime;
             while (Time.time < end && !IsDefeated)
@@ -159,7 +158,7 @@ namespace PaperWings.Combat
                 yield return null;
             }
             jawTarget = 0f;
-            Waking = false;
+            waking = false;
         }
 
         IEnumerator Barrage(PlaneController player)
@@ -227,7 +226,7 @@ namespace PaperWings.Combat
 
         // ------------------------------------------------------------------ damage
 
-        public void ApplyDamage(float amount, PlaneController source)
+        public override void ApplyDamage(float amount, PlaneController source)
         {
             if (IsDefeated || amount <= 0f) return;
 
@@ -235,7 +234,7 @@ namespace PaperWings.Combat
             float dealt = amount * (weak ? settings.weakSpotMultiplier : settings.armoredMultiplier);
             health = Mathf.Max(0f, health - dealt);
             flash = weak ? 1f : 0.4f;
-            Damaged?.Invoke(dealt, weak);
+            RaiseDamaged(dealt, weak);
             if (!weak) Audio.AudioFx.PlayAt(Audio.Sfx.BossClack, transform.position, 0.6f, 2f);   // armor "clink"
 
             if (health <= 0f) Defeat();
@@ -243,7 +242,7 @@ namespace PaperWings.Combat
 
         void Defeat()
         {
-            IsDefeated = true;
+            defeated = true;
             SlamWarning = false;
             jawSpeed = 1.5f;
             jawTarget = 1f;   // slumps open
@@ -251,7 +250,7 @@ namespace PaperWings.Combat
             Audio.AudioFx.PlayAt(Audio.Sfx.BossDefeated, transform.position, 1f, 1f, 0f);
             if (reinforcements != null) reinforcements.SetActive(false);
             CombatScore.AddKill();
-            Defeated?.Invoke();
+            RaiseDefeated();
             StartCoroutine(RespawnLater());
         }
 

@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bfca431533df494fbc40804707fafc1, type: 3}
   m_Name: Fold_Stunt
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PlaneFold
-  displayName: Stunt
+  displayName: Manta
   unlockId: fold_stunt
   foldId: stunt
-  description: Snappy delta for tight lines and big dives. Sinks fast, so keep the
-    speed up. Tough cardstock.
-  propellerMount: {x: 0, y: 0, z: -0.57000005}
+  description: 'A manta ray: curved wings and a deep keel for tight turns and big
+    dives.'
+  propellerMount: {x: 0, y: 0, z: -0.55}
   flight: {fileID: 11400000, guid: 5f701adfe574b114fba6e0c35a1c76c8, type: 2}
   paper: {fileID: 11400000, guid: 87b0ed0d70318524db96ee210368dc35, type: 2}
   mesh: {fileID: 4300000, guid: 93f06b31b819e7148a6e74226a5b2fb4, type: 2}
-  paperColor: {r: 1, g: 0.9, b: 0.82, a: 1}
-  paperTexture: {fileID: 2800000, guid: b22320c154e7bd84380cbf836a0b1324, type: 2}
+  paperColor: {r: 1, g: 1, b: 1, a: 1}
+  paperTexture: {fileID: 2800000, guid: 2d726fe10073b2744b9a1d9225e02a14, type: 2}
   attachment: {fileID: 0}

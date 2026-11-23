@@ -18,4 +18,4 @@ MonoBehaviour:
   distanceFalloff: 0.6
   edgeSoftness: 0.35
   streakRate: 40
-  streakColor: {r: 0.7, g: 0.8, b: 1, a: 0.35}
+  streakColor: {r: 0.62, g: 0.45, b: 1, a: 0.35}

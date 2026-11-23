@@ -26,6 +26,7 @@ namespace PaperWings.Gameplay
             public List<int> medalModes = new List<int>();   // parallel lists: JsonUtility can't do dictionaries
             public List<int> medals = new List<int>();
             public List<int> nightStars = new List<int>();   // campaign: stars per night index (0 = not cleared)
+            public int campaignVersion;                       // which campaign layout the stars belong to
         }
 
         static SaveData data;
@@ -114,11 +115,12 @@ namespace PaperWings.Gameplay
             ClipsEarned?.Invoke(amount, reason);
         }
 
-        public enum BuyResult { Bought, AlreadyOwned, NeedsRequirement, TooExpensive }
+        public enum BuyResult { Bought, AlreadyOwned, NeedsRequirement, TooExpensive, NeedsBlueprint }
 
         public static BuyResult CanBuy(UnlockItem item)
         {
             if (IsUnlocked(item.id)) return BuyResult.AlreadyOwned;
+            if (item.requiresNight >= 0 && !NightCleared(item.requiresNight)) return BuyResult.NeedsBlueprint;
             if (!IsUnlocked(item.requires)) return BuyResult.NeedsRequirement;
             if (Data.paperClips < item.cost) return BuyResult.TooExpensive;
             return BuyResult.Bought;
@@ -135,6 +137,19 @@ namespace PaperWings.Gameplay
         }
 
         // ------------------------------------------------------------------ dev helpers
+
+        /// <summary>
+        /// Stars are saved per night index, so when the campaign is rebuilt (new nights, new order)
+        /// the old stars would land on the wrong nights. A new campaign version starts the stars over;
+        /// paper clips and unlocks are kept.
+        /// </summary>
+        public static void SyncCampaign(int version)
+        {
+            if (Data.campaignVersion == version) return;
+            Data.nightStars.Clear();
+            Data.campaignVersion = version;
+            SaveAndNotify();
+        }
 
         public static void ResetAll()
         {

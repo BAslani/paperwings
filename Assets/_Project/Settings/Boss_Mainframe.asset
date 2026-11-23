@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7346536d6127e7244977f2ea826a34ba, type: 3}
+  m_Name: Boss_Mainframe
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.AirBossSettings
+  displayName: THE MAINFRAME
+  title: Head of IT
+  maxHealth: 700
+  armoredMultiplier: 0.2
+  weakSpotMultiplier: 2.5
+  aggroRange: 115
+  engageDelay: 4
+  wakeUpTime: 1.4
+  phase2At: 0.6
+  phase3At: 0.3
+  telegraph: 1.1
+  attackDuration: 4
+  vulnerableTime: 4
+  restTime: 1.5
+  airSpeed: 16
+  secondaryAirSpeed: 12
+  contactDamagePerSecond: 40
+  shotsPerVolley: 6
+  spreadAngle: 40
+  projectileSpeed: 38
+  projectileDamage: 10
+  projectileLifetime: 2.5
+  projectileScale: 2
+  respawnDelay: 25

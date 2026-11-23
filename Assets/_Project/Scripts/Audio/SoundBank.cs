@@ -10,7 +10,8 @@ namespace PaperWings.Audio
         StapleFire, StapleHit, PencilLaunch, PencilImpact, LockBeep, NoLock,
         RingChime, LandJingle, ShotDown, Victory,
         BossClank, BossClack, BossSlam, BossDefeated,
-        UiMove, UiConfirm
+        UiMove, UiConfirm,
+        Alarm, Pop, Ding                      // Stage 29: room events, balloons, the microwave
     }
 
     /// <summary>
@@ -75,6 +76,9 @@ namespace PaperWings.Audio
                 case Sfx.BossDefeated: return Mix(Crackle(1.6f, 0.3f, 2500f, 0.6f), Mix(Clank(1.6f, 0.6f), Thump(1.6f, 45f, 0.5f), 1f, 1f), 1f, 0.7f);
                 case Sfx.UiMove:       return Tone(0.05f, 900f, 0.002f, 0.02f, false);
                 case Sfx.UiConfirm:    return Concat(Tone(0.07f, 880f, 0.002f, 0.04f, false), Tone(0.12f, 1320f, 0.002f, 0.06f, false));
+                case Sfx.Alarm:        return Concat(Concat(Sweep(0.35f, 700f, 1100f, 0.01f, 0.3f, true), Sweep(0.35f, 700f, 1100f, 0.01f, 0.3f, true)), Sweep(0.35f, 700f, 1100f, 0.01f, 0.3f, true));
+                case Sfx.Pop:          return Mix(BandBurst(0.12f, 1800f, 0.3f, 0.0005f, 0.02f), Thump(0.12f, 160f, 0.03f), 1f, 0.6f);
+                case Sfx.Ding:         return Mix(Tone(1.2f, 1760f, 0.002f, 0.5f, false), Tone(1.2f, 2637f, 0.002f, 0.35f, false), 1f, 0.4f);
             }
             return new float[1];
         }

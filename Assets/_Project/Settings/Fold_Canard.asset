@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bfca431533df494fbc40804707fafc1, type: 3}
   m_Name: Fold_Canard
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PlaneFold
-  displayName: Canard
+  displayName: Dragon
   unlockId: fold_canard
   foldId: canard
-  description: A little pusher propeller on the tail and small nose wings. Glides
-    far, climbs easily, rides the air, and its boost lifts you up.
-  propellerMount: {x: 0, y: 0, z: -0.92}
+  description: 'A paper dragon: nose canards and bat wings. Glides far and climbs
+    easily.'
+  propellerMount: {x: 0, y: 0, z: -0.95}
   flight: {fileID: 11400000, guid: d6cf813b7bf2a4b44a286e1280b382cd, type: 2}
   paper: {fileID: 11400000, guid: 499a9a125d2e50e49bd63095a9863a60, type: 2}
   mesh: {fileID: 4300000, guid: 39cd805819abf7f4f895b6115fb0a53c, type: 2}
-  paperColor: {r: 0.98, g: 0.96, b: 0.92, a: 1}
-  paperTexture: {fileID: 2800000, guid: b2eb61bc4da48d9449a7e49e7e8ef5ca, type: 2}
+  paperColor: {r: 1, g: 1, b: 1, a: 1}
+  paperTexture: {fileID: 2800000, guid: 9c63238750f0a054aade7080ddce5ef4, type: 2}
   attachment: {fileID: 0}

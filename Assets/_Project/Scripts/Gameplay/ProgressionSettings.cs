@@ -43,6 +43,8 @@ namespace PaperWings.Gameplay
         public int cost = 50;
         [Tooltip("Another unlock that must be owned first (empty = none). In the fold upgrade list this is another upgrade key.")]
         public string requires = "";
+        [Tooltip("Blueprint: can only be bought once this campaign night (index, 0 = Night 1) is cleared. -1 = always in the shop.")]
+        public int requiresNight = -1;
 
         /// <summary>Which fold a per-fold upgrade belongs to (empty for global unlocks). Filled in at runtime.</summary>
         [NonSerialized] public string foldName = "";
@@ -64,27 +66,27 @@ namespace PaperWings.Gameplay
         [Header("Fold unlocks (ids must match each fold's Unlock Id)")]
         public UnlockItem[] foldUnlocks =
         {
-            new UnlockItem { id = UnlockIds.GliderFold, displayName = "Glider Fold", cost = 80,
-                description = "Wide wings that ride thermals and glide forever." },
-            new UnlockItem { id = UnlockIds.StuntFold, displayName = "Stunt Fold", cost = 100,
-                description = "A snappy delta for tight turns and big dives." },
-            new UnlockItem { id = UnlockIds.CanardFold, displayName = "Canard Fold", cost = 150,
-                description = "Little nose wings: glides far and climbs easily." },
+            new UnlockItem { id = UnlockIds.GliderFold, displayName = "Crane Glider", cost = 450, requiresNight = 3,
+                description = "Long feathered crane wings that ride thermals and glide forever." },
+            new UnlockItem { id = UnlockIds.StuntFold, displayName = "Manta Stunt", cost = 700, requiresNight = 6,
+                description = "A snappy manta-ray delta for tight turns and big dives." },
+            new UnlockItem { id = UnlockIds.CanardFold, displayName = "Dragon Canard", cost = 1000, requiresNight = 9,
+                description = "A paper dragon: little nose wings, bat wings, glides far and climbs easily." },
         };
 
         [Header("Upgrades every fold can buy (each fold separately)")]
         public UnlockItem[] foldUpgrades =
         {
-            new UnlockItem { id = UnlockIds.Pencils, displayName = "Pencil Missiles", cost = 60,
-                description = "Two lock-on homing pencils under the wings." },
-            new UnlockItem { id = UnlockIds.PencilRack, displayName = "Pencil Rack", cost = 120, requires = UnlockIds.Pencils,
-                description = "Carry four pencils instead of two." },
-            new UnlockItem { id = UnlockIds.StapleMagazine, displayName = "Staple Magazine", cost = 50,
+            new UnlockItem { id = UnlockIds.StapleMagazine, displayName = "Staple Magazine", cost = 160, requiresNight = 0,
                 description = "+15 staples per throw." },
-            new UnlockItem { id = UnlockIds.HeavyPaper, displayName = "Heavy Paper", cost = 70,
+            new UnlockItem { id = UnlockIds.Pencils, displayName = "Pencil Missiles", cost = 260, requiresNight = 2,
+                description = "Two lock-on homing pencils under the wings." },
+            new UnlockItem { id = UnlockIds.HeavyPaper, displayName = "Heavy Paper", cost = 320, requiresNight = 4,
                 description = "+25% paper integrity: more bumps and hits before you crumple." },
-            new UnlockItem { id = UnlockIds.Propeller, displayName = "Pusher Propeller", cost = 90,
+            new UnlockItem { id = UnlockIds.Propeller, displayName = "Pusher Propeller", cost = 420, requiresNight = 7,
                 description = "A spinning prop on the tail: boosting lifts you up as well as speeding you up." },
+            new UnlockItem { id = UnlockIds.PencilRack, displayName = "Pencil Rack", cost = 550, requires = UnlockIds.Pencils, requiresNight = 10,
+                description = "Carry four pencils instead of two." },
         };
 
         [Header("Starting loadout")]
@@ -95,9 +97,9 @@ namespace PaperWings.Gameplay
         [Header("Earning paper clips")]
         public int clipsPerKill = 3;
         [Tooltip("For finishing a Ring Run, Dogfight, Squadron Battle or Boss Fight.")]
-        public int clipsPerCompletedRun = 20;
+        public int clipsPerCompletedRun = 10;
         [Tooltip("Extra clips for a NEW best medal in a mode (bronze, silver, gold). Paid once per medal tier.")]
-        public int[] medalBonus = { 15, 30, 60 };
+        public int[] medalBonus = { 10, 20, 40 };
 
         [Header("Medal times (seconds; beat them for bronze / silver / gold)")]
         public Vector3 ringRunMedals = new Vector3(60f, 45f, 32f);
@@ -118,6 +120,7 @@ namespace PaperWings.Gameplay
             displayName = template.displayName,
             description = template.description,
             cost = template.cost,
+            requiresNight = template.requiresNight,
             requires = string.IsNullOrEmpty(template.requires) ? fold.unlockId : UnlockIds.ForFold(fold, template.requires),
             foldName = fold.displayName
         };
@@ -149,6 +152,15 @@ namespace PaperWings.Gameplay
             foreach (var fold in folds)
                 if (fold != null)
                     foreach (var up in foldUpgrades) yield return UpgradeFor(fold, up);
+        }
+
+        /// <summary>Names of everything whose blueprint the given night unlocks (for the results screen).</summary>
+        public List<string> BlueprintsFor(int night)
+        {
+            var names = new List<string>();
+            foreach (var f in foldUnlocks) if (f.requiresNight == night) names.Add(f.displayName);
+            foreach (var u in foldUpgrades) if (u.requiresNight == night) names.Add(u.displayName);
+            return names;
         }
 
         public UnlockItem Find(string id)

@@ -16,6 +16,29 @@ namespace PaperWings.Air
         /// <summary>How wet this air is, 0 (dry) to 1 (steam). Wet air makes paper soggy.</summary>
         public virtual float Moisture => 0f;
 
+        /// <summary>
+        /// The kind of air at one point. Most sources are one kind everywhere; a ceiling fan pushes
+        /// down under its blades and lifts at their edge, so it answers per point (Stage 24).
+        /// </summary>
+        public virtual AirKind KindAt(Vector3 worldPosition) => Kind;
+
+        /// <summary>True if this air is warm and dry (dries soggy paper). Default: dry thermals.</summary>
+        public virtual bool IsHeat => Kind == AirKind.Thermal && Moisture < 0.5f;
+
+        /// <summary>
+        /// True if an AI pilot can circle around this source's position to climb (a round column of lift).
+        /// Radiators (a strip along a wall) and fans don't qualify, so rivals don't circle into walls.
+        /// </summary>
+        public virtual bool OffersLiftCenter => Kind == AirKind.Thermal;
+
+        /// <summary>How this air should look (its colour in the air palette).</summary>
+        public virtual AirLook Look => Kind switch
+        {
+            AirKind.Thermal => Moisture >= 0.5f ? AirLook.Steam : (IsHeat ? AirLook.Heat : AirLook.Updraft),
+            AirKind.Downdraft => AirLook.Downdraft,
+            _ => AirLook.Draft
+        };
+
         /// <summary>Wind velocity at a world position. influence = 0 means "outside my zone".</summary>
         public abstract Vector3 GetWind(Vector3 worldPosition, out float influence);
 
@@ -25,12 +48,7 @@ namespace PaperWings.Air
         protected virtual void OnEnable() => AirField.Register(this);
         protected virtual void OnDisable() => AirField.Unregister(this);
 
-        protected Color GizmoColor => Kind switch
-        {
-            AirKind.Thermal   => new Color(1f, 0.55f, 0.15f),
-            AirKind.Downdraft => new Color(0.55f, 0.45f, 1f),
-            _                 => new Color(0.3f, 0.85f, 1f)
-        };
+        protected Color GizmoColor => AirPalette.Of(Look);
 
         /// <summary>
         /// When selected: sample a 3D grid inside the bounds and draw an arrow for the wind at each point.

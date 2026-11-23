@@ -24,6 +24,41 @@ namespace PaperWings.Gameplay
         [Tooltip("Extra rivals plus your wingmen for Squadron Battle (also needs the combat group).")]
         public GameObject squadronGroup;
 
+        [Header("Places inside this room (Stage 27): campaign nights can pick one by name")]
+        [Tooltip("Extra throw points, e.g. 'Lounge' or 'Landing3'. A night's Spawn field picks one by name.")]
+        public Transform[] extraSpawns;
+        [Tooltip("Extra ring routes (each a group holding a RaceRoute). A night's Area field picks one by name. " +
+                 "A route may carry its own throw point as a child named 'Spawn'.")]
+        public GameObject[] extraRoutes;
+        [Tooltip("Mission groups (Stage 29): a convoy route, an ace's spawner... A night's Group field switches one on by name.")]
+        public GameObject[] extraGroups;
+
+        /// <summary>The mission group with this name, or null.</summary>
+        public GameObject GroupNamed(string groupName)
+        {
+            if (string.IsNullOrEmpty(groupName) || extraGroups == null) return null;
+            foreach (var g in extraGroups) if (g != null && g.name == groupName) return g;
+            return null;
+        }
+
+        /// <summary>The extra throw point with this name, or null.</summary>
+        public Transform SpawnNamed(string spawnName)
+        {
+            if (string.IsNullOrEmpty(spawnName) || extraSpawns == null) return null;
+            foreach (var s in extraSpawns) if (s != null && s.name == spawnName) return s;
+            return null;
+        }
+
+        /// <summary>The extra route group with this name (or the main route if it has that name), or null.</summary>
+        public GameObject RouteNamed(string routeName)
+        {
+            if (string.IsNullOrEmpty(routeName)) return null;
+            if (routeGroup != null && routeGroup.name == routeName) return routeGroup;
+            if (extraRoutes == null) return null;
+            foreach (var r in extraRoutes) if (r != null && r.name == routeName) return r;
+            return null;
+        }
+
         [Header("Medals")]
         [Tooltip("Bronze / silver / gold seconds for this room's Ring Run. Zero = the Progression defaults.")]
         public Vector3 ringRunMedals = Vector3.zero;

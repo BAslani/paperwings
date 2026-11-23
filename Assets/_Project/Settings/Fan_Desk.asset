@@ -24,4 +24,4 @@ MonoBehaviour:
   oscillateSpeed: 0.15
   bladeSpinSpeed: 1440
   streakRate: 45
-  streakColor: {r: 0.85, g: 0.95, b: 1, a: 0.45}
+  streakColor: {r: 0.3, g: 0.85, b: 1, a: 0.45}

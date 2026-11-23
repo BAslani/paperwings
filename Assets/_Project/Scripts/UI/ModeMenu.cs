@@ -290,7 +290,8 @@ namespace PaperWings.UI
                 GUI.Label(new Rect(row.x + 14 * scale, row.y + 6 * scale, 330 * scale, 32 * scale),
                           $"<color={nameColor}><b>NIGHT {i + 1}</b>   {night.title}</color>", button);
                 string goal = open ? night.Goal(director.DefaultDogfightTarget, director.DefaultSquadronTarget) : "";
-                if (open && night.room > 0) goal = $"<color=#80C8FF>{director.RoomName(night.room)}:</color> {goal}";
+                string where = !string.IsNullOrEmpty(night.place) ? night.place : (night.room > 0 ? director.RoomName(night.room) : "");
+                if (open && where.Length > 0) goal = $"<color=#80C8FF>{where}:</color> {goal}";
                 GUI.Label(new Rect(row.x + 340 * scale, row.y + 10 * scale, row.width - 470 * scale, 28 * scale),
                           $"<color=#AAAAAA>{goal}</color>", new GUIStyle(small) { alignment = TextAnchor.UpperLeft, wordWrap = false, clipping = TextClipping.Clip });
                 string right = !open ? "<color=#666666>LOCKED</color>" : (stars > 0 ? StarText(stars) : "<color=#FFE080><b>NEW</b></color>");
@@ -365,6 +366,11 @@ namespace PaperWings.UI
             if (cfg == null || leave) { Show(Screen.Menu); return; }
             if (left || right) { SetTab(foldTab + (right ? 1 : -1)); Audio.AudioFx.PlayUi(Audio.Sfx.UiMove); }
 
+            // F / (X): fly the fold on this tab.
+            var kb = Keyboard.current;
+            var pad = Gamepad.current;
+            if ((kb != null && kb.fKey.wasPressedThisFrame) || (pad != null && pad.buttonWest.wasPressedThisFrame)) Equip(TabFold());
+
             var shop = cfg.ShopFor(TabFold());
             if (shop.Count == 0) return;
             if (up) shopSelected = (shopSelected + shop.Count - 1) % shop.Count;
@@ -372,6 +378,35 @@ namespace PaperWings.UI
             if (up || down) { Audio.AudioFx.PlayUi(Audio.Sfx.UiMove); shopMessage = ""; }
             shopSelected = Mathf.Clamp(shopSelected, 0, shop.Count - 1);
             if (confirm) Buy(shop[shopSelected]);
+        }
+
+        /// <summary>Makes the tab's fold the one in your hand (if it's unlocked and you're not mid-flight).</summary>
+        void Equip(PlaneFold fold)
+        {
+            if (fold == null) return;
+            if (foldSelector == null) foldSelector = FindAnyObjectByType<FoldSelector>();
+            if (foldSelector == null) return;
+            if (!Progression.IsUnlocked(fold.unlockId))
+            {
+                shopMessage = $"<color=#FF9050>Unlock the {fold.displayName} first.</color>";
+                Audio.AudioFx.PlayUi(Audio.Sfx.NoLock);
+            }
+            else if (foldSelector.Select(fold))
+            {
+                shopMessage = $"<color=#60FF80>Flying the {fold.displayName}.</color>";
+                Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
+            }
+            else
+            {
+                shopMessage = "<color=#FF9050>Land (or reset) first: you can only refold in hand.</color>";
+                Audio.AudioFx.PlayUi(Audio.Sfx.NoLock);
+            }
+        }
+
+        string NightName(int night)
+        {
+            var n = director.Campaign != null ? director.Campaign.Get(night) : null;
+            return n != null ? $"Night {night + 1} ({n.title})" : $"Night {night + 1}";
         }
 
         string NameOf(string id)
@@ -392,6 +427,9 @@ namespace PaperWings.UI
                 case Progression.BuyResult.AlreadyOwned:
                     shopMessage = "<color=#AAAAAA>Already yours.</color>";
                     break;
+                case Progression.BuyResult.NeedsBlueprint:
+                    shopMessage = $"<color=#FF9050>No blueprint yet: clear {NightName(item.requiresNight)} in the campaign.</color>";
+                    break;
                 case Progression.BuyResult.NeedsRequirement:
                     shopMessage = $"<color=#FF9050>Unlock {NameOf(item.requires)} first.</color>";
                     Audio.AudioFx.PlayUi(Audio.Sfx.NoLock);
@@ -403,7 +441,13 @@ namespace PaperWings.UI
             }
         }
 
-        /// <summary>The unlock shop: a tab per fold, each with the fold itself and its own upgrades.</summary>
+        PlanePreview preview;
+
+        /// <summary>
+        /// The hangar (Stage 28): a tab per fold. Left, the fold on a turntable with every upgrade it owns
+        /// fitted, plus its stats; the upgrade selected in the list shows on the plane as a glowing blueprint.
+        /// Right, the fold's shop. F / (X) flies the fold.
+        /// </summary>
         void DrawUnlocks()
         {
             var cfg = director.ProgressionConfig;
@@ -411,20 +455,23 @@ namespace PaperWings.UI
             var folds = ShopFolds();
             var fold = TabFold();
             var shop = cfg.ShopFor(fold);
+            if (foldSelector == null) foldSelector = FindAnyObjectByType<FoldSelector>();
+            if (preview == null) preview = FindAnyObjectByType<PlanePreview>();
 
             Dim(0.7f);
-            float w = 820 * scale, rowH = 64 * scale;
-            float h = (290 + shop.Count * 70) * scale;
+            float leftW = 440 * scale, rightW = 760 * scale, gap = 20 * scale;
+            float w = leftW + rightW + gap + 60 * scale, rowH = 64 * scale;
+            float h = Mathf.Max(290 + shop.Count * 70, 930) * scale;   // tall enough for the turntable column
             Rect panel = Centered(w, h);
             Box(panel, 0.9f);
 
             float y = panel.y + 20 * scale;
-            GUI.Label(new Rect(panel.x, y, w, 44 * scale), "UNLOCKS", title);
+            GUI.Label(new Rect(panel.x, y, w, 44 * scale), "HANGAR", title);
             y += 48 * scale;
             GUI.Label(new Rect(panel.x, y, w, 30 * scale), $"<color=#FFD040><b>{Progression.PaperClips}</b> paper clips</color>", body);
             y += 42 * scale;
 
-            // Fold tabs.
+            // Fold tabs across the top.
             if (folds.Length > 0)
             {
                 float tabW = (w - 60 * scale) / folds.Length;
@@ -432,27 +479,34 @@ namespace PaperWings.UI
                 {
                     Rect tab = new Rect(panel.x + 30 * scale + t * tabW, y, tabW - 6 * scale, 40 * scale);
                     bool open = Progression.IsUnlocked(folds[t].unlockId);
+                    bool flying = foldSelector != null && foldSelector.Current == folds[t];
                     GUI.color = t == foldTab ? new Color(1f, 0.85f, 0.3f, 0.45f) : new Color(1f, 1f, 1f, 0.07f);
                     GUI.DrawTexture(tab, Texture2D.whiteTexture);
                     GUI.color = Color.white;
                     string label = open ? folds[t].displayName.ToUpper() : $"<color=#888888>{folds[t].displayName.ToUpper()} (locked)</color>";
+                    if (flying) label += "  <color=#60FF80>✈</color>";
                     GUI.Label(tab, $"<b>{label}</b>", body);
                     if (GUI.Button(tab, GUIContent.none, GUIStyle.none)) SetTab(t);
                 }
-                y += 50 * scale;
+                y += 54 * scale;
             }
 
+            float top = y;
+            DrawHangarBay(new Rect(panel.x + 30 * scale, top, leftW, panel.yMax - 80 * scale - top), fold, shop);
+
+            // The shop list on the right.
+            float x = panel.x + 30 * scale + leftW + gap;
             for (int i = 0; i < shop.Count; i++)
             {
                 var item = shop[i];
-                Rect row = new Rect(panel.x + 30 * scale, y, w - 60 * scale, rowH);
+                Rect row = new Rect(x, y, rightW, rowH);
                 bool sel = i == shopSelected;
                 var state = Progression.CanBuy(item);
                 GUI.color = sel ? new Color(1f, 0.85f, 0.3f, 0.3f) : new Color(1f, 1f, 1f, 0.05f);
                 GUI.DrawTexture(row, Texture2D.whiteTexture);
                 GUI.color = Color.white;
 
-                string nameColor = state == Progression.BuyResult.AlreadyOwned ? "#80FF90" : (state == Progression.BuyResult.NeedsRequirement ? "#777777" : "#FFFFFF");
+                string nameColor = state == Progression.BuyResult.AlreadyOwned ? "#80FF90" : (state == Progression.BuyResult.NeedsRequirement || state == Progression.BuyResult.NeedsBlueprint ? "#777777" : "#FFFFFF");
                 GUI.Label(new Rect(row.x + 14 * scale, row.y + 4 * scale, row.width, 30 * scale), $"<b><color={nameColor}>{item.displayName}</color></b>", button);
                 GUI.Label(new Rect(row.x + 14 * scale, row.y + 34 * scale, row.width - 220 * scale, 28 * scale),
                           $"<color=#BBBBBB>{item.description}</color>", new GUIStyle(small) { alignment = TextAnchor.UpperLeft });
@@ -461,19 +515,95 @@ namespace PaperWings.UI
                 {
                     Progression.BuyResult.AlreadyOwned => "<color=#80FF90><b>OWNED</b></color>",
                     Progression.BuyResult.NeedsRequirement => $"<color=#888888>needs {NameOf(item.requires)}</color>",
+                    Progression.BuyResult.NeedsBlueprint => $"<color=#888888>blueprint: {NightName(item.requiresNight)}</color>\n<color=#666666>{item.cost} clips</color>",
                     Progression.BuyResult.TooExpensive => $"<color=#FF9050>{item.cost} clips</color>",
                     _ => $"<color=#FFD040><b>{item.cost} clips</b></color>"
                 };
-                GUI.Label(new Rect(row.xMax - 250 * scale, row.y + 6 * scale, 236 * scale, 30 * scale), status,
+                GUI.Label(new Rect(row.xMax - 250 * scale, row.y + 6 * scale, 236 * scale, 56 * scale), status,
                           new GUIStyle(small) { alignment = TextAnchor.UpperRight });
 
-                if (GUI.Button(row, GUIContent.none, GUIStyle.none)) { shopSelected = i; Buy(item); }
+                if (GUI.Button(row, GUIContent.none, GUIStyle.none))
+                {
+                    if (i == shopSelected) Buy(item);   // click to look at it on the plane, click again to buy
+                    else { shopSelected = i; shopMessage = ""; Audio.AudioFx.PlayUi(Audio.Sfx.UiMove); }
+                }
                 y += 70 * scale;
             }
 
             GUI.Label(new Rect(panel.x, panel.yMax - 72 * scale, w, 28 * scale), shopMessage, body);
             GUI.Label(new Rect(panel.x, panel.yMax - 40 * scale, w, 28 * scale),
-                      "<color=#999999>Left/Right or A/D: fold.   Up/Down, Enter / Space / (A) or click to unlock.   U / Esc / (B): back</color>", small);
+                      "<color=#999999>Left/Right: fold.   Up/Down: look at an upgrade.   Enter / (A) or click twice: buy.   F / (X): fly this fold.   Drag the plane to spin it.   U / Esc / (B): back</color>", small);
+        }
+
+        /// <summary>Left column of the hangar: the turntable picture, the fold's stats and the fly button.</summary>
+        void DrawHangarBay(Rect area, PlaneFold fold, System.Collections.Generic.List<UnlockItem> shop)
+        {
+            if (fold == null) return;
+            bool unlocked = Progression.IsUnlocked(fold.unlockId);
+
+            // The 3D model: owned upgrades fitted, the selected (unowned) one as a blueprint.
+            Rect pic = new Rect(area.x, area.y, area.width, area.width);
+            if (preview != null)
+            {
+                var owned = PlanePreview.OwnedLoadout(fold);
+                var ghost = default(PreviewLoadout);
+                if (shopSelected >= 0 && shopSelected < shop.Count && Progression.CanBuy(shop[shopSelected]) != Progression.BuyResult.AlreadyOwned)
+                    ghost = PlanePreview.LoadoutFor(shop[shopSelected].id);
+                preview.Request(fold, owned, ghost);
+                GUI.DrawTexture(pic, preview.Texture, ScaleMode.ScaleToFit, false);
+
+                // Drag to spin.
+                var e = Event.current;
+                if (e.type == EventType.MouseDrag && pic.Contains(e.mousePosition)) { preview.Drag(-e.delta.x * 0.6f); e.Use(); }
+            }
+            else
+            {
+                GUI.color = new Color(1f, 1f, 1f, 0.05f);
+                GUI.DrawTexture(pic, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+            }
+            if (!unlocked)
+                GUI.Label(new Rect(pic.x, pic.y + 10 * scale, pic.width, 30 * scale), "<color=#FF9050><b>LOCKED</b></color>", body);
+
+            float y = pic.yMax + 8 * scale;
+            GUI.Label(new Rect(area.x, y, area.width, 30 * scale), $"<b>{fold.displayName.ToUpper()}</b>", body);
+            y += 30 * scale;
+            GUI.Label(new Rect(area.x, y, area.width, 40 * scale), $"<color=#BBBBBB>{fold.description}</color>", small);
+            y += 44 * scale;
+
+            if (fold.flight != null)
+            {
+                StatLine(ref y, area, "Speed", fold.flight.maxSpeed / 50f);
+                StatLine(ref y, area, "Glide", fold.flight.glideRatio / 15f);
+                StatLine(ref y, area, "Agility", fold.flight.turnRate / 120f);
+            }
+            if (fold.paper != null)
+                StatLine(ref y, area, "Paper", fold.paper.maxIntegrity * (Progression.IsUnlocked(UnlockIds.ForFold(fold, UnlockIds.HeavyPaper)) ? 1.25f : 1f) / 150f);
+
+            // Fly button.
+            y += 6 * scale;
+            Rect fly = new Rect(area.x, y, area.width, 36 * scale);
+            bool current = foldSelector != null && foldSelector.Current == fold;
+            GUI.color = current ? new Color(0.3f, 1f, 0.45f, 0.2f) : (unlocked ? new Color(1f, 0.85f, 0.3f, 0.3f) : new Color(1f, 1f, 1f, 0.06f));
+            GUI.DrawTexture(fly, Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            string flyText = current ? "<color=#80FF90><b>FLYING THIS FOLD</b></color>"
+                           : unlocked ? "<b>F / (X): FLY THIS FOLD</b>" : "<color=#888888>Unlock it to fly it</color>";
+            GUI.Label(fly, flyText, small);
+            if (!current && unlocked && GUI.Button(fly, GUIContent.none, GUIStyle.none)) Equip(fold);
+        }
+
+        void StatLine(ref float y, Rect area, string label, float value01)
+        {
+            float labelW = 90 * scale;
+            GUI.Label(new Rect(area.x, y - 4 * scale, labelW, 24 * scale), $"<color=#CCCCCC>{label}</color>", new GUIStyle(small) { alignment = TextAnchor.UpperLeft });
+            Rect bg = new Rect(area.x + labelW, y + 4 * scale, area.width - labelW, 10 * scale);
+            GUI.color = new Color(1f, 1f, 1f, 0.12f);
+            GUI.DrawTexture(bg, Texture2D.whiteTexture);
+            GUI.color = new Color(1f, 0.85f, 0.3f, 0.9f);
+            GUI.DrawTexture(new Rect(bg.x, bg.y, bg.width * Mathf.Clamp01(value01), bg.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            y += 24 * scale;
         }
 
         // ------------------------------------------------------------------ drawing
@@ -602,7 +732,7 @@ namespace PaperWings.UI
                 GUI.color = new Color(1f, 0.85f, 0.3f, 0.25f);
                 GUI.DrawTexture(btn, Texture2D.whiteTexture);
                 GUI.color = Color.white;
-                GUI.Label(btn, "<b>U / (Y): UNLOCKS</b>", small);
+                GUI.Label(btn, "<b>U / (Y): HANGAR</b>", small);
                 if (GUI.Button(btn, GUIContent.none, GUIStyle.none)) OpenUnlocks();
             }
         }
@@ -816,8 +946,10 @@ namespace PaperWings.UI
                 GameMode.RingRun => "Fly through every ring.",
                 GameMode.Dogfight => $"Rivals shot down  <b>{director.KillsThisRun} / {director.DogfightTarget}</b>",
                 GameMode.Squadron => $"Squadron kills  <b>{director.TeamKillsThisRun} / {director.SquadronTarget}</b>   <color=#AAAAAA>(yours {director.KillsThisRun})</color>",
-                _ => "Defeat THE STAPLER. Hit the glowing mouth when the jaw opens."
+                _ => director.Boss != null ? $"Defeat {director.Boss.DisplayName}." : "Defeat the boss."
             };
+            string mission = director.ObjectiveText();
+            if (mission != null) obj = mission;
             bool timed = m == GameMode.Dogfight || m == GameMode.Squadron || m == GameMode.BossFight;
             string timer = timed ? $"    Time <b>{director.RunTime:0.0}s</b>" : "";
             float best = director.BestTime(m);
@@ -840,6 +972,26 @@ namespace PaperWings.UI
             GUI.DrawTexture(r, Texture2D.whiteTexture);
             GUI.color = Color.white;
             GUI.Label(r, $"<color=#FFD040>{label}</color>    {obj}{timer}{bestText}    <color=#888888>Esc: menu</color>", small);
+            DrawEventBanner();
+        }
+
+        /// <summary>Room events (Stage 29): a warning with a countdown, then what to do while it lasts.</summary>
+        void DrawEventBanner()
+        {
+            var ev = RoomEvent.Announcing;
+            if (ev == null || director.RunComplete) return;
+            bool warn = ev.Current == RoomEvent.Stage.Warning;
+            string hex = ColorUtility.ToHtmlStringRGB(ev.color);
+            float pulse = warn ? 0.55f + 0.45f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) : 1f;
+            string text = warn ? $"<b><color=#{hex}>{ev.title}</color></b>   <color=#DDDDDD>in {ev.SecondsToGo:0.0}s</color>"
+                               : $"<b><color=#{hex}>{ev.title}</color></b>   <color=#FFFFFF>{ev.hint}</color>";
+            float w = 900 * scale;
+            Rect r = new Rect((UnityEngine.Screen.width - w) * 0.5f, 128 * scale, w, 38 * scale);
+            GUI.color = new Color(0f, 0f, 0f, 0.55f * pulse);
+            GUI.DrawTexture(r, Texture2D.whiteTexture);
+            GUI.color = new Color(1f, 1f, 1f, pulse);
+            GUI.Label(r, text, body);
+            GUI.color = Color.white;
         }
 
         static string Describe(GameMode m) => m switch
@@ -848,7 +1000,7 @@ namespace PaperWings.UI
             GameMode.RingRun => "Thread all five sticky-note rings as fast as you can. The last ring stops the clock.",
             GameMode.Dogfight => "Accounting's rival planes are up. Shoot down five of them as fast as you can.",
             GameMode.Squadron => "Fly with two Marketing wingmen against four rivals. Your squadron needs eight kills.",
-            _ => "THE STAPLER guards the desk. Dodge its staple fans and slams, hit the open jaw.",
+            _ => "Each room's boss: THE STAPLER (office), THE AUDITOR (break room, it flies!), THE MAINFRAME (server room), THE CONDENSER (rooftop).",
         };
 
         // ------------------------------------------------------------------ helpers

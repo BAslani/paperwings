@@ -10,6 +10,35 @@ namespace PaperWings.Flight
     {
         [SerializeField] PlaneController plane;
         [SerializeField] TrailRenderer[] trails;
+        [Tooltip("Faint trail kept on whenever this plane flies, whatever its speed (0 = speed only). " +
+                 "AI planes use it so you can tell Accounting (red) from Marketing (blue) at a glance.")]
+        [Range(0f, 1f)] [SerializeField] float alwaysOn = 0f;
+        [Tooltip("Trail colour at the wingtip (fades to transparent).")]
+        [SerializeField] Color trailColor = Color.white;
+        [Tooltip("Trail colour at the end of the trail.")]
+        [SerializeField] Color trailEndColor = new Color(0.7f, 0.85f, 1f);
+
+        void Start() => ApplyColors();
+
+        /// <summary>Pushes the faction colours into the trail renderers.</summary>
+        public void ApplyColors()
+        {
+            if (trails == null) return;
+            var g = new Gradient();
+            g.SetKeys(
+                new[] { new GradientColorKey(trailColor, 0f), new GradientColorKey(trailEndColor, 1f) },
+                new[] { new GradientAlphaKey(0.7f, 0f), new GradientAlphaKey(0f, 1f) });
+            foreach (var trail in trails) if (trail != null) trail.colorGradient = g;
+        }
+
+        /// <summary>New trail colours at runtime (an ace's gold trail, for example).</summary>
+        public void SetColors(Color start, Color end, float minimumOn)
+        {
+            trailColor = start;
+            trailEndColor = end;
+            alwaysOn = Mathf.Max(alwaysOn, minimumOn);
+            ApplyColors();
+        }
 
         void LateUpdate()
         {
@@ -22,6 +51,7 @@ namespace PaperWings.Flight
                 : 0f;
             // Thermals get a faint trail even when slow, so the climbing spiral is visible.
             if (flying && s.trailsEnabled && plane.Air.InThermal) t = Mathf.Max(t, 0.35f * plane.Air.thermal);
+            if (flying && s.trailsEnabled) t = Mathf.Max(t, alwaysOn);
 
             foreach (var trail in trails)
             {

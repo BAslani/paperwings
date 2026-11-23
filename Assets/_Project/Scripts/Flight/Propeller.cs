@@ -41,7 +41,14 @@ namespace PaperWings.Flight
 
         void Update()
         {
-            if (plane == null || rotor == null) return;
+            if (rotor == null) return;
+            if (plane == null)
+            {
+                // On a display stand (the hangar preview): turn lazily, even while the game is paused.
+                rotor.Rotate(0f, 0f, idleSpin * 2f * Time.unscaledDeltaTime, Space.Self);
+                if (blurDisc != null) blurDisc.enabled = false;
+                return;
+            }
             float dt = Time.deltaTime;
 
             float target = plane.State switch

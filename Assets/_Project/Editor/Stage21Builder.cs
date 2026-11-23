@@ -66,7 +66,7 @@ namespace PaperWings.EditorTools
 
             var so = new SerializedObject(director);
             var rooms = so.FindProperty("rooms");
-            rooms.arraySize = 2;
+            if (rooms.arraySize < 2) rooms.arraySize = 2;   // never shrink: rooms 2-4 come from Stage 25
             rooms.GetArrayElementAtIndex(0).objectReferenceValue = office;
             rooms.GetArrayElementAtIndex(1).objectReferenceValue = breakRoom;
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -155,7 +155,7 @@ namespace PaperWings.EditorTools
             Wall("LeftWall", shell, A(-131f, CeilingY * 0.5f, -34f), Vector3.right, 154f, CeilingY, tile);
             Wall("RightWall", shell, A(131f, CeilingY * 0.5f, -34f), Vector3.left, 154f, CeilingY, tile);
             Wall("FrontWall", shell, A(0f, CeilingY * 0.5f, -111f), Vector3.forward, 264f, CeilingY, tile);
-            Deco(PrimitiveType.Cube, "Door", shell, A(-70f, 20f, -110.9f), Vector3.zero, new Vector3(16f, 40f, 0.2f), cabinet);
+            Deco(PrimitiveType.Cube, "Door", shell, A(-70f, 43f, -110.9f), Vector3.zero, new Vector3(34f, 86f, 0.2f), cabinet);   // 2 m (Stage 23)
             var ceil = GameObject.CreatePrimitive(PrimitiveType.Plane);
             ceil.name = "Ceiling";
             ceil.transform.SetParent(shell, false);

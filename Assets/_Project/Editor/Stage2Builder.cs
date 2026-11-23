@@ -199,6 +199,7 @@ namespace PaperWings.EditorTools
             go.transform.localScale = scale;
             go.GetComponent<Renderer>().sharedMaterial = mat;
             if (!keepCollider) Object.DestroyImmediate(go.GetComponent<Collider>());
+            else if (type == PrimitiveType.Cylinder) StageKit.CylinderCollider(go);
             return go;
         }
 

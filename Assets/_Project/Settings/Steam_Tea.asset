@@ -23,4 +23,6 @@ MonoBehaviour:
   swayAmount: 3
   swayFrequency: 0.15
   steamRate: 5
-  steamColor: {r: 0.95, g: 0.95, b: 1, a: 0.14}
+  steamColor: {r: 0.93, g: 0.96, b: 1, a: 0.14}
+  steamSpread: 0.15
+  steamSize: {x: 0.35, y: 0.8}

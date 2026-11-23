@@ -70,7 +70,7 @@ namespace PaperWings.Air
             var main = shimmer.main;
             main.startSpeed = riseSpeed;
             main.startLifetime = settings.height / riseSpeed;
-            main.startColor = settings.shimmerColor;
+            main.startColor = AirPalette.Of(Look, settings.shimmerColor);
             main.startSize = new ParticleSystem.MinMaxCurve(settings.shimmerSize.x, settings.shimmerSize.y);
             main.simulationSpace = ParticleSystemSimulationSpace.World;
 

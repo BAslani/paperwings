@@ -79,7 +79,7 @@ namespace PaperWings.Air
             var main = steam.main;
             main.startSpeed = rise * puff;
             main.startLifetime = settings.height / rise;
-            main.startColor = settings.steamColor;
+            main.startColor = AirPalette.Of(Look, settings.steamColor);
             main.startSize = new ParticleSystem.MinMaxCurve(settings.steamSize.x, settings.steamSize.y);
             main.simulationSpace = ParticleSystemSimulationSpace.World;
 

@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bfca431533df494fbc40804707fafc1, type: 3}
   m_Name: Fold_Glider
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PlaneFold
-  displayName: Glider
+  displayName: Crane
   unlockId: fold_glider
   foldId: glider
-  description: Wide wings ride thermals like an elevator and glide forever. Slow,
-    wide turns, flimsy paper.
-  propellerMount: {x: 0, y: 0, z: -0.82000005}
+  description: 'An origami crane: long feathered wings that ride thermals and glide
+    forever.'
+  propellerMount: {x: 0, y: 0, z: -0.85}
   flight: {fileID: 11400000, guid: 73c9ef5fd63dd4a41bf6d6cedde18a1a, type: 2}
   paper: {fileID: 11400000, guid: 861a30e036f2de745a886a66bb1d92e2, type: 2}
   mesh: {fileID: 4300000, guid: ad2a5ce9e8dfe3f40927a3bca633beb9, type: 2}
-  paperColor: {r: 0.86, g: 0.93, b: 1, a: 1}
-  paperTexture: {fileID: 2800000, guid: 58a3c52e2b5258443b19b3cbb6d07b41, type: 2}
+  paperColor: {r: 1, g: 1, b: 1, a: 1}
+  paperTexture: {fileID: 2800000, guid: 3f7929fe4f846944fb563f36012bbefa, type: 2}
   attachment: {fileID: 0}

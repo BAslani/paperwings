@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Thermal_Microwave
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Air.ThermalSettings
   liftSpeed: 11
-  radius: 8
+  radius: 10
   height: 42
   coreFraction: 0.45
   topFade: 0.25
   centeringAssist: 1.5
   shimmerRate: 18
-  shimmerColor: {r: 1, g: 0.75, b: 0.45, a: 0.12}
+  shimmerColor: {r: 1, g: 0.55, b: 0.15, a: 0.12}
   shimmerSpread: 0.4
   shimmerSize: {x: 0.25, y: 0.6}

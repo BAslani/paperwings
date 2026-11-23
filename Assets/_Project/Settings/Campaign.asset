@@ -12,45 +12,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a3b65f9e03152942904a7929e282231, type: 3}
   m_Name: Campaign
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Gameplay.CampaignSettings
-  starBonus: 0f0000001e000000
+  version: 3
+  starBonus: 0a00000019000000
   nights:
-  - title: First Flight
+  - title: Target Practice
     memo: 'MEMO from Marketing: Welcome to the night shift, rookie. Hold Throw to
-      wind up, let go to fly. Dive for speed, climb to slow down, ride the laptop''s
-      heat. Stay up for fifteen seconds in one flight.'
-    mode: 0
+      wind up, let go to fly, hold Fire for staples. Six practice drones are circling
+      the office. The space heater by the couch throws up warm air (orange): circle
+      in it to climb.'
+    mode: 2
     room: 0
-    killTarget: 0
-    maxRivals: 0
-    timeLimit: 0
-    airTimeTarget: 15
-    windScale: 1
-    noPencils: 0
-    twoStarTime: 25
-    threeStarTime: 16
-    rewardClips: 30
-    rewardUnlockId: 
-  - title: The Ring Route
-    memo: 'MEMO: The sticky-note rings mark our patrol route. Ride the laptop''s
-      heat to climb, boost when you need speed, and thread every ring.'
-    mode: 1
-    room: 0
-    killTarget: 0
-    maxRivals: 0
+    place: 'Office: the lounge'
+    area: 
+    spawn: LoungeSpawn
+    objective: 3
+    group: PracticeDrones
+    allowedLosses: 2
+    aceName: 
+    killTarget: 6
+    maxRivals: -1
     timeLimit: 0
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
-    twoStarTime: 55
-    threeStarTime: 40
+    twoStarTime: 75
+    threeStarTime: 50
     rewardClips: 40
     rewardUnlockId: 
   - title: Trespasser
-    memo: 'MEMO: One of Accounting''s planes is snooping round our desks. It keeps
-      coming back for more, so shoot it down twice. Supply is sending your Dart a
-      bigger staple magazine.'
+    memo: 'MEMO: An Accounting plane (red trail) is snooping round the office. It
+      keeps coming back, so shoot it down twice. Their pilots climb in warm air to
+      recover: the radiators under the windows are where they''ll go.'
     mode: 2
     room: 0
+    place: 'Office: the coworker''s corner'
+    area: 
+    spawn: CoworkerSpawn
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
     killTarget: 2
     maxRivals: 1
     timeLimit: 0
@@ -59,105 +60,44 @@ MonoBehaviour:
     noPencils: 0
     twoStarTime: 60
     threeStarTime: 35
-    rewardClips: 20
-    rewardUnlockId: dart:staples_plus
-  - title: Rough Air
-    memo: 'MEMO: Someone set every fan and vent to MAX. Fly the ring route anyway.
-      The air pushes harder tonight, so use it, don''t fight it.'
-    mode: 1
-    room: 0
-    killTarget: 0
-    maxRivals: 0
-    timeLimit: 120
-    airTimeTarget: 0
-    windScale: 1.6
-    noPencils: 0
-    twoStarTime: 70
-    threeStarTime: 50
     rewardClips: 50
     rewardUnlockId: 
-  - title: Pencil Pushers
-    memo: 'MEMO: Accounting is out in force. Down four of them and we''ll requisition
-      you a pair of lock-on pencil missiles for your Dart.'
+  - title: Paper Trail
+    memo: 'MEMO: Accounting couriers are carrying our campaign plans along the window
+      row to the door. Shoot down four before three get out. They always fly the
+      same line, and one rival flies cover. Ride the radiators to stay above them.'
     mode: 2
     room: 0
+    place: 'Office: the window row'
+    area: 
+    spawn: 
+    objective: 1
+    group: WindowCouriers
+    allowedLosses: 3
+    aceName: 
     killTarget: 4
-    maxRivals: 0
+    maxRivals: 1
     timeLimit: 0
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
-    twoStarTime: 110
-    threeStarTime: 75
-    rewardClips: 20
-    rewardUnlockId: dart:pencils
-  - title: Against the Clock
-    memo: 'MEMO: The cleaners come at dawn. Run the whole route in under a minute.
-      Do it and R&D will teach you the Glider fold.'
-    mode: 1
-    room: 0
-    killTarget: 0
-    maxRivals: 0
-    timeLimit: 60
-    airTimeTarget: 0
-    windScale: 1
-    noPencils: 0
-    twoStarTime: 42
-    threeStarTime: 32
-    rewardClips: 30
-    rewardUnlockId: fold_glider
-  - title: Backup
-    memo: 'MEMO: You''re not alone any more. Two Marketing wingmen fly with you tonight.
-      Together, down six of Accounting''s planes.'
-    mode: 4
-    room: 0
-    killTarget: 6
-    maxRivals: 0
-    timeLimit: 0
-    airTimeTarget: 0
-    windScale: 1
-    noPencils: 0
-    twoStarTime: 130
-    threeStarTime: 90
+    twoStarTime: 90
+    threeStarTime: 60
     rewardClips: 60
     rewardUnlockId: 
-  - title: Staples Only
-    memo: 'MEMO: Pencil audit tonight, so they stay in the drawer. Five kills with
-      staples alone, before the clock runs out. Survive it and your Dart gets heavy
-      paper.'
-    mode: 2
-    room: 0
-    killTarget: 5
-    maxRivals: 0
-    timeLimit: 160
-    airTimeTarget: 0
-    windScale: 1
-    noPencils: 1
-    twoStarTime: 120
-    threeStarTime: 85
-    rewardClips: 30
-    rewardUnlockId: dart:paper_tough
-  - title: Full Squadron
-    memo: 'MEMO: Accounting''s whole squadron is up, and the air is rough. Ten kills
-      between you and your wingmen takes the office back.'
-    mode: 4
-    room: 0
-    killTarget: 10
-    maxRivals: 0
-    timeLimit: 0
-    airTimeTarget: 0
-    windScale: 1.3
-    noPencils: 0
-    twoStarTime: 190
-    threeStarTime: 130
-    rewardClips: 80
-    rewardUnlockId: 
   - title: The Stapler
-    memo: 'FINAL MEMO: Accounting''s secret weapon has woken up on the desk. Dodge
-      its staple fans and slams, and hit the glowing mouth when the jaw opens. End
-      the Night Shift War.'
+    memo: 'MEMO: Accounting''s desk guardian has woken up on YOUR desk. Its jaw is
+      armored; hit the glowing mouth when it opens. When the jaw rises, it slams
+      and blasts the air down: get clear.'
     mode: 3
     room: 0
+    place: 'Office: your desk'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
     killTarget: 0
     maxRivals: 0
     timeLimit: 0
@@ -166,45 +106,22 @@ MonoBehaviour:
     noPencils: 0
     twoStarTime: 150
     threeStarTime: 100
-    rewardClips: 150
-    rewardUnlockId: fold_canard
-  - title: 'Overtime: Coffee Break'
-    memo: 'OVERTIME MEMO: The war is won, but nobody goes home. Head to the break
-      room and stay up for twenty-five seconds. The microwave''s heat keeps you aloft;
-      the vent over the sink doesn''t.'
-    mode: 0
-    room: 1
-    killTarget: 0
-    maxRivals: 0
-    timeLimit: 0
-    airTimeTarget: 25
-    windScale: 1
-    noPencils: 0
-    twoStarTime: 40
-    threeStarTime: 28
-    rewardClips: 50
+    rewardClips: 120
     rewardUnlockId: 
-  - title: Microwave Express
-    memo: 'MEMO: Someone left popcorn in the microwave and the heat is rising. Ride
-      it up through the break room rings. Finish and the Dart gets its own pusher
-      propeller.'
-    mode: 1
-    room: 1
-    killTarget: 0
-    maxRivals: 0
-    timeLimit: 0
-    airTimeTarget: 0
-    windScale: 1
-    noPencils: 0
-    twoStarTime: 50
-    threeStarTime: 35
-    rewardClips: 30
-    rewardUnlockId: dart:propeller
-  - title: Break Room Brawl
-    memo: 'MEMO: Accounting is regrouping by the vending machine. Four kills between
-      the cupboards and the fridge, and R&D hands over the Stunt fold.'
+  - title: Office Party
+    memo: 'MEMO: Somebody''s leaving do, and Accounting crashed it. Four kills among
+      the balloons (shoot them to clear a lane). Watch the appliances: the microwave
+      dumps heat when it dings, the fridge door swings open, and the vending machine
+      has gone haywire.'
     mode: 2
     room: 1
+    place: 'Break room: the party'
+    area: 
+    spawn: CouchSpawn
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
     killTarget: 4
     maxRivals: 0
     timeLimit: 0
@@ -213,5 +130,190 @@ MonoBehaviour:
     noPencils: 0
     twoStarTime: 100
     threeStarTime: 70
+    rewardClips: 70
+    rewardUnlockId: 
+  - title: Coffee Run
+    memo: 'MEMO: Two of our couriers (blue) are flying the morning coffee orders
+      from the machine to the door. Rivals will hunt them. Stay close and shoot whatever
+      gets on their tail. We can lose one, not two.'
+    mode: 2
+    room: 1
+    place: 'Break room: the coffee machine'
+    area: 
+    spawn: 
+    objective: 2
+    group: CoffeeCourier
+    allowedLosses: 2
+    aceName: 
+    killTarget: 2
+    maxRivals: 2
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 110
+    threeStarTime: 80
+    rewardClips: 80
+    rewardUnlockId: 
+  - title: The Auditor
+    memo: 'MEMO: Accounting folded a bomber out of a whole ledger and it''s circling
+      the break room. Shoot off its wing turrets, dodge its clip bombs, and when
+      its engine stalls get on its tail: the glowing engine is the weak spot.'
+    mode: 3
+    room: 1
+    place: 'Break room: under the ceiling'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 170
+    threeStarTime: 120
+    rewardClips: 160
+    rewardUnlockId: 
+  - title: Cold Boot
+    memo: 'MEMO: Two Marketing wingmen (blue) fly with you tonight against a whole
+      squadron. Eight kills between you. The tape robot rides its gantry overhead
+      and the halon alarm slams everyone down: listen for the siren.'
+    mode: 4
+    room: 2
+    place: 'Server room: the aisles'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 8
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 150
+    threeStarTime: 105
+    rewardClips: 90
+    rewardUnlockId: 
+  - title: Sysadmin
+    memo: 'MEMO: IT''s best pilot (gold trail) is hunting you: tougher paper, sharper
+      turns, longer bursts. Shoot it down twice. The lights keep cutting out; the
+      racks still glow, and so does its trail.'
+    mode: 2
+    room: 2
+    place: 'Server room: lights out'
+    area: 
+    spawn: 
+    objective: 4
+    group: 
+    allowedLosses: 2
+    aceName: The Sysadmin
+    killTarget: 2
+    maxRivals: 1
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 120
+    threeStarTime: 80
     rewardClips: 100
-    rewardUnlockId: fold_stunt
+    rewardUnlockId: 
+  - title: The Mainframe
+    memo: 'MEMO: The Mainframe has joined Accounting. Shoot off its two fans and
+      its sweep loses its bite. When it raises a firewall, shoot down its drones.
+      When it overheats, ride its hot exhaust up and shoot the hatch.'
+    mode: 3
+    room: 2
+    place: 'Server room: the Mainframe''s wall'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 170
+    threeStarTime: 120
+    rewardClips: 200
+    rewardUnlockId: 
+  - title: Fire Escape
+    memo: 'MEMO: Accounting is running its files up the stairwell to the roof. The
+      couriers spiral up the warm chimney: climb with them and shoot down five before
+      three reach the top. The doors on every floor gust open: they shove you, and
+      them.'
+    mode: 2
+    room: 3
+    place: 'Stairwell: the chimney'
+    area: 
+    spawn: 
+    objective: 1
+    group: StairCouriers
+    allowedLosses: 3
+    aceName: 
+    killTarget: 5
+    maxRivals: 1
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 110
+    threeStarTime: 75
+    rewardClips: 110
+    rewardUnlockId: 
+  - title: Squall
+    memo: 'MEMO: Accounting''s last squadron is up on the roof. Five kills in the
+      wind. Their planes drift with the gusts just like yours: lead your shots downwind.'
+    mode: 2
+    room: 4
+    place: 'Rooftop: the water tower'
+    area: 
+    spawn: WaterTowerSpawn
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 5
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 130
+    threeStarTime: 90
+    rewardClips: 120
+    rewardUnlockId: 
+  - title: The Condenser
+    memo: 'FINAL MEMO: The building''s giant AC unit is Accounting''s last weapon.
+      Its fan blows you sky-high and throws rings of debris, then reverses and sucks
+      you into the grille. Shoot off its coolant tanks, hit the hub when the fan
+      stalls. End the Night Shift War.'
+    mode: 3
+    room: 4
+    place: 'Rooftop: the AC unit'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    twoStarTime: 200
+    threeStarTime: 140
+    rewardClips: 300
+    rewardUnlockId: 

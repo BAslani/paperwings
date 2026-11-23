@@ -20,9 +20,42 @@ namespace PaperWings.Combat
         [SerializeField] float firstSpawnDelay = 1f;
 
         public PlaneController Current { get; private set; }
+        /// <summary>True while this spawner is sending an ace (a campaign night's named rival).</summary>
+        public bool IsAce => ace != null;
 
         PaperDamage currentPaper;
         float respawnAt;
+        AceStyle ace;
+
+        /// <summary>How an ace differs from a regular rival.</summary>
+        public class AceStyle
+        {
+            public string name = "THE AUDITOR'S ACE";
+            public RivalPilotSettings pilot;
+            public float integrityScale = 3f;
+            public float scale = 1.35f;
+            public Color trail = new Color(1f, 0.8f, 0.2f);
+        }
+
+        /// <summary>Turns this spawner's rival (and every respawn) into an ace until the spawner is switched off.</summary>
+        public void MakeAce(AceStyle style)
+        {
+            ace = style;
+            ApplyAce();
+        }
+
+        void ApplyAce()
+        {
+            if (ace == null || Current == null) return;
+            var pilot = Current.GetComponent<RivalPilot>();
+            if (pilot != null && ace.pilot != null) pilot.Settings = ace.pilot;
+            if (currentPaper != null) { currentPaper.IntegrityScale = ace.integrityScale; currentPaper.Repair(); }
+            Current.transform.localScale = Vector3.one * ace.scale;
+            var target = Current.GetComponent<CombatTarget>();
+            if (target != null) target.DisplayName = ace.name;
+            var trails = Current.GetComponent<PlaneTrails>();
+            if (trails != null) trails.SetColors(ace.trail, new Color(ace.trail.r, ace.trail.g, ace.trail.b, 0f), 0.6f);
+        }
 
         // UNITY NOTE: OnEnable/OnDisable run every time the object is switched on/off (Start only
         // runs once), so spawning here makes game modes able to toggle rivals cleanly.
@@ -43,6 +76,7 @@ namespace PaperWings.Combat
 
         void OnDisable()
         {
+            ace = null;
             // Take our rival with us (it's a separate object in the scene, not a child).
             if (Current != null)
             {

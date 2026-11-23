@@ -91,8 +91,14 @@ namespace PaperWings.Flight
         public bool FoldPrevPressed => foldPrev != null && foldPrev.WasPressedThisFrame();
         public bool FoldNextPressed => foldNext != null && foldNext.WasPressedThisFrame();
 
-        /// <summary>True while the fire button is held (weapons auto-fire at their own rate).</summary>
-        public bool FireHeld => fire != null && fire.IsPressed();
+        /// <summary>
+        /// True while the fire button is held (weapons auto-fire at their own rate).
+        /// It reads the physical buttons, not the action's phase, and needs a fresh press while
+        /// nothing blocks input: an action can stay "pressed" when its release is missed (focus
+        /// change, a click that closed a menu), which used to make the gun fire on its own.
+        /// </summary>
+        public bool FireHeld => fireArmed;
+        bool fireArmed;
 
         /// <summary>True on the frame the missile (pencil) button was pressed.</summary>
         public bool MissilePressed => missile != null && missile.WasPressedThisFrame();
@@ -124,6 +130,7 @@ namespace PaperWings.Flight
 
         void OnDisable()
         {
+            fireArmed = false;
             map?.Disable();
             SetCursorCaptured(false);
         }
@@ -135,6 +142,7 @@ namespace PaperWings.Flight
             // Button presses happen in Update (per frame) but the flight model runs in
             // FixedUpdate (per physics tick). Queue the press so it's never missed.
             if (boost.WasPressedThisFrame()) boostQueued = true;
+            UpdateFire();
 
             if (toggleControls != null && toggleControls.WasPressedThisFrame() && controls != null && !CursorBlocked)
             {
@@ -144,6 +152,22 @@ namespace PaperWings.Flight
 
             UpdateMouseAim();
             SetCursorCaptured(IsMouseAim && controls.lockCursor && Application.isFocused && !CursorBlocked);
+        }
+
+        void UpdateFire()
+        {
+            if (fire == null) { fireArmed = false; return; }
+            bool down = false, pressedNow = false;
+            foreach (var control in fire.controls)
+            {
+                if (control is UnityEngine.InputSystem.Controls.ButtonControl b)
+                {
+                    down |= b.isPressed;
+                    pressedNow |= b.wasPressedThisFrame;
+                }
+            }
+            if (!down || CursorBlocked || !Application.isFocused) { fireArmed = false; return; }
+            if (pressedNow) fireArmed = true;
         }
 
         void UpdateMouseAim()

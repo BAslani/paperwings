@@ -105,7 +105,7 @@ namespace PaperWings.Air
             var main = streaks.main;
             main.startSpeed = settings.windSpeed;
             main.startLifetime = settings.range / Mathf.Max(1f, settings.windSpeed);
-            main.startColor = settings.streakColor;
+            main.startColor = AirPalette.Of(Look, settings.streakColor);
             main.simulationSpace = ParticleSystemSimulationSpace.Local; // streaks swing with the head, matching the wind
 
             var shape = streaks.shape;

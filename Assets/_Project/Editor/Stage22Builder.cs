@@ -58,7 +58,7 @@ namespace PaperWings.EditorTools
                 Room office = rooms.arraySize > 0 ? rooms.GetArrayElementAtIndex(0).objectReferenceValue as Room : null;
                 if (office == null) office = Stage21Builder.MakeOfficeRoom(scene, director);
                 var breakRoom = Stage21Builder.BuildBreakRoom(scene);
-                rooms.arraySize = 2;
+                if (rooms.arraySize < 2) rooms.arraySize = 2;   // never shrink: rooms 2-4 come from Stage 25
                 rooms.GetArrayElementAtIndex(0).objectReferenceValue = office;
                 rooms.GetArrayElementAtIndex(1).objectReferenceValue = breakRoom;
                 so.ApplyModifiedPropertiesWithoutUndo();
@@ -211,14 +211,15 @@ namespace PaperWings.EditorTools
             }
 
             // ---- Left wall: door and a whiteboard ----
-            Picture("DoorFrame", dressing, new Vector3(Left + 0.05f, 21f, Front + 30f), Vector3.right, 20f, 42f, trim);
-            Picture("Door", dressing, new Vector3(Left + 0.1f, 20f, Front + 30f), Vector3.right, 17f, 40f, wood);
+            // A 2 m door at the props' scale (~2.3 cm per unit), fixed in Stage 23.
+            Picture("DoorFrame", dressing, new Vector3(Left + 0.05f, 44f, Front + 30f), Vector3.right, 38f, 88f, trim);
+            Picture("Door", dressing, new Vector3(Left + 0.1f, 43f, Front + 30f), Vector3.right, 34f, 86f, wood);
             Picture("WhiteboardFrame", dressing, new Vector3(Left + 0.05f, 62f, 5f), Vector3.right, 70f, 34f, trim);
             Picture("Whiteboard", dressing, new Vector3(Left + 0.1f, 62f, 5f), Vector3.right, 68f, 32f, board);
 
             // ---- Right wall: filing cabinets ----
-            for (int i = 0; i < 3; i++)
-                Box("FilingCabinet", dressing, new Vector3(Right - 6f, 13f, -40f + i * 13f), new Vector3(11f, 26f, 12f), cabinetMat);
+            for (int i = 0; i < 3; i++)   // four-drawer cabinets, taller than the desk (Stage 23)
+                Box("FilingCabinet", dressing, new Vector3(Right - 11f, 26f, -52f + i * 22f), new Vector3(20f, 52f, 21f), cabinetMat);
 
             // ---- Front corner: a potted plant ----
             Stage2Builder.Prim(PrimitiveType.Cylinder, "PlantPot", dressing, Vector3.zero, Vector3.zero, new Vector3(9f, 5f, 9f), pot, keepCollider: true)
@@ -312,13 +313,14 @@ namespace PaperWings.EditorTools
             for (int i = 0; i < 5; i++)
                 Box("Binder", drawers, new Vector3(14f + i * 3.2f, 33f, 82f), new Vector3(2.8f, 14f, 10f), bookColors[i % bookColors.Length]);
 
-            // Tall drawer cabinet in the back-left corner.
-            Box("TallDrawers", drawers, new Vector3(-155f, 30f, 78f), new Vector3(26f, 60f, 18f), wood);
+            // Tall drawer cabinet against the front wall, front-right (moved out of the back-left corner in
+            // Stage 24, so the window-radiator route can turn there). Its drawers face into the room (+Z).
+            Box("TallDrawers", drawers, new Vector3(133f, 30f, -141f), new Vector3(26f, 60f, 18f), wood);
             for (int row = 0; row < 6; row++)
             {
                 float y = 5f + row * 9.6f;
-                Deco("DrawerFront", drawers, new Vector3(-155f, y, 68.9f), new Vector3(24f, 8.6f, 0.4f), Vector3.zero, darkWood);
-                Deco("DrawerKnob", drawers, new Vector3(-155f, y, 68.4f), new Vector3(4f, 0.8f, 0.8f), Vector3.zero, knob);
+                Deco("DrawerFront", drawers, new Vector3(133f, y, -131.9f), new Vector3(24f, 8.6f, 0.4f), Vector3.zero, darkWood);
+                Deco("DrawerKnob", drawers, new Vector3(133f, y, -131.4f), new Vector3(4f, 0.8f, 0.8f), Vector3.zero, knob);
             }
 
             // ---- Bookshelf against the right wall ----
@@ -360,9 +362,10 @@ namespace PaperWings.EditorTools
             OfficeChair(f, new Vector3(0f, 0f, -32f), 0f, fabric, metal);
 
             // ---- Printer stand in the back-right corner, and a bin by the desk ----
-            Box("PrinterStand", f, new Vector3(125f, 15f, 79f), new Vector3(22f, 30f, 18f), plastic);
-            Box("BigPrinter", f, new Vector3(125f, 36f, 79f), new Vector3(20f, 12f, 16f), lightPlastic);
-            Deco("BigPrinterTray", f, new Vector3(125f, 42.4f, 76f), new Vector3(14f, 0.8f, 8f), Vector3.zero, paper);
+            // In the corner, clear of the right window's radiator (Stage 24).
+            Box("PrinterStand", f, new Vector3(152f, 15f, 79f), new Vector3(22f, 30f, 18f), plastic);
+            Box("BigPrinter", f, new Vector3(152f, 36f, 79f), new Vector3(20f, 12f, 16f), lightPlastic);
+            Deco("BigPrinterTray", f, new Vector3(152f, 42.4f, 76f), new Vector3(14f, 0.8f, 8f), Vector3.zero, paper);
             Stage2Builder.Prim(PrimitiveType.Cylinder, "Bin", f, Vector3.zero, Vector3.zero, new Vector3(7f, 6f, 7f), metal, keepCollider: true)
                 .transform.position = new Vector3(42f, 6f, -26f);
         }
