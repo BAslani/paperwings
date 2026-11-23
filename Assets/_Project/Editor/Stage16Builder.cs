@@ -72,7 +72,7 @@ namespace PaperWings.EditorTools
             fold.paperTexture = paperTex;
             fold.attachment = BuildPropeller(paperTex);
             if (fold.description.StartsWith("A small extra wing at the nose."))
-                fold.description = "A paper propeller on a pin and little nose wings. Glides far, climbs easily, rides the air, and its boost lifts you up.";
+                fold.description = "A little pusher propeller on the tail and small nose wings. Glides far, climbs easily, rides the air, and its boost lifts you up.";
             EditorUtility.SetDirty(fold);
             AssetDatabase.SaveAssets();
 
@@ -109,7 +109,11 @@ namespace PaperWings.EditorTools
             var blur = Stage2Builder.ParticleMaterial("M_PropBlur", null, additive: false);
 
             var root = new GameObject("Propeller");
-            root.transform.localPosition = new Vector3(0f, 0f, 1.02f);   // on the Canard's nose (local to Visual)
+            // A small pusher prop on the Canard's tail (local to Visual): turned to face backward,
+            // so the pushpin head pokes out behind and the blades sit just past the trailing edge.
+            root.transform.localPosition = new Vector3(0f, 0f, -0.92f);
+            root.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            root.transform.localScale = Vector3.one * 0.6f;
 
             // Pushpin axle along the nose (cylinders stand on Y, so rotate 90 on X to point along Z).
             Part(PrimitiveType.Cylinder, "Pin", root.transform, Vector3.zero, new Vector3(90f, 0f, 0f), new Vector3(0.04f, 0.12f, 0.04f), steel);
