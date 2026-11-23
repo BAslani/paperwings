@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05fa77705a8e417478f13e2c631ec084, type: 3}
+  m_Name: Progression
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Gameplay.ProgressionSettings
+  unlocks:
+  - id: pencils
+    displayName: Pencil Missiles
+    description: Two lock-on homing pencils under your wings.
+    cost: 60
+    requires: 
+  - id: pencils_plus
+    displayName: Pencil Rack
+    description: Carry four pencils instead of two.
+    cost: 120
+    requires: pencils
+  - id: staples_plus
+    displayName: Staple Magazine
+    description: +15 staples per throw.
+    cost: 50
+    requires: 
+  - id: paper_tough
+    displayName: Heavy Paper
+    description: '+25% paper integrity: more bumps and hits before you crumple.'
+    cost: 70
+    requires: 
+  - id: fold_glider
+    displayName: Glider Fold
+    description: Wide wings that ride thermals and glide forever.
+    cost: 80
+    requires: 
+  - id: fold_stunt
+    displayName: Stunt Fold
+    description: A snappy delta for tight turns and big dives.
+    cost: 100
+    requires: 
+  - id: fold_canard
+    displayName: Canard Fold
+    description: 'Little nose wings: glides far and climbs easily.'
+    cost: 150
+    requires: 
+  - id: propeller
+    displayName: Pusher Propeller
+    description: 'A spinning prop for the Canard: its boost lifts you up.'
+    cost: 90
+    requires: fold_canard
+  staplesAreAnUnlock: 0
+  staplesCost: 40
+  clipsPerKill: 3
+  clipsPerMugLanding: 5
+  clipsPerCompletedRun: 20
+  medalBonus: 0f0000001e0000003c000000
+  ringRunMedals: {x: 75, y: 55, z: 40}
+  dogfightMedals: {x: 140, y: 100, z: 70}
+  squadronMedals: {x: 200, y: 140, z: 100}
+  bossMedals: {x: 180, y: 130, z: 90}

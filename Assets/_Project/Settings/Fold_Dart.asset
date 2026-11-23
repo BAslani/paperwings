@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Fold_Dart
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PlaneFold
   displayName: Dart
+  unlockId: 
+  attachmentUnlockId: 
   description: The classic. Fast, steady and forgiving. Good at everything, best
     at nothing.
   flight: {fileID: 11400000, guid: 7d410f372d5be0b4a935832b6db12529, type: 2}
@@ -20,3 +22,4 @@ MonoBehaviour:
   mesh: {fileID: 4300000, guid: 2d04e0b5dcb748b48a2e47882061ffbb, type: 2}
   paperColor: {r: 0.96, g: 0.95, b: 0.9, a: 1}
   paperTexture: {fileID: 2800000, guid: 38d78f89883eae04cad1901e6c1d755d, type: 2}
+  attachment: {fileID: 0}

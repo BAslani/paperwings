@@ -25,7 +25,11 @@ namespace PaperWings.Flight
         /// <summary>Fired when damage is taken. Argument: amount.</summary>
         public event Action<float> Damaged;
 
-        public float Integrity01 => settings != null ? integrity / settings.maxIntegrity : 1f;
+        public float Integrity01 => settings != null ? integrity / MaxIntegrity : 1f;
+
+        /// <summary>Multiplies the paper's max integrity (e.g. the Heavy Paper unlock). Takes effect on the next repair.</summary>
+        public float IntegrityScale { get; set; } = 1f;
+        float MaxIntegrity => settings.maxIntegrity * IntegrityScale;
         public float Wetness01 => wetness;
 
         // IDamageable: lets staples, pencils and bosses hurt paper planes.
@@ -52,7 +56,7 @@ namespace PaperWings.Flight
         void Awake()
         {
             plane = GetComponent<PlaneController>();
-            integrity = settings != null ? settings.maxIntegrity : 100f;
+            integrity = settings != null ? MaxIntegrity : 100f;
             block = new MaterialPropertyBlock();
 
             if (visualMesh != null)
@@ -124,7 +128,7 @@ namespace PaperWings.Flight
 
         public void Repair()
         {
-            if (settings != null) integrity = settings.maxIntegrity;
+            if (settings != null) integrity = MaxIntegrity;
             wetness = 0f;
             bentSide = 0f;
             plane.Modifiers.Reset();
@@ -135,7 +139,7 @@ namespace PaperWings.Flight
             if (settings == null) return;
 
             // Back in hand = fresh sheet of paper.
-            if (plane.State == PlaneState.Held && (integrity < settings.maxIntegrity || wetness > 0f || shownCrumple > 0f))
+            if (plane.State == PlaneState.Held && (integrity < MaxIntegrity || wetness > 0f || shownCrumple > 0f))
                 Repair();
 
             if (plane.State == PlaneState.Flying) UpdateWetness(Time.deltaTime);

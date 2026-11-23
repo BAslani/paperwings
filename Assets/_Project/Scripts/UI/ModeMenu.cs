@@ -20,7 +20,9 @@ namespace PaperWings.UI
 
         public static bool IsOpen { get; private set; }
 
-        enum Screen { Menu, Results, None }
+        enum Screen { Menu, Results, None, Unlocks }
+        int shopSelected;
+        string shopMessage = "";
         Screen screen = Screen.Menu;
         int selected;
         GUIStyle title, body, small, button;
@@ -79,6 +81,7 @@ namespace PaperWings.UI
             bool confirm = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
                            || (pad != null && pad.buttonSouth.wasPressedThisFrame);
             bool back = pad != null && pad.buttonEast.wasPressedThisFrame;
+            bool unlocksKey = (kb != null && kb.uKey.wasPressedThisFrame) || (pad != null && pad.buttonNorth.wasPressedThisFrame);
 
             switch (screen)
             {
@@ -107,8 +110,106 @@ namespace PaperWings.UI
                     }
                     if (confirm) Choose(selected);
                     else if ((menuKey || back) && director.HasMode && !director.RunComplete) Show(Screen.None);   // resume
+                    else if (unlocksKey && director.ProgressionConfig != null) { shopMessage = ""; Show(Screen.Unlocks); Audio.AudioFx.PlayUi(Audio.Sfx.UiMove); }
+                    break;
+
+                case Screen.Unlocks:
+                    UpdateUnlocks(kb, pad, confirm, menuKey || back || unlocksKey);
                     break;
             }
+        }
+
+        // ------------------------------------------------------------------ unlocks
+
+        void UpdateUnlocks(Keyboard kb, Gamepad pad, bool confirm, bool leave)
+        {
+            var shop = director.ProgressionConfig != null ? director.ProgressionConfig.Shop() : null;
+            if (shop == null || shop.Length == 0 || leave) { Show(Screen.Menu); return; }
+
+            bool up = (kb != null && (kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame)) || (pad != null && pad.dpad.up.wasPressedThisFrame);
+            bool down = (kb != null && (kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame)) || (pad != null && pad.dpad.down.wasPressedThisFrame);
+            if (up) shopSelected = (shopSelected + shop.Length - 1) % shop.Length;
+            if (down) shopSelected = (shopSelected + 1) % shop.Length;
+            if (up || down) { Audio.AudioFx.PlayUi(Audio.Sfx.UiMove); shopMessage = ""; }
+            shopSelected = Mathf.Clamp(shopSelected, 0, shop.Length - 1);
+            if (confirm) Buy(shop[shopSelected]);
+        }
+
+        void Buy(UnlockItem item)
+        {
+            var result = Progression.TryBuy(item);
+            switch (result)
+            {
+                case Progression.BuyResult.Bought:
+                    shopMessage = $"<color=#60FF80>Unlocked {item.displayName}!</color>";
+                    Audio.AudioFx.PlayUi(Audio.Sfx.Victory, 0.7f);
+                    break;
+                case Progression.BuyResult.AlreadyOwned:
+                    shopMessage = "<color=#AAAAAA>Already yours.</color>";
+                    break;
+                case Progression.BuyResult.NeedsRequirement:
+                    var req = director.ProgressionConfig.Find(item.requires);
+                    shopMessage = $"<color=#FF9050>Unlock {(req != null ? req.displayName : item.requires)} first.</color>";
+                    Audio.AudioFx.PlayUi(Audio.Sfx.NoLock);
+                    break;
+                case Progression.BuyResult.TooExpensive:
+                    shopMessage = $"<color=#FF9050>Not enough paper clips ({Progression.PaperClips} / {item.cost}).</color>";
+                    Audio.AudioFx.PlayUi(Audio.Sfx.NoLock);
+                    break;
+            }
+        }
+
+        /// <summary>The unlock shop: every upgrade with its price and status. Earn clips by playing modes.</summary>
+        void DrawUnlocks()
+        {
+            var cfg = director.ProgressionConfig;
+            if (cfg == null) { screen = Screen.Menu; return; }
+            var shop = cfg.Shop();
+
+            Dim(0.7f);
+            float w = 780 * scale, rowH = 64 * scale;
+            float h = (190 + shop.Length * 70) * scale;
+            Rect panel = Centered(w, h);
+            Box(panel, 0.9f);
+
+            float y = panel.y + 20 * scale;
+            GUI.Label(new Rect(panel.x, y, w, 44 * scale), "UNLOCKS", title);
+            y += 48 * scale;
+            GUI.Label(new Rect(panel.x, y, w, 30 * scale), $"<color=#FFD040><b>{Progression.PaperClips}</b> paper clips</color>", body);
+            y += 40 * scale;
+
+            for (int i = 0; i < shop.Length; i++)
+            {
+                var item = shop[i];
+                Rect row = new Rect(panel.x + 30 * scale, y, w - 60 * scale, rowH);
+                bool sel = i == shopSelected;
+                var state = Progression.CanBuy(item);
+                GUI.color = sel ? new Color(1f, 0.85f, 0.3f, 0.3f) : new Color(1f, 1f, 1f, 0.05f);
+                GUI.DrawTexture(row, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+
+                string nameColor = state == Progression.BuyResult.AlreadyOwned ? "#80FF90" : (state == Progression.BuyResult.NeedsRequirement ? "#777777" : "#FFFFFF");
+                GUI.Label(new Rect(row.x + 14 * scale, row.y + 4 * scale, row.width, 30 * scale), $"<b><color={nameColor}>{item.displayName}</color></b>", button);
+                GUI.Label(new Rect(row.x + 14 * scale, row.y + 34 * scale, row.width - 200 * scale, 28 * scale),
+                          $"<color=#BBBBBB>{item.description}</color>", new GUIStyle(small) { alignment = TextAnchor.UpperLeft });
+
+                string status = state switch
+                {
+                    Progression.BuyResult.AlreadyOwned => "<color=#80FF90><b>OWNED</b></color>",
+                    Progression.BuyResult.NeedsRequirement => $"<color=#888888>needs {(cfg.Find(item.requires)?.displayName ?? item.requires)}</color>",
+                    Progression.BuyResult.TooExpensive => $"<color=#FF9050>{item.cost} clips</color>",
+                    _ => $"<color=#FFD040><b>{item.cost} clips</b></color>"
+                };
+                GUI.Label(new Rect(row.xMax - 210 * scale, row.y + 6 * scale, 196 * scale, 30 * scale), status,
+                          new GUIStyle(small) { alignment = TextAnchor.UpperRight });
+
+                if (GUI.Button(row, GUIContent.none, GUIStyle.none)) { shopSelected = i; Buy(item); }
+                y += 70 * scale;
+            }
+
+            GUI.Label(new Rect(panel.x, panel.yMax - 72 * scale, w, 28 * scale), shopMessage, body);
+            GUI.Label(new Rect(panel.x, panel.yMax - 40 * scale, w, 28 * scale),
+                      "<color=#999999>Up/Down, Enter / Space / (A) or click to unlock.    U / Esc / (B): back</color>", small);
         }
 
         // ------------------------------------------------------------------ drawing
@@ -125,6 +226,7 @@ namespace PaperWings.UI
                 case Screen.Menu: DrawMenu(); break;
                 case Screen.Results: DrawResults(); break;
                 case Screen.None: DrawObjective(); break;
+                case Screen.Unlocks: DrawUnlocks(); break;
             }
         }
 
@@ -152,6 +254,8 @@ namespace PaperWings.UI
 
                 string best = director.BestTime(m) > 0f ? $"Best {director.BestTime(m):0.0}s" : "";
                 if (m == GameMode.RingRun && director.Route != null && director.Route.BestTime > 0f) best = $"Best {director.Route.BestTime:0.00}s";
+                int medal = Progression.GetMedal(m);
+                if (medal > 0) best = $"<color={ProgressionSettings.MedalColor(medal)}>{ProgressionSettings.MedalName(medal)}</color>   " + best;
                 GUI.Label(new Rect(card.x + 18 * scale, card.y + 8 * scale, card.width, 36 * scale),
                           $"<b>{i + 1}.  {ModeDirector.ModeName(m).ToUpper()}</b>", button);
                 GUI.Label(new Rect(card.x + 18 * scale, card.y + 44 * scale, card.width - 200 * scale, 44 * scale),
@@ -167,6 +271,19 @@ namespace PaperWings.UI
             string resume = director.HasMode && !director.RunComplete ? "    Esc / M: resume" : "";
             GUI.Label(new Rect(panel.x, panel.yMax - 44 * scale, w, 30 * scale),
                       $"<color=#999999>Up/Down or W/S, Enter / Space to start, or 1-5, or click.{resume}</color>", small);
+
+            // Paper clips + the way into the unlock shop.
+            if (director.ProgressionConfig != null)
+            {
+                GUI.Label(new Rect(panel.xMax - 260 * scale, panel.y + 18 * scale, 240 * scale, 28 * scale),
+                          $"<color=#FFD040><b>{Progression.PaperClips}</b> paper clips</color>", new GUIStyle(small) { alignment = TextAnchor.UpperRight });
+                Rect btn = new Rect(panel.xMax - 260 * scale, panel.y + 46 * scale, 240 * scale, 30 * scale);
+                GUI.color = new Color(1f, 0.85f, 0.3f, 0.25f);
+                GUI.DrawTexture(btn, Texture2D.whiteTexture);
+                GUI.color = Color.white;
+                GUI.Label(btn, "<b>U / (Y): UNLOCKS</b>", small);
+                if (GUI.Button(btn, GUIContent.none, GUIStyle.none)) { shopMessage = ""; Show(Screen.Unlocks); }
+            }
         }
 
         void DrawResults()
@@ -174,7 +291,7 @@ namespace PaperWings.UI
             var r = director.LastResult;
             if (r == null) { screen = Screen.Menu; return; }
             Dim(0.5f);
-            float w = 720 * scale, h = 300 * scale;
+            float w = 720 * scale, h = 380 * scale;
             Rect panel = Centered(w, h);
             Box(panel, 0.85f);
 
@@ -183,7 +300,19 @@ namespace PaperWings.UI
             y += 70 * scale;
             GUI.Label(new Rect(panel.x, y, w, 34 * scale), r.detail, body);
             y += 44 * scale;
-            if (r.newBest) GUI.Label(new Rect(panel.x, y, w, 40 * scale), "<color=#FFD040><b>NEW BEST!</b></color>", body);
+            if (r.newBest) { GUI.Label(new Rect(panel.x, y, w, 40 * scale), "<color=#FFD040><b>NEW BEST!</b></color>", body); y += 40 * scale; }
+
+            // Medal and reward.
+            if (r.medal > 0)
+            {
+                string medalText = $"<color={ProgressionSettings.MedalColor(r.medal)}><b>{ProgressionSettings.MedalName(r.medal).ToUpper()} MEDAL</b></color>"
+                                   + (r.newMedal ? "  <color=#FFD040>(new!)</color>" : "");
+                GUI.Label(new Rect(panel.x, y, w, 36 * scale), medalText, body);
+                y += 38 * scale;
+            }
+            if (r.clipsEarned > 0)
+                GUI.Label(new Rect(panel.x, y, w, 34 * scale),
+                          $"<color=#FFD040>+{r.clipsEarned} paper clips</color>   <color=#999999>({Progression.PaperClips} total, U in the menu to spend)</color>", small);
 
             GUI.Label(new Rect(panel.x, panel.yMax - 50 * scale, w, 30 * scale),
                       "<color=#BBBBBB>Enter / Space / (A): retry      Esc / M / (B): change mode</color>", small);

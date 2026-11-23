@@ -18,6 +18,9 @@ namespace PaperWings.EditorTools
         [MenuItem("PaperWings/Settings/Audio  - volume, mute", priority = 1)]
         static void AudioMix() => Open("Audio.asset");
 
+        [MenuItem("PaperWings/Settings/Progression  - unlocks, rewards, medals", priority = 2)]
+        static void ProgressionSettingsMenu() => Open("Progression.asset");
+
         [MenuItem("PaperWings/Settings/Camera Feel", priority = 1)]
         static void Camera() => Open("CameraFeel_Chase.asset");
 

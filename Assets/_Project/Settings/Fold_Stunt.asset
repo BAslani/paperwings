@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Fold_Stunt
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PlaneFold
   displayName: Stunt
+  unlockId: fold_stunt
+  attachmentUnlockId: 
   description: Snappy delta for tight lines and big dives. Sinks fast, so keep the
     speed up. Tough cardstock.
   flight: {fileID: 11400000, guid: 5f701adfe574b114fba6e0c35a1c76c8, type: 2}
@@ -20,3 +22,4 @@ MonoBehaviour:
   mesh: {fileID: 4300000, guid: 93f06b31b819e7148a6e74226a5b2fb4, type: 2}
   paperColor: {r: 1, g: 0.9, b: 0.82, a: 1}
   paperTexture: {fileID: 2800000, guid: b22320c154e7bd84380cbf836a0b1324, type: 2}
+  attachment: {fileID: 0}

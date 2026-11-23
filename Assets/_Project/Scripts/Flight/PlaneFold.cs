@@ -12,6 +12,10 @@ namespace PaperWings.Flight
     public class PlaneFold : ScriptableObject
     {
         public string displayName = "Dart";
+        [Tooltip("Unlock id needed to pick this fold (see the Progression settings). Empty = always available.")]
+        public string unlockId = "";
+        [Tooltip("Unlock id needed for this fold's attachment (e.g. the Canard's propeller). Empty = always.")]
+        public string attachmentUnlockId = "";
         [TextArea(2, 4)] public string description = "Fast and steady. A good all-rounder.";
 
         [Header("Behaviour")]

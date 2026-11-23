@@ -52,6 +52,9 @@ namespace PaperWings.Flight
         public FlightSettings Settings => settings;
         /// <summary>True for the player's plane (it has a PlaneInput), false for AI planes.</summary>
         public bool IsPlayer => input != null;
+
+        /// <summary>Multiplies boost lift (e.g. 0 when the Canard's propeller isn't unlocked yet).</summary>
+        public float BoostLiftScale { get; set; } = 1f;
         public PlaneState State { get; private set; } = PlaneState.Held;
         public float Speed => speed;
         public Vector3 Velocity => rb.linearVelocity;
@@ -349,7 +352,7 @@ namespace PaperWings.Flight
             if (Time.time < boostReadyTime) return;
             speed = Mathf.Min(speed + settings.boostSpeed, settings.maxSpeed);
             boostReadyTime = Time.time + settings.boostCooldown;
-            boostLift = settings.boostLift;   // optional upward kick that fades out
+            boostLift = settings.boostLift * BoostLiftScale;   // optional upward kick that fades out
             Boosted?.Invoke();
         }
 

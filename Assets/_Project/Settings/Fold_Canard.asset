@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Fold_Canard
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Flight.PlaneFold
   displayName: Canard
+  unlockId: fold_canard
+  attachmentUnlockId: propeller
   description: A little pusher propeller on the tail and small nose wings. Glides
     far, climbs easily, rides the air, and its boost lifts you up.
   flight: {fileID: 11400000, guid: d6cf813b7bf2a4b44a286e1280b382cd, type: 2}

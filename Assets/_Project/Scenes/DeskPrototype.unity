@@ -601,6 +601,7 @@ GameObject:
   - component: {fileID: 273746708}
   - component: {fileID: 273746707}
   - component: {fileID: 273746709}
+  - component: {fileID: 273746710}
   m_Layer: 0
   m_Name: GameFlow
   m_TagString: Untagged
@@ -665,6 +666,25 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 78b2f056777229344a1b434e8fad3dff, type: 2}
   - {fileID: 11400000, guid: 1a17399d3dbd93148864f878fbc841fb, type: 2}
   - {fileID: 11400000, guid: aed625f6a4aa1ee4e8145c559d5208f0, type: 2}
+--- !u!114 &273746710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 273746706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b3162a01ce64764ab9dc85784b7dfd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Gameplay.ProgressionApplier
+  player: {fileID: 2006676164}
+  folds: {fileID: 273746709}
+  settings: {fileID: 11400000, guid: fa160003b2257f04eb58321f242507cd, type: 2}
+  pencilsWithMissiles: 2
+  pencilsWithRack: 4
+  magazineBonusStaples: 15
+  heavyPaperScale: 1.25
 --- !u!1 &302312618
 GameObject:
   m_ObjectHideFlags: 0
@@ -2667,6 +2687,7 @@ MonoBehaviour:
   squadronGroup: {fileID: 1463128132}
   dogfightKillTarget: 5
   squadronKillTarget: 8
+  progression: {fileID: 11400000, guid: fa160003b2257f04eb58321f242507cd, type: 2}
 --- !u!4 &1142706492
 Transform:
   m_ObjectHideFlags: 0

@@ -38,6 +38,9 @@ namespace PaperWings.UI
         float hitFlash;         // >0 briefly after your staple hits a rival
         float killFlash;        // >0 briefly after shooting a rival down
         float allyKillFlash;    // >0 briefly after a wingman shoots a rival down
+        float clipFlash;        // >0 briefly after earning paper clips
+        int lastClips;
+        string lastClipReason = "";
         PencilLauncher pencils;
         float noLockFlash;      // >0 briefly after pressing fire without a lock
 
@@ -58,6 +61,7 @@ namespace PaperWings.UI
             CombatScore.AnyHit += OnAnyHit;
             CombatScore.KillScored += OnKill;
             CombatScore.AllyKillScored += OnAllyKill;
+            Progression.ClipsEarned += OnClips;
         }
 
         void OnDestroy()
@@ -66,12 +70,14 @@ namespace PaperWings.UI
             CombatScore.AnyHit -= OnAnyHit;
             CombatScore.KillScored -= OnKill;
             CombatScore.AllyKillScored -= OnAllyKill;
+            Progression.ClipsEarned -= OnClips;
             if (boss != null) { boss.Damaged -= OnBossDamaged; boss.Defeated -= OnBossDefeated; }
         }
 
         void OnAnyHit(PlaneController shooter, GameObject victim) { if (shooter == plane) hitFlash = 1f; }
         void OnKill(int kills) => killFlash = 1f;
         void OnAllyKill(int teamKills) => allyKillFlash = 1f;
+        void OnClips(int amount, string reason) { clipFlash = 1f; lastClips = amount; lastClipReason = reason; }
 
         /// <summary>True when the ring route exists and is switched on (e.g. in Ring Run mode).</summary>
         bool RouteActive => route != null && route.isActiveAndEnabled && route.RingCount > 0;
@@ -90,6 +96,7 @@ namespace PaperWings.UI
             hitFlash = Mathf.MoveTowards(hitFlash, 0f, Time.deltaTime * 4f);
             killFlash = Mathf.MoveTowards(killFlash, 0f, Time.deltaTime * 0.8f);
             allyKillFlash = Mathf.MoveTowards(allyKillFlash, 0f, Time.deltaTime * 0.8f);
+            clipFlash = Mathf.MoveTowards(clipFlash, 0f, Time.deltaTime * 0.6f);
             noLockFlash = Mathf.MoveTowards(noLockFlash, 0f, Time.deltaTime * 1.5f);
             bossHitFlash = Mathf.MoveTowards(bossHitFlash, 0f, Time.deltaTime * 2.5f);
             bossDefeatFlash = Mathf.MoveTowards(bossDefeatFlash, 0f, Time.deltaTime * 0.3f);
@@ -520,6 +527,15 @@ namespace PaperWings.UI
                 GUI.color = Color.white;
             }
 
+            // "+5 clips  mug landing" pop under the kill counter.
+            if (clipFlash > 0f)
+            {
+                GUI.color = new Color(1f, 0.85f, 0.3f, clipFlash);
+                GUI.Label(new Rect(Screen.width - 290 * scale, (RouteActive ? 150 : 40) * scale, 280 * scale, 30 * scale),
+                          $"<size={Px(20)}><b>+{lastClips} clips</b>  <color=#CCCCCC>{lastClipReason}</color></size>", panelText);
+                GUI.color = Color.white;
+            }
+
             if (killFlash > 0f)
             {
                 GUI.color = new Color(1f, 0.85f, 0.3f, killFlash);
@@ -567,9 +583,9 @@ namespace PaperWings.UI
             Bar(ref y, x, w, 1f - boostCd / Mathf.Max(0.01f, s.boostCooldown), boostCd <= 0f ? Green : Cyan);
 
             // Staples (refill when back in hand).
-            if (gun != null && gun.Settings != null && !gun.Unlimited)
+            if (gun != null && gun.enabled && gun.Settings != null && !gun.Unlimited)
             {
-                int clip = gun.Settings.clipSize;
+                int clip = gun.ClipSize;   // includes the Staple Magazine bonus
                 string ammoColor = gun.Ammo == 0 ? "#FF6050" : "white";
                 Label(ref y, x, w, line, $"Staples  <color={ammoColor}><b>{gun.Ammo} / {clip}</b></color>   <color=#999>(F / LMB / X)</color>");
             }
@@ -709,8 +725,8 @@ namespace PaperWings.UI
             GUI.color = Color.white;
 
             float x = card.x + 16 * scale, y = card.y + 10 * scale, iw = card.width - 32 * scale;
-            string arrows = folds.Count > 1 ? "<color=#888><   </color>" : "";
-            string arrowsR = folds.Count > 1 ? "<color=#888>   ></color>" : "";
+            string arrows = folds.AvailableCount > 1 ? "<color=#888><   </color>" : "";
+            string arrowsR = folds.AvailableCount > 1 ? "<color=#888>   ></color>" : "";
             GUI.Label(new Rect(card.x, y, card.width, 40 * scale),
                       $"<size={Px(30)}>{arrows}<b>{fold.displayName.ToUpper()}</b>{arrowsR}</size>", big);
             y += 40 * scale;
@@ -728,7 +744,7 @@ namespace PaperWings.UI
             }
             if (fold.paper != null) StatBar(ref y, x, iw, "Paper", fold.paper.maxIntegrity / 150f);
 
-            if (folds.Count > 1)
+            if (folds.AvailableCount > 1)
                 GUI.Label(new Rect(card.x, card.yMax - 26 * scale, card.width, 24 * scale),
                           $"<size={Px(14)}><color=#999>Q / E   or   LB / RB   to change fold</color></size>", big);
         }

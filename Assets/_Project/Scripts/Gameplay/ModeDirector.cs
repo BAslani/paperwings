@@ -21,6 +21,12 @@ namespace PaperWings.Gameplay
         public string title;
         public string detail;
         public bool newBest;
+        /// <summary>Run time in seconds (what medals are judged on).</summary>
+        public float time;
+        /// <summary>0 none, 1 bronze, 2 silver, 3 gold.</summary>
+        public int medal;
+        public bool newMedal;
+        public int clipsEarned;
     }
 
     /// <summary>
@@ -48,6 +54,11 @@ namespace PaperWings.Gameplay
         [SerializeField] int dogfightKillTarget = 5;
         [Tooltip("Rivals your squadron (you + wingmen) must shoot down to win a Squadron Battle.")]
         [SerializeField] int squadronKillTarget = 8;
+
+        [Header("Progression")]
+        [Tooltip("Rewards and medal times. Leave empty to play without progression.")]
+        [SerializeField] ProgressionSettings progression;
+        public ProgressionSettings ProgressionConfig => progression;
 
         public GameMode Mode { get; private set; }
         public bool HasMode { get; private set; }
@@ -91,13 +102,21 @@ namespace PaperWings.Gameplay
         void OnEnable()
         {
             LandingZone.AnyLanded += OnLanded;
+            CombatScore.KillScored += OnPlayerKill;
             if (Boss != null) Boss.Defeated += OnBossDefeated;
         }
 
         void OnDisable()
         {
             LandingZone.AnyLanded -= OnLanded;
+            CombatScore.KillScored -= OnPlayerKill;
             if (Boss != null) Boss.Defeated -= OnBossDefeated;
+        }
+
+        // Small rewards for things you do during any mode.
+        void OnPlayerKill(int kills)
+        {
+            if (progression != null && HasMode) Gameplay.Progression.AddClips(progression.clipsPerKill, "shot down");
         }
 
         /// <summary>Starts (or restarts) a mode from scratch: right groups on, plane back in hand, timer reset.</summary>
@@ -161,7 +180,8 @@ namespace PaperWings.Gameplay
                         mode = Mode,
                         title = "RING RUN COMPLETE!",
                         detail = $"All rings and a mug landing in {t:0.00}s" + (Route.BestTime > 0f ? $"   (best {Route.BestTime:0.00}s)" : ""),
-                        newBest = Route.LastWasNewBest
+                        newBest = Route.LastWasNewBest,
+                        time = t
                     });
                 }
             }
@@ -169,7 +189,9 @@ namespace PaperWings.Gameplay
 
         void OnLanded(PlaneController plane, string message)
         {
-            if (HasMode && Mode == GameMode.RingRun && plane == player) ringLandingPending = true;
+            if (plane != player || !HasMode) return;
+            if (progression != null) Gameplay.Progression.AddClips(progression.clipsPerMugLanding, "mug landing");
+            if (Mode == GameMode.RingRun) ringLandingPending = true;
         }
 
         void OnBossDefeated()
@@ -188,15 +210,34 @@ namespace PaperWings.Gameplay
                 mode = Mode,
                 title = title,
                 detail = $"{lead} {RunTime:0.0}s" + (newBest ? "" : $"   (best {best:0.0}s)"),
-                newBest = newBest
+                newBest = newBest,
+                time = RunTime
             });
         }
 
         void Finish(ModeResult result)
         {
             RunComplete = true;
+            AwardRun(result);
             LastResult = result;
             Completed?.Invoke(result);
+        }
+
+        /// <summary>
+        /// Paper clips for finishing, plus a bonus only when you beat your best medal in this mode
+        /// (so the big payouts can't be farmed by repeating an easy run).
+        /// </summary>
+        void AwardRun(ModeResult result)
+        {
+            if (progression == null) return;
+            result.medal = progression.MedalFor(result.mode, result.time);
+            int previous = Gameplay.Progression.GetMedal(result.mode);
+            int clips = progression.clipsPerCompletedRun;
+            for (int tier = previous + 1; tier <= result.medal; tier++)
+                clips += progression.medalBonus[Mathf.Clamp(tier - 1, 0, progression.medalBonus.Length - 1)];
+            result.newMedal = Gameplay.Progression.RecordMedal(result.mode, result.medal);
+            result.clipsEarned = clips;
+            Gameplay.Progression.AddClips(clips, "run complete");
         }
     }
 }

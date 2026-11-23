@@ -27,7 +27,17 @@ namespace PaperWings.Combat
         public float LockProgress { get; private set; }
         public bool IsLocked => Candidate != null && LockProgress >= 1f;
         public int PencilsLeft { get; private set; }
-        public int MaxPencils => slots != null ? slots.Length : 0;
+        /// <summary>Pencils carried: the wing slots, capped by what's unlocked (0 = not unlocked yet).</summary>
+        public int MaxPencils => slots != null ? Mathf.Min(slots.Length, slotLimit) : 0;
+
+        int slotLimit = int.MaxValue;
+
+        /// <summary>How many slots may hold pencils (set by progression). Re-arms right away if in hand.</summary>
+        public void SetSlotLimit(int limit)
+        {
+            slotLimit = Mathf.Max(0, limit);
+            if (mounted != null && (plane == null || plane.State != PlaneState.Flying)) Rearm();
+        }
         public PencilSettings Settings => settings;
 
         public event Action<PencilMissile> Fired;
@@ -49,7 +59,7 @@ namespace PaperWings.Combat
                 ClearLock();
                 return;
             }
-            if (plane.State != PlaneState.Flying) { ClearLock(); return; }
+            if (plane.State != PlaneState.Flying || MaxPencils == 0) { ClearLock(); return; }   // not flying, or pencils not unlocked yet
 
             UpdateLock(Time.deltaTime);
 
@@ -125,6 +135,12 @@ namespace PaperWings.Combat
 
             for (int i = 0; i < slots.Length; i++)
             {
+                // Slots beyond the unlocked count stay empty (and lose any pencil they had).
+                if (i >= MaxPencils)
+                {
+                    if (mounted[i] != null) { Destroy(mounted[i].gameObject); mounted[i] = null; }
+                    continue;
+                }
                 if (mounted[i] != null || slots[i] == null) continue;
                 mounted[i] = Instantiate(pencilPrefab, slots[i], false);   // parented, zero local offset
                 mounted[i].name = "Pencil (mounted)";

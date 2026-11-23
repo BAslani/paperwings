@@ -23,9 +23,22 @@ namespace PaperWings.Gameplay
         public int Index => index;
         public int Count => folds != null ? folds.Length : 0;
 
+        /// <summary>Which folds may be picked (set by progression). Null = all of them.</summary>
+        public Func<PlaneFold, bool> FoldAvailable { get; set; }
+        /// <summary>Whether a fold's attachment is unlocked (set by progression). Null = always.</summary>
+        public Func<PlaneFold, bool> AttachmentAvailable { get; set; }
+        /// <summary>How many folds can currently be picked.</summary>
+        public int AvailableCount
+        {
+            get { int n = 0; for (int i = 0; i < Count; i++) if (IsAvailable(i)) n++; return n; }
+        }
+
+        bool IsAvailable(int i) => folds[i] != null && (FoldAvailable == null || FoldAvailable(folds[i]));
+
         const string PrefKey = "PaperWings.SelectedFold";
         int index;
         GameObject currentAttachment;   // spawned part for the current fold (if any)
+        bool started;
 
         void Start()
         {
@@ -38,21 +51,45 @@ namespace PaperWings.Gameplay
                     Debug.LogWarning($"FoldSelector: {before - folds.Length} empty fold slot(s) ignored. " +
                                      "Re-run PaperWings > Build Stage 7, or drag fold assets into the list.", this);
             }
+            started = true;
             if (Count == 0) return;
             index = Mathf.Clamp(PlayerPrefs.GetInt(PrefKey, 0), 0, Count - 1);
+            if (!IsAvailable(index)) index = FirstAvailable();
+            Apply();
+        }
+
+        int FirstAvailable()
+        {
+            for (int i = 0; i < Count; i++) if (IsAvailable(i)) return i;
+            return 0;
+        }
+
+        /// <summary>
+        /// Re-applies the current fold (e.g. after an unlock or a progress reset): falls back to the
+        /// first available fold if the current one is locked, and refreshes its attachment.
+        /// </summary>
+        public void Refresh()
+        {
+            if (!started || Count == 0) return;   // not set up yet: Start will apply the right fold
+            if (!IsAvailable(index)) index = FirstAvailable();
             Apply();
         }
 
         void Update()
         {
-            if (Count < 2 || input == null || plane.State != PlaneState.Held) return;
+            if (AvailableCount < 2 || input == null || plane.State != PlaneState.Held) return;
             if (input.FoldNextPressed) Cycle(+1);
             else if (input.FoldPrevPressed) Cycle(-1);
         }
 
         public void Cycle(int direction)
         {
-            index = (index + direction + Count) % Count;
+            // Step to the next fold that's unlocked, skipping locked ones.
+            for (int step = 0; step < Count; step++)
+            {
+                index = (index + direction + Count) % Count;
+                if (IsAvailable(index)) break;
+            }
             PlayerPrefs.SetInt(PrefKey, index);
             Apply();
             // A little flutter so the swap feels physical.
@@ -92,10 +129,13 @@ namespace PaperWings.Gameplay
             }
 
             // Swap the fold's optional attachment (e.g. the Canard's propeller).
+            // Locked attachments don't appear, and don't give their bonus (the propeller's boost lift).
             if (currentAttachment != null) Destroy(currentAttachment);
             currentAttachment = null;
-            if (fold.attachment != null)
+            bool attachmentUnlocked = AttachmentAvailable == null || AttachmentAvailable(fold);
+            if (fold.attachment != null && attachmentUnlocked)
                 currentAttachment = Instantiate(fold.attachment, visual != null ? visual : plane.transform, false);
+            plane.BoostLiftScale = fold.attachment == null || attachmentUnlocked ? 1f : 0f;
 
             FoldChanged?.Invoke(fold);
         }

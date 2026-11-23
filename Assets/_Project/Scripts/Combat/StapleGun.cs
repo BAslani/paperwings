@@ -20,6 +20,11 @@ namespace PaperWings.Combat
         public int Ammo { get; private set; }
         public bool Unlimited => settings != null && settings.clipSize <= 0;
 
+        /// <summary>Extra staples on top of the weapon's clip size (e.g. the Staple Magazine unlock).</summary>
+        public int ClipBonus { get; set; }
+        /// <summary>Staples carried when full.</summary>
+        public int ClipSize => settings != null ? settings.clipSize + ClipBonus : 0;
+
         // ---- Aim info, updated every frame (the HUD reticle reads these) ----
         /// <summary>The target aim assist is currently locked onto (null if none): a rival, a boss...</summary>
         public CombatTarget LockTarget { get; private set; }
@@ -44,19 +49,19 @@ namespace PaperWings.Combat
 
             if (plane.State == PlaneState.Held)
             {
-                if (Ammo < settings.clipSize) Refill();
+                if (Ammo < ClipSize) Refill();
                 return;
             }
 
             // Trickle refill in flight, once you've stopped shooting for a moment.
-            if (plane.State == PlaneState.Flying && Ammo < settings.clipSize && settings.refillPerSecond > 0f
+            if (plane.State == PlaneState.Flying && Ammo < ClipSize && settings.refillPerSecond > 0f
                 && Time.time - lastShotTime > settings.refillDelay)
             {
                 refillProgress += settings.refillPerSecond * Time.deltaTime;
                 if (refillProgress >= 1f)
                 {
                     int add = Mathf.FloorToInt(refillProgress);
-                    Ammo = Mathf.Min(settings.clipSize, Ammo + add);
+                    Ammo = Mathf.Min(ClipSize, Ammo + add);
                     refillProgress -= add;
                 }
             }
@@ -75,7 +80,7 @@ namespace PaperWings.Combat
 
         public void Refill()
         {
-            Ammo = settings != null ? settings.clipSize : 0;
+            Ammo = ClipSize;
             refillProgress = 0f;
         }
 
