@@ -66,33 +66,33 @@ namespace PaperWings.Gameplay
         [Header("Fold unlocks (ids must match each fold's Unlock Id)")]
         public UnlockItem[] foldUnlocks =
         {
-            new UnlockItem { id = UnlockIds.GliderFold, displayName = "Crane Glider", cost = 450, requiresNight = 3,
+            new UnlockItem { id = UnlockIds.GliderFold, displayName = "Crane Glider", cost = 405, requiresNight = 2,
                 description = "Long feathered crane wings that ride thermals and glide forever." },
-            new UnlockItem { id = UnlockIds.StuntFold, displayName = "Manta Stunt", cost = 700, requiresNight = 6,
+            new UnlockItem { id = UnlockIds.StuntFold, displayName = "Manta Stunt", cost = 630, requiresNight = 5,
                 description = "A snappy manta-ray delta for tight turns and big dives." },
-            new UnlockItem { id = UnlockIds.CanardFold, displayName = "Dragon Canard", cost = 1000, requiresNight = 9,
+            new UnlockItem { id = UnlockIds.CanardFold, displayName = "Dragon Canard", cost = 900, requiresNight = 8,
                 description = "A paper dragon: little nose wings, bat wings, glides far and climbs easily." },
         };
 
         [Header("Upgrades every fold can buy (each fold separately)")]
         public UnlockItem[] foldUpgrades =
         {
-            new UnlockItem { id = UnlockIds.StapleMagazine, displayName = "Staple Magazine", cost = 160, requiresNight = 0,
+            new UnlockItem { id = UnlockIds.StapleMagazine, displayName = "Staple Magazine", cost = 145, requiresNight = 0,
                 description = "+15 staples per throw." },
-            new UnlockItem { id = UnlockIds.Pencils, displayName = "Pencil Missiles", cost = 260, requiresNight = 2,
+            new UnlockItem { id = UnlockIds.Pencils, displayName = "Pencil Missiles", cost = 235, requiresNight = 1,
                 description = "Two lock-on homing pencils under the wings." },
-            new UnlockItem { id = UnlockIds.HeavyPaper, displayName = "Heavy Paper", cost = 320, requiresNight = 4,
+            new UnlockItem { id = UnlockIds.HeavyPaper, displayName = "Heavy Paper", cost = 290, requiresNight = 3,
                 description = "+25% paper integrity: more bumps and hits before you crumple." },
-            new UnlockItem { id = UnlockIds.Propeller, displayName = "Pusher Propeller", cost = 420, requiresNight = 7,
+            new UnlockItem { id = UnlockIds.Propeller, displayName = "Pusher Propeller", cost = 380, requiresNight = 6,
                 description = "A spinning prop on the tail: boosting lifts you up as well as speeding you up." },
-            new UnlockItem { id = UnlockIds.PencilRack, displayName = "Pencil Rack", cost = 550, requires = UnlockIds.Pencils, requiresNight = 10,
+            new UnlockItem { id = UnlockIds.PencilRack, displayName = "Pencil Rack", cost = 495, requires = UnlockIds.Pencils, requiresNight = 9,
                 description = "Carry four pencils instead of two." },
         };
 
         [Header("Starting loadout")]
         [Tooltip("If ON, the staple gun must be unlocked too (once, for every fold). Default: you start with it.")]
         public bool staplesAreAnUnlock = false;
-        public int staplesCost = 40;
+        public int staplesCost = 36;
 
         [Header("Earning paper clips")]
         public int clipsPerKill = 3;

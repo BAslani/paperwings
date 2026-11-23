@@ -12,37 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a3b65f9e03152942904a7929e282231, type: 3}
   m_Name: Campaign
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Gameplay.CampaignSettings
-  version: 3
+  version: 4
   starBonus: 0a00000019000000
   nights:
-  - title: Target Practice
-    memo: 'MEMO from Marketing: Welcome to the night shift, rookie. Hold Throw to
-      wind up, let go to fly, hold Fire for staples. Six practice drones are circling
-      the office. The space heater by the couch throws up warm air (orange): circle
-      in it to climb.'
-    mode: 2
-    room: 0
-    place: 'Office: the lounge'
-    area: 
-    spawn: LoungeSpawn
-    objective: 3
-    group: PracticeDrones
-    allowedLosses: 2
-    aceName: 
-    killTarget: 6
-    maxRivals: -1
-    timeLimit: 0
-    airTimeTarget: 0
-    windScale: 1
-    noPencils: 0
-    twoStarTime: 75
-    threeStarTime: 50
-    rewardClips: 40
-    rewardUnlockId: 
   - title: Trespasser
-    memo: 'MEMO: An Accounting plane (red trail) is snooping round the office. It
-      keeps coming back, so shoot it down twice. Their pilots climb in warm air to
-      recover: the radiators under the windows are where they''ll go.'
+    memo: 'MEMO from Marketing: Welcome to the night shift, rookie. An Accounting
+      plane (red trail) is snooping round the office. It keeps coming back, so shoot
+      it down twice. New here? Fly FLIGHT SCHOOL from the main menu first. Their
+      pilots climb in warm air to recover: the radiators under the windows are where
+      they''ll go.'
     mode: 2
     room: 0
     place: 'Office: the coworker''s corner'
@@ -60,7 +38,7 @@ MonoBehaviour:
     noPencils: 0
     twoStarTime: 60
     threeStarTime: 35
-    rewardClips: 50
+    rewardClips: 60
     rewardUnlockId: 
   - title: Paper Trail
     memo: 'MEMO: Accounting couriers are carrying our campaign plans along the window
@@ -85,13 +63,15 @@ MonoBehaviour:
     threeStarTime: 60
     rewardClips: 60
     rewardUnlockId: 
-  - title: The Stapler
-    memo: 'MEMO: Accounting''s desk guardian has woken up on YOUR desk. Its jaw is
-      armored; hit the glowing mouth when it opens. When the jaw rises, it slams
-      and blasts the air down: get clear.'
+  - title: The Printer
+    memo: 'MEMO: The big printer in the corner has gone rogue: it''s flying on paper
+      wings and PRINTING Accounting fighters. While its print job is out it''s shielded:
+      shoot the fighters down. Shoot off its paper trays and it prints fewer. When
+      it jams, get behind it: the hot fuser is the weak spot, and its heat lifts
+      you.'
     mode: 3
     room: 0
-    place: 'Office: your desk'
+    place: 'Office: the printer corner'
     area: 
     spawn: 
     objective: 0
@@ -104,9 +84,9 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
-    twoStarTime: 150
-    threeStarTime: 100
-    rewardClips: 120
+    twoStarTime: 170
+    threeStarTime: 115
+    rewardClips: 140
     rewardUnlockId: 
   - title: Office Party
     memo: 'MEMO: Somebody''s leaving do, and Accounting crashed it. Four kills among

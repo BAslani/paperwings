@@ -108,6 +108,8 @@ namespace PaperWings.Flight
         float boostLift;      // current extra upward air speed from a boost (fades to 0)
 
         float launchTime, lastFlightTime;
+        /// <summary>Seconds after a throw during which bumps are ignored (the hand is next to furniture).</summary>
+        public const float LaunchGrace = 0.4f;
 
         // Landing snap (a short slide into the rest pose on a target).
         Vector3 snapFromPos, snapToPos;
@@ -363,6 +365,8 @@ namespace PaperWings.Flight
         void OnCollisionEnter(Collision collision)
         {
             if (State != PlaneState.Flying) return;
+            // Throw grace: brushing the desk or a keyboard as it leaves the hand doesn't count.
+            if (Time.time - launchTime < LaunchGrace && collision.collider.GetComponentInParent<LandingZone>() == null) return;
 
             // Landing targets get first say (they judge touchdowns on their top surface).
             var pad = collision.collider.GetComponentInParent<LandingZone>();

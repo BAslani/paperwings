@@ -146,6 +146,15 @@ namespace PaperWings.Gameplay
         public static void SyncCampaign(int version)
         {
             if (Data.campaignVersion == version) return;
+            if (Data.campaignVersion == 3 && version == 4)
+            {
+                // Night Shift v3 -> v4 only dropped the first night (Target Practice is Flight School now):
+                // keep everyone's stars, one night earlier.
+                if (Data.nightStars.Count > 0) Data.nightStars.RemoveAt(0);
+                Data.campaignVersion = version;
+                SaveAndNotify();
+                return;
+            }
             Data.nightStars.Clear();
             Data.campaignVersion = version;
             SaveAndNotify();

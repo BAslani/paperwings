@@ -21,56 +21,56 @@ MonoBehaviour:
   - id: fold_glider
     displayName: Crane Glider
     description: Long feathered crane wings that ride thermals and glide forever.
-    cost: 450
+    cost: 405
     requires: 
-    requiresNight: 3
+    requiresNight: 2
   - id: fold_stunt
     displayName: Manta Stunt
     description: A snappy manta-ray delta for tight turns and big dives.
-    cost: 700
+    cost: 630
     requires: 
-    requiresNight: 6
+    requiresNight: 5
   - id: fold_canard
     displayName: Dragon Canard
     description: 'A paper dragon: little nose wings, bat wings, glides far and climbs
       easily.'
-    cost: 1000
+    cost: 900
     requires: 
-    requiresNight: 9
+    requiresNight: 8
   foldUpgrades:
   - id: staples_plus
     displayName: Staple Magazine
     description: +15 staples per throw.
-    cost: 160
+    cost: 145
     requires: 
     requiresNight: 0
   - id: pencils
     displayName: Pencil Missiles
     description: Two lock-on homing pencils under the wings.
-    cost: 260
+    cost: 235
     requires: 
-    requiresNight: 2
+    requiresNight: 1
   - id: paper_tough
     displayName: Heavy Paper
     description: '+25% paper integrity: more bumps and hits before you crumple.'
-    cost: 320
+    cost: 290
     requires: 
-    requiresNight: 4
+    requiresNight: 3
   - id: propeller
     displayName: Pusher Propeller
     description: 'A spinning prop on the tail: boosting lifts you up as well as speeding
       you up.'
-    cost: 420
+    cost: 380
     requires: 
-    requiresNight: 7
+    requiresNight: 6
   - id: pencils_plus
     displayName: Pencil Rack
     description: Carry four pencils instead of two.
-    cost: 550
+    cost: 495
     requires: pencils
-    requiresNight: 10
+    requiresNight: 9
   staplesAreAnUnlock: 0
-  staplesCost: 40
+  staplesCost: 36
   clipsPerKill: 3
   clipsPerCompletedRun: 10
   medalBonus: 0a0000001400000028000000

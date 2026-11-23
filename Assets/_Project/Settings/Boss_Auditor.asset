@@ -14,25 +14,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.AirBossSettings
   displayName: THE AUDITOR
   title: Chief of Accounting
-  maxHealth: 650
-  armoredMultiplier: 0.25
+  maxHealth: 480
+  armoredMultiplier: 0.3
   weakSpotMultiplier: 2.5
   aggroRange: 220
   engageDelay: 3
   wakeUpTime: 1.5
   phase2At: 0.6
   phase3At: 0.3
-  telegraph: 1.2
-  attackDuration: 4
-  vulnerableTime: 4.5
-  restTime: 1.5
+  telegraph: 1.6
+  attackDuration: 3.5
+  vulnerableTime: 6.5
+  restTime: 2.5
   airSpeed: 16
   secondaryAirSpeed: 9
   contactDamagePerSecond: 40
-  shotsPerVolley: 5
-  spreadAngle: 30
-  projectileSpeed: 36
-  projectileDamage: 8
+  shotsPerVolley: 3
+  spreadAngle: 24
+  projectileSpeed: 30
+  projectileDamage: 5
   projectileLifetime: 2.5
   projectileScale: 2
   respawnDelay: 25

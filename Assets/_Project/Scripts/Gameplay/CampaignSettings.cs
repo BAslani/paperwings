@@ -114,7 +114,7 @@ namespace PaperWings.Gameplay
     {
         [Tooltip("Bump this when the nights change: saved stars from another version are cleared (clips and unlocks stay).")]
         public int version = CurrentVersion;
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 4;
 
         [Tooltip("Extra paper clips for each NEW star beyond the first (2nd star, 3rd star).")]
         public int[] starBonus = { 10, 25 };
@@ -122,9 +122,9 @@ namespace PaperWings.Gameplay
         public CampaignNight[] nights = NightShift();
 
         /// <summary>
-        /// The Night Shift (campaign version 3, Stage 29): thirteen nights of air combat climbing the
-        /// building. No two nights in a room ask for the same thing:
-        ///   Office      target practice, a lone trespasser, intercept the couriers, The Stapler
+        /// The Night Shift (campaign version 4, Stage 33): twelve nights of air combat climbing the
+        /// building (target practice moved to Flight School). No two nights in a room ask for the same thing:
+        ///   Office      a lone trespasser, intercept the couriers, The Printer
         ///   Break room  a dogfight at the office party, escort the coffee courier, The Auditor (it flies)
         ///   Server room a squadron battle, an ace duel in the dark, The Mainframe
         ///   Stairwell   intercept couriers climbing the chimney
@@ -137,18 +137,11 @@ namespace PaperWings.Gameplay
             // ---------------- Act 1: the office ----------------
             new CampaignNight
             {
-                title = "Target Practice", mode = GameMode.Dogfight, objective = NightObjective.Practice, room = 0,
-                spawn = "LoungeSpawn", group = "PracticeDrones", maxRivals = -1, killTarget = 6,
-                place = "Office: the lounge", twoStarTime = 75f, threeStarTime = 50f, rewardClips = 40,
-                memo = "MEMO from Marketing: Welcome to the night shift, rookie. Hold Throw to wind up, let go to fly, hold Fire for staples. " +
-                       "Six practice drones are circling the office. The space heater by the couch throws up warm air (orange): circle in it to climb."
-            },
-            new CampaignNight
-            {
                 title = "Trespasser", mode = GameMode.Dogfight, room = 0, spawn = "CoworkerSpawn",
                 place = "Office: the coworker's corner", killTarget = 2, maxRivals = 1,
-                twoStarTime = 60f, threeStarTime = 35f, rewardClips = 50,
-                memo = "MEMO: An Accounting plane (red trail) is snooping round the office. It keeps coming back, so shoot it down twice. " +
+                twoStarTime = 60f, threeStarTime = 35f, rewardClips = 60,
+                memo = "MEMO from Marketing: Welcome to the night shift, rookie. An Accounting plane (red trail) is snooping round the office. " +
+                       "It keeps coming back, so shoot it down twice. New here? Fly FLIGHT SCHOOL from the main menu first. " +
                        "Their pilots climb in warm air to recover: the radiators under the windows are where they'll go."
             },
             new CampaignNight
@@ -161,10 +154,11 @@ namespace PaperWings.Gameplay
             },
             new CampaignNight
             {
-                title = "The Stapler", mode = GameMode.BossFight, room = 0,
-                place = "Office: your desk", twoStarTime = 150f, threeStarTime = 100f, rewardClips = 120,
-                memo = "MEMO: Accounting's desk guardian has woken up on YOUR desk. Its jaw is armored; hit the glowing mouth when it " +
-                       "opens. When the jaw rises, it slams and blasts the air down: get clear."
+                title = "The Printer", mode = GameMode.BossFight, room = 0,
+                place = "Office: the printer corner", twoStarTime = 170f, threeStarTime = 115f, rewardClips = 140,
+                memo = "MEMO: The big printer in the corner has gone rogue: it's PRINTING Accounting fighters that hunt you, and firing paper at you. " +
+                       "While its print job is out it's shielded: shoot the fighters down. Shoot off its paper trays and it prints fewer. " +
+                       "When it jams, its lid pops open: ride the heat up and shoot the glowing fuser inside."
             },
 
             // ---------------- Act 2: the break room ----------------

@@ -227,10 +227,19 @@ namespace PaperWings.Combat
         /// Launches its drones and stays shielded until each has been shot down once (or the
         /// timeout). The drones are regular rivals from the spawners under 'drones'.
         /// </summary>
-        protected IEnumerator DroneShield(float timeout)
+        protected IEnumerator DroneShield(float timeout, System.Func<EnemySpawner, bool> use = null)
         {
             if (drones == null) yield break;
-            var spawners = drones.GetComponentsInChildren<EnemySpawner>(true);
+            // 'use' picks which spawners launch this time (e.g. one per paper tray still attached).
+            var all = drones.GetComponentsInChildren<EnemySpawner>(true);
+            var picked = new System.Collections.Generic.List<EnemySpawner>();
+            foreach (var sp in all)
+            {
+                bool on = use == null || use(sp);
+                if (sp.gameObject != drones) sp.gameObject.SetActive(on);
+                if (on) picked.Add(sp);
+            }
+            var spawners = picked.ToArray();
             if (spawners.Length == 0) yield break;
             shielded = true;
             dronesDowned = 0;

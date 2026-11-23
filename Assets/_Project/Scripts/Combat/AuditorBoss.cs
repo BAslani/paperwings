@@ -17,7 +17,9 @@ namespace PaperWings.Combat
     ///     you down. Get out from under it.
     ///   - ESCORTS (phase 2+, every other round): two fighters launch from its belly and shield it
     ///     until you shoot them down.
-    ///   - FLAK (phase 3): rings of staples burst from its hull.
+    ///   - FLAK (phase 3): a ring of staples bursts from its hull.
+    ///   Stage 33 eased it: slower turret bursts that only fire forward, sparser bombs, escorts every
+    ///   third round, a longer and slower engine stall.
     ///   - ENGINE STALL: after each attack its engine overheats and it slows right down: the glowing
     ///     engine at the back is the weak spot. Get on its tail.
     ///   - With both turrets gone it gets desperate: RAMMING DIVES straight at you.
@@ -93,10 +95,10 @@ namespace PaperWings.Combat
             round++;
             float pace = Phase >= 3 ? 0.8f : 1f;
 
-            if (Phase >= 2 && drones != null && round % 2 == 0)
+            if (Phase >= 2 && drones != null && round % 3 == 2)
             {
                 yield return Telegraph("ESCORTS LAUNCHED!  shoot them down to break its guard", settings.telegraph);
-                yield return DroneShield(30f);
+                yield return DroneShield(24f);
             }
 
             if (TurretsLeft == 0 && round % 2 == 1)
@@ -108,14 +110,14 @@ namespace PaperWings.Combat
             else if (round % 2 == 1)
             {
                 yield return Telegraph("STRAFING RUN!  get out of its sights", settings.telegraph);
-                turretRate = 2.5f;
+                turretRate = 1.6f;
                 float end = Time.time + settings.attackDuration * pace;
                 bool volley = false;
                 while (Time.time < end && !IsDefeated)
                 {
                     var p = FindFlyingPlayer();
                     if (p != null) { move = Move.Pass; passTarget = p.transform.position + Vector3.up * 6f; }
-                    if (!volley && Time.time > end - settings.attackDuration * 0.5f) { volley = true; FireVolley(p, settings.shotsPerVolley, settings.spreadAngle); }
+                    if (!volley && Phase >= 2 && Time.time > end - settings.attackDuration * 0.5f) { volley = true; FireVolley(p, settings.shotsPerVolley, settings.spreadAngle); }
                     yield return null;
                 }
                 turretRate = 1f;
@@ -127,10 +129,10 @@ namespace PaperWings.Combat
                 yield return BombRun(pace);
             }
 
-            if (Phase >= 3) { FireRing(14, 0f, 0.6f); FireRing(14, -20f, 0.6f, 12f); }
+            if (Phase >= 3) FireRing(10, -10f, 0.55f);
 
             // ENGINE STALL: slow, the engine glows.
-            speedScale = 0.45f;
+            speedScale = 0.35f;
             yield return WeakWindow(settings.vulnerableTime * (TurretsLeft == 0 ? 1.3f : 1f));
             speedScale = 1f;
         }
@@ -157,8 +159,8 @@ namespace PaperWings.Combat
                 bool over = pl != null && Vector3.Distance(Flat(body.position), Flat(pl.transform.position)) < 35f;
                 if (over && Time.time >= nextBomb && bombBay != null)
                 {
-                    nextBomb = Time.time + (Phase >= 3 ? 0.18f : 0.26f);
-                    Drop(bombBay.position + body.right * Random.Range(-4f, 4f), Velocity, 24f);
+                    nextBomb = Time.time + (Phase >= 3 ? 0.3f : 0.42f);
+                    Drop(bombBay.position + body.right * Random.Range(-3f, 3f), Velocity, 20f);
                 }
                 yield return null;
             }
@@ -171,13 +173,13 @@ namespace PaperWings.Combat
             var p = FindFlyingPlayer();
             if (p == null) yield break;
             move = Move.Dive;
-            passTarget = p.transform.position + p.Velocity * 1.2f;
-            speedScale = 2.2f;
+            passTarget = p.transform.position + p.Velocity * 0.6f;
+            speedScale = 1.8f;
             float stop = Time.time + 4f;
             while (Time.time < stop && !IsDefeated && Vector3.Distance(body.position, passTarget) > 10f) yield return null;
             speedScale = 1f;
             move = Move.Orbit;
-            FireRing(12, 10f, 0.6f);
+            FireRing(8, 10f, 0.55f);
         }
 
         static Vector3 Flat(Vector3 v) => new Vector3(v.x, 0f, v.z);
@@ -263,8 +265,8 @@ namespace PaperWings.Combat
                         if (turrets[i] == null || turrets[i].Broken) continue;
                         Transform m = turretMuzzles != null && i < turretMuzzles.Length ? turretMuzzles[i] : turrets[i].transform;
                         Vector3 d = player.transform.position - m.position;
-                        if (d.magnitude < turretRange && Vector3.Dot(d.normalized, Flat(body.forward).normalized) > -0.3f)
-                            FireAimed(m, player, turretBurst, 3f);
+                        if (d.magnitude < turretRange && Vector3.Dot(d.normalized, Flat(body.forward).normalized) > 0.1f)
+                            FireAimed(m, player, turretBurst, 4.5f);
                     }
             }
         }

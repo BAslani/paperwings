@@ -27,7 +27,19 @@ namespace PaperWings.Gameplay
         [SerializeField] int magazineBonusStaples = 15;
         [SerializeField] float heavyPaperScale = 1.25f;
 
-        bool pencilsBanned;
+        bool pencilsBanned, fullLoadout;
+        /// <summary>
+        /// Flight School: every fold, every upgrade, without touching the save. Off again as soon as
+        /// any other mode starts.
+        /// </summary>
+        public bool FullLoadout
+        {
+            get => fullLoadout;
+            set { if (fullLoadout == value) return; fullLoadout = value; Apply(); }
+        }
+
+        bool Owned(string id) => fullLoadout || Progression.IsUnlocked(id);
+
         /// <summary>Set by campaign nights that take your pencils away. Takes effect next time the plane is in hand.</summary>
         public bool PencilsBanned
         {
@@ -60,8 +72,8 @@ namespace PaperWings.Gameplay
             if (player == null) return;
             if (folds != null)
             {
-                folds.FoldAvailable = f => Progression.IsUnlocked(f.unlockId);
-                folds.PropellerAvailable = f => Progression.IsUnlocked(UnlockIds.ForFold(f, UnlockIds.Propeller));
+                folds.FoldAvailable = f => Owned(f.unlockId);
+                folds.PropellerAvailable = f => Owned(UnlockIds.ForFold(f, UnlockIds.Propeller));
                 if (player.State != PlaneState.Flying) folds.Refresh();   // re-fold (and re-fit the prop) only while in hand
             }
             ApplyLoadout();
@@ -72,7 +84,7 @@ namespace PaperWings.Gameplay
         {
             if (player == null) return;
             PlaneFold fold = folds != null ? folds.Current : null;
-            bool Has(string upgrade) => Progression.IsUnlocked(UnlockIds.ForFold(fold, upgrade));
+            bool Has(string upgrade) => Owned(UnlockIds.ForFold(fold, upgrade));
             bool inHand = player.State != PlaneState.Flying;
 
             var pencils = player.GetComponent<PencilLauncher>();
@@ -84,7 +96,7 @@ namespace PaperWings.Gameplay
             if (gun != null)
             {
                 gun.ClipBonus = Has(UnlockIds.StapleMagazine) ? magazineBonusStaples : 0;
-                bool hasGun = settings == null || !settings.staplesAreAnUnlock || Progression.IsUnlocked(UnlockIds.Staples);
+                bool hasGun = settings == null || !settings.staplesAreAnUnlock || Owned(UnlockIds.Staples);
                 gun.enabled = hasGun;
                 var shooter = player.GetComponent<PlayerShooter>();
                 if (shooter != null) shooter.enabled = hasGun;

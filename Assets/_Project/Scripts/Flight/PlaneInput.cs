@@ -130,7 +130,7 @@ namespace PaperWings.Flight
 
         void OnDisable()
         {
-            fireArmed = false;
+            Disarm();
             map?.Disable();
             SetCursorCaptured(false);
         }
@@ -154,21 +154,63 @@ namespace PaperWings.Flight
             SetCursorCaptured(IsMouseAim && controls.lockCursor && Application.isFocused && !CursorBlocked);
         }
 
+        // The fire latch remembers WHICH button started the burst and fires only while that same
+        // button is down. A button that reads as held without ever being pressed (a drifting pad,
+        // a mouse release the editor swallowed when the cursor locked) can't keep the gun going.
+        UnityEngine.InputSystem.Controls.ButtonControl fireControl;
+        CursorLockMode lastLock;
+        bool lastFocus = true;
+
         void UpdateFire()
         {
-            if (fire == null) { fireArmed = false; return; }
-            bool down = false, pressedNow = false;
+            bool blocked = fire == null || CursorBlocked || !Application.isFocused;
+            // A cursor lock change or focus change can swallow the mouse release: start over.
+            if (Cursor.lockState != lastLock || Application.isFocused != lastFocus) { blocked = true; }
+            lastLock = Cursor.lockState;
+            lastFocus = Application.isFocused;
+            if (blocked) { Disarm(); return; }
+
+            if (fireControl != null && (!fireControl.isPressed || !PhysicallyDown(fireControl))) Disarm();
+
             foreach (var control in fire.controls)
             {
-                if (control is UnityEngine.InputSystem.Controls.ButtonControl b)
+                if (control is UnityEngine.InputSystem.Controls.ButtonControl b && b.wasPressedThisFrame)
                 {
-                    down |= b.isPressed;
-                    pressedNow |= b.wasPressedThisFrame;
+                    fireControl = b;
+                    break;
                 }
             }
-            if (!down || CursorBlocked || !Application.isFocused) { fireArmed = false; return; }
-            if (pressedNow) fireArmed = true;
+            fireArmed = fireControl != null;
         }
+
+        void Disarm()
+        {
+            fireControl = null;
+            fireArmed = false;
+        }
+
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        [System.Runtime.InteropServices.DllImport("user32.dll")] static extern short GetAsyncKeyState(int key);
+        [System.Runtime.InteropServices.DllImport("user32.dll")] static extern int GetSystemMetrics(int index);
+
+        /// <summary>
+        /// Windows: ask the OS whether a mouse button is really down. The Input System only knows
+        /// what events it received, so a lost release leaves it "pressed" forever.
+        /// </summary>
+        static bool PhysicallyDown(UnityEngine.InputSystem.Controls.ButtonControl b)
+        {
+            if (!(b.device is Mouse mouse)) return true;
+            bool swapped = GetSystemMetrics(23) != 0;   // SM_SWAPBUTTON: left-handed mouse setting
+            int vk;
+            if (b == mouse.leftButton) vk = swapped ? 0x02 : 0x01;
+            else if (b == mouse.rightButton) vk = swapped ? 0x01 : 0x02;
+            else if (b == mouse.middleButton) vk = 0x04;
+            else return true;
+            return (GetAsyncKeyState(vk) & 0x8000) != 0;
+        }
+#else
+        static bool PhysicallyDown(UnityEngine.InputSystem.Controls.ButtonControl b) => true;
+#endif
 
         void UpdateMouseAim()
         {

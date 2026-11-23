@@ -121,7 +121,7 @@ namespace PaperWings.EditorTools
             // ---- Throw points for campaign nights ----
             var spawns = StageKit.Group(root, "Spawns");
             var lounge = StageKit.Spawn("LoungeSpawn", spawns, new Vector3(-122f, 12.5f, -92f), 165f);           // coffee table, facing the heater
-            var coworker = StageKit.Spawn("CoworkerSpawn", spawns, new Vector3(110f, 31.5f, -95f), -90f);        // coworker's desk, facing the room
+            var coworker = StageKit.Spawn("CoworkerSpawn", spawns, new Vector3(88f, 33.5f, -91f), -90f);         // front edge of the coworker's desk (clear of the keyboard), facing the room
 
             // ---- WindowRoute: radiator to radiator, via the ceiling fan ----
             var route = StageKit.Route("WindowRoute", root, "OfficeWindows");

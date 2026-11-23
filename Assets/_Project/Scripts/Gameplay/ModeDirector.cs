@@ -36,6 +36,8 @@ namespace PaperWings.Gameplay
         public bool failed;
         public int stars;
         public bool newStars;
+        /// <summary>Flight School was finished (the results screen offers Night 1 next).</summary>
+        public bool training;
         /// <summary>"Unlocked: Pencil Missiles" etc. for the first clear, or empty.</summary>
         public string reward = "";
         /// <summary>This clear finished the whole campaign for the first time.</summary>
@@ -94,6 +96,15 @@ namespace PaperWings.Gameplay
         public ConvoySpawner Convoy => ConvoySpawner.Active;
 
         public GameMode Mode { get; private set; }
+        /// <summary>Flight School is running (a guided free flight in the office with a fully upgraded plane).</summary>
+        public bool InTraining { get; private set; }
+        /// <summary>The tutorial driving Flight School (lives in the office's FlightSchool group).</summary>
+        public Tutorial Training { get; private set; }
+        /// <summary>The office group holding Flight School (drones, a training rival, the tutorial).</summary>
+        public const string TrainingGroup = "FlightSchool";
+        public bool HasTraining => RoomAt(0) != null && RoomAt(0).GroupNamed(TrainingGroup) != null;
+        const string TrainingDoneKey = "PaperWings.FlightSchoolDone";
+        public static bool TrainingDone => PlayerPrefs.GetInt(TrainingDoneKey, 0) == 1;
         public bool HasMode { get; private set; }
         public bool RunStarted { get; private set; }
         public bool RunComplete { get; private set; }
@@ -219,12 +230,12 @@ namespace PaperWings.Gameplay
         // Small rewards for things you do during any mode.
         void OnPlayerKill(int kills)
         {
-            if (progression != null && HasMode) Gameplay.Progression.AddClips(progression.clipsPerKill, "shot down");
+            if (progression != null && HasMode && !InTraining) Gameplay.Progression.AddClips(progression.clipsPerKill, "shot down");
         }
 
         void OnFlyerDowned(PathFlyer flyer, PlaneController by)
         {
-            if (progression != null && HasMode && by != null && by.IsPlayer && Objective != NightObjective.Practice)
+            if (progression != null && HasMode && !InTraining && by != null && by.IsPlayer && Objective != NightObjective.Practice)
                 Gameplay.Progression.AddClips(progression.clipsPerKill, "courier down");
         }
 
@@ -239,6 +250,49 @@ namespace PaperWings.Gameplay
             PlayerPrefs.SetInt("PaperWings.LastMode", (int)mode);
         }
 
+        /// <summary>
+        /// Flight School: a guided flight in the office with every fold and upgrade. Its tutorial
+        /// switches drones and a training rival on step by step, then calls <see cref="CompleteTraining"/>.
+        /// </summary>
+        public void StartTraining()
+        {
+            NightIndex = -1;
+            Begin(GameMode.FreeFlight, 0);
+            if (applier != null) applier.FullLoadout = true;
+            InTraining = true;
+            activeExtraGroup = RoomAt(0) != null ? RoomAt(0).GroupNamed(TrainingGroup) : null;
+            Toggle(activeExtraGroup, true);
+            Training = activeExtraGroup != null ? activeExtraGroup.GetComponentInChildren<Tutorial>(true) : null;
+            if (Training != null) Training.Begin(player);
+            if (launcher != null) launcher.ResetToStart();   // in hand with the full loadout
+        }
+
+        /// <summary>The tutorial's last step is done.</summary>
+        public void CompleteTraining()
+        {
+            if (!InTraining || RunComplete) return;
+            bool first = !TrainingDone;
+            PlayerPrefs.SetInt(TrainingDoneKey, 1);
+            PlayerPrefs.Save();
+            var result = new ModeResult
+            {
+                mode = Mode,
+                training = true,
+                title = "FLIGHT SCHOOL COMPLETE!",
+                detail = "You're cleared for the Night Shift. Your own plane starts as a plain sheet: upgrades come from the campaign.",
+                time = RunTime
+            };
+            if (first && progression != null)
+            {
+                result.clipsEarned = 30;
+                Gameplay.Progression.AddClips(30, "flight school");
+            }
+            RunComplete = true;
+            result.night = -1;
+            LastResult = result;
+            Completed?.Invoke(result);
+        }
+
         /// <summary>Starts (or restarts) a campaign night: its mode and room plus tonight's twist.</summary>
         public void StartNight(int index)
         {
@@ -251,6 +305,9 @@ namespace PaperWings.Gameplay
         /// <summary>Right room, right groups on, twists applied, plane back in hand, timer reset.</summary>
         void Begin(GameMode mode, int room)
         {
+            InTraining = false;
+            Training = null;
+            if (applier != null) applier.FullLoadout = false;
             room = Mathf.Clamp(room, 0, RoomCount - 1);
             if (!RoomSupports(room, mode)) room = 0;   // e.g. a Boss Fight asked for in a room without a boss
             bool moved = room != RoomIndex;
@@ -346,6 +403,7 @@ namespace PaperWings.Gameplay
         /// <summary>The objective line for the in-flight strip (null = let the menu describe the mode).</summary>
         public string ObjectiveText()
         {
+            if (InTraining) return Training != null ? Training.StripText : "Flight School";
             var c = Convoy;
             switch (Objective)
             {

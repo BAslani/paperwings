@@ -32,11 +32,17 @@ namespace PaperWings.UI
         GUIStyle title, body, small, button;
         float scale;
 
-        static readonly GameMode[] Modes = { GameMode.FreeFlight, GameMode.RingRun, GameMode.Dogfight, GameMode.Squadron, GameMode.BossFight };
+        // Boss fights are only played as campaign nights (no separate Boss Fight card).
+        static readonly GameMode[] Modes = { GameMode.FreeFlight, GameMode.RingRun, GameMode.Dogfight, GameMode.Squadron };
 
         CampaignSettings Campaign => director != null ? director.Campaign : null;
         /// <summary>1 if the menu starts with the Campaign card, else 0. Mode cards come after it.</summary>
-        int Offset => Campaign != null && Campaign.Count > 0 ? 1 : 0;
+        /// <summary>Index of the Flight School card (0), or -1 if the scene has no Flight School.</summary>
+        int TrainingEntry => director != null && director.HasTraining ? 0 : -1;
+        /// <summary>Index of the campaign card, or -1.</summary>
+        int CampaignEntry => Campaign != null && Campaign.Count > 0 ? (TrainingEntry + 1) : -1;
+        /// <summary>Cards before the free-play modes (Flight School, Campaign).</summary>
+        int Offset => (TrainingEntry >= 0 ? 1 : 0) + (CampaignEntry >= 0 ? 1 : 0);
         int EntryCount => Modes.Length + Offset;
 
         void Start()
@@ -44,7 +50,10 @@ namespace PaperWings.UI
             // The saved value is the mode itself; find where it sits in the menu list.
             int mode = System.Array.IndexOf(Modes, (GameMode)PlayerPrefs.GetInt("PaperWings.LastMode", (int)GameMode.RingRun));
             // New players land on the campaign; returning players on what they played last.
-            selected = Offset == 1 && !PlayerPrefs.HasKey("PaperWings.LastMode") ? 0 : Mathf.Max(0, mode) + Offset;
+            // New players land on Flight School (then the campaign); returning players on what they played last.
+            if (TrainingEntry >= 0 && !ModeDirector.TrainingDone) selected = TrainingEntry;
+            else if (CampaignEntry >= 0 && !PlayerPrefs.HasKey("PaperWings.LastMode")) selected = CampaignEntry;
+            else selected = Mathf.Max(0, mode) + Offset;
             nightSelected = FirstUnclearedNight();
             if (director != null)
             {
@@ -80,7 +89,14 @@ namespace PaperWings.UI
         void Choose(int index)
         {
             selected = index;
-            if (index < Offset)
+            if (index == TrainingEntry)
+            {
+                Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
+                director.StartTraining();
+                Show(Screen.None);
+                return;
+            }
+            if (index == CampaignEntry)
             {
                 Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
                 nightSelected = FirstUnclearedNight();
@@ -180,6 +196,7 @@ namespace PaperWings.UI
             if (kb.digit4Key.wasPressedThisFrame) return 4;
             if (kb.digit5Key.wasPressedThisFrame) return 5;
             if (kb.digit6Key.wasPressedThisFrame) return 6;
+            if (kb.digit7Key.wasPressedThisFrame) return 7;
             return 0;
         }
 
@@ -208,6 +225,13 @@ namespace PaperWings.UI
             var r = director.LastResult;
             if (r == null) { Show(Screen.Menu); return; }
 
+            if (r.training)
+            {
+                if (retry) Choose(TrainingEntry);
+                else if (confirm && Campaign != null && Campaign.Count > 0) PlayNight(FirstUnclearedNight());
+                else if (confirm || leave) Show(Screen.Menu);
+                return;
+            }
             if (r.night >= 0)
             {
                 if (retry) PlayNight(r.night);
@@ -630,7 +654,8 @@ namespace PaperWings.UI
         {
             Dim(0.65f);
             bool rooms = director.RoomCount > 1;
-            float w = 760 * scale, h = (230 + (rooms ? 56 : 0) + EntryCount * 102) * scale;
+            const float Step = 90f;
+            float w = 760 * scale, h = (230 + (rooms ? 56 : 0) + EntryCount * Step) * scale;
             Rect panel = Centered(w, h);
             Box(panel, 0.85f);
 
@@ -660,16 +685,26 @@ namespace PaperWings.UI
 
             for (int i = 0; i < EntryCount; i++)
             {
-                Rect card = new Rect(panel.x + 40 * scale, y, w - 80 * scale, 92 * scale);
+                Rect card = new Rect(panel.x + 40 * scale, y, w - 80 * scale, (Step - 8f) * scale);
                 bool sel = i == selected;
-                bool isCampaign = i < Offset;
-                bool available = isCampaign || director.RoomSupports(roomSelected, Modes[i - Offset]);
-                GUI.color = sel ? new Color(1f, 0.85f, 0.3f, available ? 0.35f : 0.15f) : (isCampaign ? new Color(1f, 0.85f, 0.3f, 0.12f) : new Color(1f, 1f, 1f, 0.06f));
+                bool isTraining = i == TrainingEntry;
+                bool isCampaign = i == CampaignEntry;
+                bool available = isCampaign || isTraining || director.RoomSupports(roomSelected, Modes[i - Offset]);
+                Color tint = isTraining ? new Color(0.45f, 0.85f, 1f, 0.12f) : isCampaign ? new Color(1f, 0.85f, 0.3f, 0.12f) : new Color(1f, 1f, 1f, 0.06f);
+                GUI.color = sel ? new Color(1f, 0.85f, 0.3f, available ? 0.35f : 0.15f) : tint;
                 GUI.DrawTexture(card, Texture2D.whiteTexture);
                 GUI.color = Color.white;
 
                 string heading, description, right;
-                if (isCampaign)
+                if (isTraining)
+                {
+                    bool done = ModeDirector.TrainingDone;
+                    heading = "FLIGHT SCHOOL";
+                    description = done ? "Fly the lessons again on a fully upgraded plane: every fold, every weapon."
+                                       : "Start here! Learn to throw, steer, climb, boost and fight, on a fully upgraded plane.";
+                    right = done ? "<color=#80FF90>passed</color>" : "<color=#80D8FF>new</color>";
+                }
+                else if (isCampaign)
                 {
                     int next = FirstUnclearedNight();
                     bool allDone = Progression.NightCleared(Campaign.Count - 1);
@@ -700,15 +735,15 @@ namespace PaperWings.UI
                     }
                 }
 
-                GUI.Label(new Rect(card.x + 18 * scale, card.y + 8 * scale, card.width, 36 * scale), $"<b>{i + 1}.  {heading}</b>", button);
-                GUI.Label(new Rect(card.x + 18 * scale, card.y + 44 * scale, card.width - 200 * scale, 44 * scale),
+                GUI.Label(new Rect(card.x + 18 * scale, card.y + 6 * scale, card.width, 36 * scale), $"<b>{i + 1}.  {heading}</b>", button);
+                GUI.Label(new Rect(card.x + 18 * scale, card.y + 40 * scale, card.width - 200 * scale, 42 * scale),
                           $"<color=#CCCCCC>{description}</color>", small);
                 GUI.Label(new Rect(card.xMax - 190 * scale, card.y + 12 * scale, 175 * scale, 30 * scale),
                           $"<color=#FFD040>{right}</color>", new GUIStyle(small) { alignment = TextAnchor.UpperRight });
 
                 // Mouse support: click a card to start it.
                 if (GUI.Button(card, GUIContent.none, GUIStyle.none)) Choose(i);
-                y += 102 * scale;
+                y += Step * scale;
             }
 
             string resume = director.HasMode && !director.RunComplete ? "    Esc / M: resume" : "";
@@ -925,7 +960,8 @@ namespace PaperWings.UI
                           $"<color=#FFD040>+{r.clipsEarned} paper clips</color>   <color=#999999>({Progression.PaperClips} total, U in the menu to spend)</color>", small);
 
             string hint;
-            if (!night) hint = "Enter / Space / (A): retry      Esc / M / (B): change mode";
+            if (r.training) hint = "Enter / Space / (A): start the Night Shift      R / (X): fly it again      Esc / M / (B): menu";
+            else if (!night) hint = "Enter / Space / (A): retry      Esc / M / (B): change mode";
             else if (r.failed) hint = "Enter / Space / (A): try again      Esc / M / (B): campaign";
             else if (NextNightAfter(r) != r.night) hint = $"Enter / Space / (A): Night {r.night + 2}      R / (X): replay      Esc / M / (B): campaign";
             else hint = "Enter / Space / (A): replay      Esc / M / (B): campaign";
@@ -957,6 +993,7 @@ namespace PaperWings.UI
 
             string label = ModeDirector.ModeName(m).ToUpper();
             if (director.RoomCount > 1 && director.RoomIndex > 0) label += $" · {director.RoomName(director.RoomIndex).ToUpper()}";
+            if (director.InTraining) { label = "FLIGHT SCHOOL"; timer = ""; bestText = ""; }
             if (night != null)
             {
                 label = $"NIGHT {director.NightIndex + 1}: {night.title.ToUpper()}";
@@ -973,6 +1010,28 @@ namespace PaperWings.UI
             GUI.color = Color.white;
             GUI.Label(r, $"<color=#FFD040>{label}</color>    {obj}{timer}{bestText}    <color=#888888>Esc: menu</color>", small);
             DrawEventBanner();
+            DrawLesson();
+        }
+
+        /// <summary>Flight School: the current lesson as a card at the top of the screen.</summary>
+        void DrawLesson()
+        {
+            var t = director.InTraining ? director.Training : null;
+            if (t == null || director.RunComplete || t.Current == Tutorial.Step.Done) return;
+            float fade = Mathf.Clamp01((Time.time - t.StepStarted) * 3f);
+            float w = 900 * scale, h = 132 * scale;
+            Rect r = new Rect((UnityEngine.Screen.width - w) * 0.5f, 24 * scale, w, h);
+            GUI.color = new Color(0.05f, 0.12f, 0.2f, 0.78f * fade);
+            GUI.DrawTexture(r, Texture2D.whiteTexture);
+            GUI.color = new Color(0.45f, 0.85f, 1f, 0.9f * fade);
+            GUI.DrawTexture(new Rect(r.x, r.y, 6 * scale, r.height), Texture2D.whiteTexture);
+            GUI.color = new Color(1f, 1f, 1f, fade);
+            GUI.Label(new Rect(r.x + 24 * scale, r.y + 8 * scale, w - 48 * scale, 34 * scale),
+                      $"<color=#80D8FF>LESSON {t.StepNumber} / {Tutorial.StepCount}</color>   <b>{t.Title}</b>" +
+                      (t.Progress.Length > 0 ? $"   <color=#FFD040>{t.Progress}</color>" : ""), new GUIStyle(body) { alignment = TextAnchor.MiddleLeft });
+            GUI.Label(new Rect(r.x + 24 * scale, r.y + 46 * scale, w - 48 * scale, h - 52 * scale), t.Body,
+                      new GUIStyle(small) { alignment = TextAnchor.UpperLeft });
+            GUI.color = Color.white;
         }
 
         /// <summary>Room events (Stage 29): a warning with a countdown, then what to do while it lasts.</summary>
@@ -1000,7 +1059,7 @@ namespace PaperWings.UI
             GameMode.RingRun => "Thread all five sticky-note rings as fast as you can. The last ring stops the clock.",
             GameMode.Dogfight => "Accounting's rival planes are up. Shoot down five of them as fast as you can.",
             GameMode.Squadron => "Fly with two Marketing wingmen against four rivals. Your squadron needs eight kills.",
-            _ => "Each room's boss: THE STAPLER (office), THE AUDITOR (break room, it flies!), THE MAINFRAME (server room), THE CONDENSER (rooftop).",
+            _ => "Each room's boss: THE PRINTER (office), THE AUDITOR (break room), THE MAINFRAME (server room), THE CONDENSER (rooftop).",
         };
 
         // ------------------------------------------------------------------ helpers

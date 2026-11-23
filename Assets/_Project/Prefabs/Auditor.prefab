@@ -207,7 +207,7 @@ MonoBehaviour:
   orbitRadius: {x: 85, y: 40}
   altitude: 75
   altitudeSwing: 12
-  cruiseSpeed: 15
+  cruiseSpeed: 13
   turnRate: 55
   boundsMin: {x: -108, y: 28, z: -58}
   boundsMax: {x: 108, y: 105, z: 52}
@@ -217,9 +217,9 @@ MonoBehaviour:
   turretMuzzles:
   - {fileID: 2488147145607396690}
   - {fileID: 6914269251986327426}
-  turretInterval: 1.6
-  turretBurst: 3
-  turretRange: 85
+  turretInterval: 2.6
+  turretBurst: 2
+  turretRange: 70
   bombBay: {fileID: 9124619874534422581}
   wash: {fileID: 536910331214844408}
   propellers:
@@ -15506,8 +15506,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.BossPart
   partName: TURRET
-  maxHealth: 130
-  bossDamageOnDestroy: 0.08
+  maxHealth: 90
+  bossDamageOnDestroy: 0.1
   flashRenderers:
   - {fileID: 5428720478013718093}
   destroyBurst: {fileID: 7417589388514583712}
@@ -30901,8 +30901,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.BossPart
   partName: TURRET
-  maxHealth: 130
-  bossDamageOnDestroy: 0.08
+  maxHealth: 90
+  bossDamageOnDestroy: 0.1
   flashRenderers:
   - {fileID: 2205048017307625876}
   destroyBurst: {fileID: 2497502451361167842}

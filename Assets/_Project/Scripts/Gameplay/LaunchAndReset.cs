@@ -70,6 +70,7 @@ namespace PaperWings.Gameplay
             Charge01 = 0f;
             IsCharging = false;
             downTimer = 0f;
+            ClearSpawn();
             plane.Hold(spawnPoint.position, spawnPoint.rotation);
             var trails = plane.GetComponent<PlaneTrails>();
             if (trails) trails.ClearTrails();
@@ -92,6 +93,46 @@ namespace PaperWings.Gameplay
                 case PlaneState.Landed: UpdateLanded(); break;
             }
         }
+
+        /// <summary>
+        /// Lifts the hand clear if the throw point sits inside or right against furniture (a keyboard,
+        /// a monitor, the water tower's roof), so the plane can't clip it the moment it's thrown.
+        /// </summary>
+        void ClearSpawn()
+        {
+            var box = plane.GetComponent<BoxCollider>();
+            Vector3 half = box != null ? Vector3.Scale(box.size, plane.transform.lossyScale) * 0.5f : new Vector3(0.7f, 0.15f, 1f);
+            half += new Vector3(0.6f, 0.35f, 0.3f);   // a little room for the wobble and the wind-up tilt
+            Quaternion rot = spawnPoint.rotation;
+            Vector3 start = spawnPoint.position;
+            for (int i = 0; i <= 10; i++)
+            {
+                Vector3 p = start + Vector3.up * (i * 0.6f);
+                if (!Blocked(p, half, rot) && !SweepBlocked(p, half, rot))
+                {
+                    if (i > 0) spawnPoint.position = p;
+                    return;
+                }
+            }
+        }
+
+        bool Blocked(Vector3 p, Vector3 half, Quaternion rot)
+        {
+            foreach (var c in Physics.OverlapBox(p, half, rot, ~0, QueryTriggerInteraction.Ignore))
+                if (!IsPlane(c)) return true;
+            return false;
+        }
+
+        // The first couple of metres of the throw, nose slightly down (a weak throw sinks).
+        bool SweepBlocked(Vector3 p, Vector3 half, Quaternion rot)
+        {
+            Vector3 dir = Quaternion.AngleAxis(6f, rot * Vector3.right) * (rot * Vector3.forward);
+            foreach (var hit in Physics.BoxCastAll(p, half, dir, rot, 4f, ~0, QueryTriggerInteraction.Ignore))
+                if (!IsPlane(hit.collider)) return true;
+            return false;
+        }
+
+        bool IsPlane(Collider c) => c.attachedRigidbody != null && c.attachedRigidbody.gameObject == plane.gameObject;
 
         void UpdateLanded()
         {

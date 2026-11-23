@@ -18,7 +18,7 @@ namespace PaperWings.EditorTools
     ///    maintenance drones) rebuilt (Stage 26).
     ///  - Checks every campaign night's room, group and throw point.
     ///
-    /// Also: PaperWings > Build Stages 29-32 (Air Combat Update) runs 29, 30, 31 and 32 in order.
+    /// Also: PaperWings > Build Stages 29-33 (Air Combat Update) runs 29 to 33 in order.
     /// </summary>
     public static class Stage32Builder
     {
@@ -31,17 +31,20 @@ namespace PaperWings.EditorTools
             EditorUtility.DisplayDialog("PaperWings", "Stage 32 built.\n\n" + report, "Fly");
         }
 
-        [MenuItem("PaperWings/Build Stages 29-32 (Air Combat Update)", priority = 144)]
+        [MenuItem("PaperWings/Build Stages 29-33 (Air Combat Update)", priority = 144)]
         public static void BuildAll()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;
             string r29 = Stage29Builder.Run(scene);
             if (!Stage30Builder.Run(scene)) return;
             if (!Stage31Builder.Run(scene)) return;
-            string r32 = Run(scene);
+            Run(scene);
+            // Stage 33 last: it eases the Auditor that Stage 30 just rebuilt, and runs the final check.
+            var office = StageKit.RoomAt(StageKit.Office);
+            string r33 = office != null ? Stage33Builder.Run(scene, office) : "(no office room: Stage 33 skipped)";
             StageKit.Save(scene);
             EditorUtility.DisplayDialog("PaperWings",
-                "Stages 29-32 built.\n\n" + r29 + "\n- Break room party, appliance events, THE AUDITOR.\n- Server room machinery, halon and blackouts, a squadron.\n\n" + r32, "Fly");
+                "Stages 29-33 built.\n\n" + r29 + "\n- Break room party, appliance events, THE AUDITOR.\n- Server room machinery, halon and blackouts, a squadron.\n" + r33, "Fly");
         }
 
         internal static string Run(Scene scene)
