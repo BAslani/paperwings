@@ -26,6 +26,14 @@ namespace PaperWings.Gameplay
         [SerializeField] int magazineBonusStaples = 15;
         [SerializeField] float heavyPaperScale = 1.25f;
 
+        bool pencilsBanned;
+        /// <summary>Set by campaign nights that take your pencils away. Takes effect next time the plane is in hand.</summary>
+        public bool PencilsBanned
+        {
+            get => pencilsBanned;
+            set { if (pencilsBanned == value) return; pencilsBanned = value; Apply(); }
+        }
+
         // Awake (not Start) so the fold picker and pencil launcher see the limits before they set up.
         void Awake()
         {
@@ -42,7 +50,7 @@ namespace PaperWings.Gameplay
             var pencils = player.GetComponent<PencilLauncher>();
             if (pencils != null)
             {
-                int n = !Progression.IsUnlocked(UnlockIds.Pencils) ? 0
+                int n = pencilsBanned || !Progression.IsUnlocked(UnlockIds.Pencils) ? 0
                       : Progression.IsUnlocked(UnlockIds.PencilRack) ? pencilsWithRack : pencilsWithMissiles;
                 pencils.SetSlotLimit(n);
             }

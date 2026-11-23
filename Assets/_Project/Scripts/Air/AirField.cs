@@ -44,6 +44,9 @@ namespace PaperWings.Air
 
         public static IReadOnlyList<AirSource> Sources => sources;
 
+        /// <summary>Multiplies every wind and updraft (campaign "rough air" nights raise it). 1 = normal.</summary>
+        public static float WindScale = 1f;
+
         public static void Register(AirSource s)
         {
             if (!sources.Contains(s)) sources.Add(s);
@@ -60,7 +63,7 @@ namespace PaperWings.Air
                 Vector3 wind = s.GetWind(position, out float influence);
                 if (influence <= 0f) continue;
 
-                result.wind += wind;
+                result.wind += wind * WindScale;
                 result.moisture = Mathf.Max(result.moisture, s.Moisture * influence);
                 switch (s.Kind)
                 {
@@ -78,6 +81,6 @@ namespace PaperWings.Air
         // UNITY NOTE: If "Enter Play Mode Options" skips domain reload, static fields survive
         // between Play sessions. This clears the list at the start of every Play session.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() => sources.Clear();
+        static void ResetStatics() { sources.Clear(); WindScale = 1f; }
     }
 }

@@ -55,7 +55,7 @@ namespace PaperWings.Combat
 
             if (plane.State == PlaneState.Held)
             {
-                if (PencilsLeft < MaxPencils) Rearm();
+                if (PencilsLeft != MaxPencils) Rearm();   // refill, or drop pencils a mission bans
                 ClearLock();
                 return;
             }

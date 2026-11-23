@@ -25,6 +25,7 @@ namespace PaperWings.Gameplay
             public List<string> unlocked = new List<string>();
             public List<int> medalModes = new List<int>();   // parallel lists: JsonUtility can't do dictionaries
             public List<int> medals = new List<int>();
+            public List<int> nightStars = new List<int>();   // campaign: stars per night index (0 = not cleared)
         }
 
         static SaveData data;
@@ -60,6 +61,45 @@ namespace PaperWings.Gameplay
             SaveAndNotify();
             return true;
         }
+
+        // ------------------------------------------------------------------ campaign
+
+        /// <summary>Stars earned on a campaign night (0 = not cleared yet).</summary>
+        public static int GetNightStars(int night)
+            => night >= 0 && night < Data.nightStars.Count ? Data.nightStars[night] : 0;
+
+        public static bool NightCleared(int night) => GetNightStars(night) > 0;
+
+        /// <summary>Night 0 is always open; every other night opens once the one before it is cleared.</summary>
+        public static bool NightOpen(int night) => night == 0 || NightCleared(night - 1);
+
+        /// <summary>Records stars if they beat the previous best. Returns true if improved.</summary>
+        public static bool RecordNightStars(int night, int stars)
+        {
+            if (night < 0 || stars <= GetNightStars(night)) return false;
+            while (Data.nightStars.Count <= night) Data.nightStars.Add(0);
+            Data.nightStars[night] = stars;
+            SaveAndNotify();
+            return true;
+        }
+
+        public static int TotalStars()
+        {
+            int n = 0;
+            foreach (int s in Data.nightStars) n += s;
+            return n;
+        }
+
+        /// <summary>Gives an unlock for free (a campaign reward). False if it was already owned.</summary>
+        public static bool GrantUnlock(string id)
+        {
+            if (IsUnlocked(id)) return false;
+            Data.unlocked.Add(id);
+            SaveAndNotify();
+            return true;
+        }
+
+        // ------------------------------------------------------------------ clips and shop
 
         public static void AddClips(int amount, string reason)
         {
@@ -104,6 +144,14 @@ namespace PaperWings.Gameplay
             SaveAndNotify();
         }
 
+        /// <summary>Marks the first <paramref name="count"/> nights cleared (1 star) so every night is open.</summary>
+        public static void ClearNights(int count)
+        {
+            while (Data.nightStars.Count < count) Data.nightStars.Add(0);
+            for (int i = 0; i < count; i++) Data.nightStars[i] = Mathf.Max(1, Data.nightStars[i]);
+            SaveAndNotify();
+        }
+
         // ------------------------------------------------------------------ file
 
         public static void Load()
@@ -118,6 +166,7 @@ namespace PaperWings.Gameplay
                 data = null;
             }
             data ??= new SaveData();
+            data.nightStars ??= new List<int>();   // saves from before the campaign existed
         }
 
         static void SaveAndNotify()

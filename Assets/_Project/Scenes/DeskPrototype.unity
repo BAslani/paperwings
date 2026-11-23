@@ -2688,6 +2688,7 @@ MonoBehaviour:
   dogfightKillTarget: 5
   squadronKillTarget: 8
   progression: {fileID: 11400000, guid: fa160003b2257f04eb58321f242507cd, type: 2}
+  campaign: {fileID: 11400000, guid: 2b832a70544a9f643be3832426b53f65, type: 2}
 --- !u!4 &1142706492
 Transform:
   m_ObjectHideFlags: 0
