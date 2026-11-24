@@ -25,7 +25,7 @@ namespace PaperWings.Gameplay
         [TextArea(2, 4)] public string memo = "";
         [Tooltip("Which mode this night is built on. Free Flight nights are won by staying in the air (Air Time Target).")]
         public GameMode mode = GameMode.RingRun;
-        [Tooltip("Which room: 0 office, 1 break room, 2 server room, 3 stairwell, 4 rooftop.")]
+        [Tooltip("Which room: 0 office, 1 break room, 2 server room, 3 stairwell, 4 rooftop, 5 kitchen (Tiny War).")]
         public int room = 0;
         [Tooltip("Where in the room, shown on the campaign screen (e.g. 'Office: the window row').")]
         public string place = "";
@@ -116,7 +116,7 @@ namespace PaperWings.Gameplay
     {
         [Tooltip("Bump this when the nights change: saved stars from another version are cleared (clips and unlocks stay).")]
         public int version = CurrentVersion;
-        public const int CurrentVersion = 4;
+        public const int CurrentVersion = 5;   // 5: Fire Escape removed (Stage 36)
 
         [Tooltip("Extra paper clips for each NEW star beyond the first (2nd star, 3rd star).")]
         public int[] starBonus = { 10, 25 };
@@ -124,12 +124,11 @@ namespace PaperWings.Gameplay
         public CampaignNight[] nights = NightShift();
 
         /// <summary>
-        /// The Night Shift (campaign version 4, Stage 33): twelve nights of air combat climbing the
+        /// The Night Shift (campaign version 5, Stage 36): eleven nights of air combat climbing the
         /// building (target practice moved to Flight School). No two nights in a room ask for the same thing:
         ///   Office      a lone trespasser, intercept the couriers, The Printer
         ///   Break room  a dogfight at the office party, escort the coffee courier, The Auditor (it flies)
         ///   Server room a squadron battle, an ace duel in the dark, The Mainframe
-        ///   Stairwell   intercept couriers climbing the chimney
         ///   Rooftop     a dogfight in the wind, The Condenser
         /// Nights pay paper clips and unlock BLUEPRINTS (what the hangar is allowed to sell); the
         /// upgrades themselves are bought. Rooms: 0 office, 1 break room, 2 server room, 3 stairwell, 4 rooftop.
@@ -211,15 +210,7 @@ namespace PaperWings.Gameplay
                        "shoot down its drones. When it overheats, ride its hot exhaust up and shoot the hatch."
             },
 
-            // ---------------- Act 4: up and out ----------------
-            new CampaignNight
-            {
-                title = "Fire Escape", mode = GameMode.Dogfight, objective = NightObjective.Intercept, room = 3,
-                group = "StairCouriers", killTarget = 5, allowedLosses = 3, maxRivals = 1,
-                place = "Stairwell: the chimney", twoStarTime = 110f, threeStarTime = 75f, rewardClips = 110,
-                memo = "MEMO: Accounting is running its files up the stairwell to the roof. The couriers spiral up the warm chimney: climb with them " +
-                       "and shoot down five before three reach the top. The doors on every floor gust open: they shove you, and them."
-            },
+            // ---------------- Act 4: the roof ----------------
             new CampaignNight
             {
                 title = "Squall", mode = GameMode.Dogfight, room = 4, spawn = "WaterTowerSpawn", killTarget = 5,

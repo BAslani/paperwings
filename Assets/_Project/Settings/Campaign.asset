@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a3b65f9e03152942904a7929e282231, type: 3}
   m_Name: Campaign
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Gameplay.CampaignSettings
-  version: 4
+  version: 5
   starBonus: 0a00000019000000
   nights:
   - title: Trespasser
@@ -235,31 +235,6 @@ MonoBehaviour:
     twoStarTime: 170
     threeStarTime: 120
     rewardClips: 200
-    rewardUnlockId: 
-  - title: Fire Escape
-    memo: 'MEMO: Accounting is running its files up the stairwell to the roof. The
-      couriers spiral up the warm chimney: climb with them and shoot down five before
-      three reach the top. The doors on every floor gust open: they shove you, and
-      them.'
-    mode: 2
-    room: 3
-    place: 'Stairwell: the chimney'
-    area: 
-    spawn: 
-    objective: 1
-    group: StairCouriers
-    allowedLosses: 3
-    aceName: 
-    killTarget: 5
-    maxRivals: 1
-    timeLimit: 0
-    airTimeTarget: 0
-    windScale: 1
-    noPencils: 0
-    rivalPilot: {fileID: 0}
-    twoStarTime: 110
-    threeStarTime: 75
-    rewardClips: 110
     rewardUnlockId: 
   - title: Squall
     memo: 'MEMO: Accounting''s last squadron is up on the roof. Five kills in the

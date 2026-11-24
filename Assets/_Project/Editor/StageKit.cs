@@ -21,7 +21,7 @@ namespace PaperWings.EditorTools
         public const float CeilingY = 125f;
 
         // Room indices (campaign nights refer to rooms by number).
-        public const int Office = 0, BreakRoom = 1, ServerRoom = 2, Stairwell = 3, Rooftop = 4;
+        public const int Office = 0, BreakRoom = 1, ServerRoom = 2, Stairwell = 3, Rooftop = 4, Kitchen = 5;
 
         // ------------------------------------------------------------------ scene
 
