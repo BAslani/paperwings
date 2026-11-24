@@ -1,0 +1,8 @@
+Biscuit the cat (PROTOTYPE MODEL)
+"An Animated Cat" by Evil_Katz, https://sketchfab.com/3d-models/an-animated-cat-aec25699660043a29595f9572149d1e8
+Posted under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/). Credit required if used.
+
+WARNING: the model's page credits an earlier upload taken from the game "Murdered: Soul Suspect".
+If the model comes from that game, the CC BY licence is not the uploader's to grant.
+Use for prototyping only. Replace with a properly licensed cat before any release:
+Stage44Builder.cs maps her bones by name, so a new rig only needs those names updated.
