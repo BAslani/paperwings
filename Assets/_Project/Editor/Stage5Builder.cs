@@ -10,7 +10,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 5: more air variety + a timed ring route in the desk scene.
-    /// Menu: PaperWings > Build Stage 5 (Steam, Vent, Ring Route)
+    /// Menu: PaperWings > Stage Builders > Stage 5 (Steam, Vent, Ring Route)
     ///
     /// Builds TeaSteam, CeilingVent and StickyRing prefabs and their settings assets, then adds
     /// a "Stage5" group to DeskPrototype: a ceiling with an AC vent (downdraft), a steaming tea mug,
@@ -30,7 +30,7 @@ namespace PaperWings.EditorTools
         const float DeskTop = 30f;
         const float CeilingY = 95f;
 
-        [MenuItem("PaperWings/Build Stage 5 (Steam, Vent, Ring Route)", priority = 105)]
+        [MenuItem("PaperWings/Stage Builders/Stage 5 (Steam, Vent, Ring Route)", priority = 105)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(DeskScene) == null)

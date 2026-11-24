@@ -145,6 +145,11 @@ namespace PaperWings.Gameplay
         public int RoomIndex { get; private set; }
         public int RoomCount => rooms != null && rooms.Length > 0 ? rooms.Length : 1;
         public Room RoomAt(int i) => rooms != null && i >= 0 && i < rooms.Length ? rooms[i] : null;
+        /// <summary>
+        /// False for a retired room's empty slot (Stage 42: the stairwell, slot 3). Slots keep their
+        /// numbers because campaign nights and saved medals refer to rooms by number.
+        /// </summary>
+        public bool HasRoom(int i) => i == 0 || RoomAt(i) != null;
         public Room CurrentRoom => RoomAt(RoomIndex);
         public string RoomName(int i) => RoomAt(i) != null ? RoomAt(i).displayName : "Office";
 
@@ -194,6 +199,7 @@ namespace PaperWings.Gameplay
                 if (BossGroupOf(i) != null) bosses[i] = BossGroupOf(i).GetComponentInChildren<BossBase>(true);
             }
             RoomIndex = Mathf.Clamp(PlayerPrefs.GetInt("PaperWings.LastRoom", 0), 0, RoomCount - 1);
+            if (!HasRoom(RoomIndex)) RoomIndex = 0;   // last flown in a room that's been removed
             if (campaign != null) Gameplay.Progression.SyncCampaign(campaign.version);
             if (launcher != null) applier = launcher.GetComponent<ProgressionApplier>();
             // Until a mode is chosen, nothing hostile is running.
@@ -309,7 +315,7 @@ namespace PaperWings.Gameplay
             Training = null;
             if (applier != null) applier.FullLoadout = false;
             room = Mathf.Clamp(room, 0, RoomCount - 1);
-            if (!RoomSupports(room, mode)) room = 0;   // e.g. a Boss Fight asked for in a room without a boss
+            if (!HasRoom(room) || !RoomSupports(room, mode)) room = 0;   // e.g. a Boss Fight asked for in a room without a boss
             bool moved = room != RoomIndex;
             RoomIndex = room;
             PlayerPrefs.SetInt("PaperWings.LastRoom", room);

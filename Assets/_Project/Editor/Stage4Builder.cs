@@ -11,7 +11,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 4: Cinemachine chase camera + feel polish.
-    /// Menu: PaperWings > Build Stage 4 (Cinemachine + Polish, All Scenes)
+    /// Menu: PaperWings > Stage Builders > Stage 4 (Cinemachine + Polish, All Scenes)
     ///
     /// Upgrades the existing FlightTest and DeskPrototype scenes IN PLACE (only the camera
     /// objects are replaced, so your other scene edits are kept), and adds wing trails to
@@ -24,7 +24,7 @@ namespace PaperWings.EditorTools
         const string PlanePrefabPath = Root + "/Prefabs/PaperDart.prefab";
         static readonly string[] Scenes = { Root + "/Scenes/FlightTest.unity", Root + "/Scenes/DeskPrototype.unity" };
 
-        [MenuItem("PaperWings/Build Stage 4 (Cinemachine + Polish, All Scenes)", priority = 104)]
+        [MenuItem("PaperWings/Stage Builders/Stage 4 (Cinemachine + Polish, All Scenes)", priority = 104)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 40: Server Room look pass, the third room in the "animated film" style.
-    /// Menu: PaperWings > Build Stage 40 (Server Room Look Pass)
+    /// Menu: PaperWings > Room Looks > Server Room (Stage 40)
     ///
     ///  - Colour: cyan and magenta tech-noir on the server room's own materials ("M_SR_..."):
     ///    navy-black racks covered in cyan, magenta and white status lights, a dark raised floor with
@@ -51,19 +51,30 @@ namespace PaperWings.EditorTools
         static Vector3 origin;
         static Vector3 A(float x, float y, float z) => origin + new Vector3(x, y, z);
 
-        [MenuItem("PaperWings/Build Stage 40 (Server Room Look Pass)", priority = 152)]
+        [MenuItem("PaperWings/Room Looks/Server Room (Stage 40)", priority = 53)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out var scene)) return;
-            var room = StageKit.RoomAt(StageKit.ServerRoom);
-            if (room == null)
+            string report;
+            try { report = Run(scene); }
+            finally { EditorUtility.ClearProgressBar(); }
+            if (report == null)
             {
                 EditorUtility.DisplayDialog("PaperWings", "No server room. Run Build Stage 25 (and 31 for its machinery) first.", "OK");
                 return;
             }
+            StageKit.Save(scene);
+            EditorUtility.DisplayDialog("PaperWings", "Stage 40 built: Server Room look pass.\n\n" + report +
+                "\n\nLook at it in the Game view: Free Flight in the Server Room (and wait for a Blackout).", "Boot it up");
+        }
+
+        /// <summary>Builds the pass into the open scene (no save, no dialog). Returns a short report, or null if there's no server room.</summary>
+        internal static string Run(UnityEngine.SceneManagement.Scene scene)
+        {
+            var room = StageKit.RoomAt(StageKit.ServerRoom);
+            if (room == null) return null;
             origin = room.transform.position;
 
-            try
             {
                 EditorUtility.DisplayProgressBar("PaperWings", "Mixing the tech-noir palette...", 0.1f);
                 var map = Palette(out var pal);
@@ -92,20 +103,11 @@ namespace PaperWings.EditorTools
                 WireEvents(room.transform, fills);
                 Grade(look);
 
-                StageKit.Save(scene);
-                EditorUtility.ClearProgressBar();
-                EditorUtility.DisplayDialog("PaperWings",
-                    "Stage 40 built: Server Room look pass.\n\n" +
-                    $"- {rounded} boxes now have rounded edges.\n" +
-                    "- Tech-noir palette: navy racks with cyan/magenta status lights, raised floor, panelled walls.\n" +
-                    "- Rack light bars, neon aisle lines, aisle haze, LED skirting, wall dashboard and code screen.\n" +
-                    "- Cool blue fill, aisle glows, screen spill, shadowed key over the Mainframe's arena.\n" +
-                    "- Server room colour grade (its own volume).\n\n" +
-                    "Look at it in the Game view: Free Flight in the Server Room (and wait for a Blackout).", "Boot it up");
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
+                return $"- {rounded} boxes now have rounded edges.\n" +
+                       "- Tech-noir palette: navy racks with cyan/magenta status lights, raised floor, panelled walls.\n" +
+                       "- Rack light bars, neon aisle lines, aisle haze, LED skirting, wall dashboard and code screen.\n" +
+                       "- Cool blue fill, aisle glows, screen spill, shadowed key over the Mainframe's arena.\n" +
+                       "- Server room colour grade (its own volume).";
             }
         }
 

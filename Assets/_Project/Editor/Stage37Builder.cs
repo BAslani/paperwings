@@ -8,7 +8,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 37: the Kitchen, the first room of the Tiny War campaign (Act 1, "The Kitchen Front").
-    /// Menu: PaperWings > Build Stage 37 (Tiny War: Kitchen)
+    /// Menu: PaperWings > Stage Builders > Stage 37 (Tiny War: Kitchen)
     ///
     /// A family kitchen on a Friday night, at paper-plane scale (room 5, 800 east / 800 north):
     ///   - the COUNTER along the back wall: toaster, kettle, sink, cookie jar, cereal-box "bunkers"
@@ -30,7 +30,7 @@ namespace PaperWings.EditorTools
         const float W = 160f, D = 120f, H = 130f;          // half width (x), half depth (z), height
         const float CounterTop = 36f, CounterFront = 93f;  // counter height, z of its front edge
 
-        [MenuItem("PaperWings/Build Stage 37 (Tiny War: Kitchen)", priority = 149)]
+        [MenuItem("PaperWings/Stage Builders/Stage 37 (Tiny War: Kitchen)", priority = 149)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

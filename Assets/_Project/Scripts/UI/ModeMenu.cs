@@ -57,7 +57,7 @@ namespace PaperWings.UI
             nightSelected = FirstUnclearedNight();
             if (director != null)
             {
-                roomSelected = director.RoomIndex;
+                roomSelected = director.HasRoom(director.RoomIndex) ? director.RoomIndex : 0;
                 director.Completed += _ => { roomSelected = director.RoomIndex; Show(Screen.Results); };
             }
             GameOptions.Init();   // saved volume, controls and brightness
@@ -419,7 +419,12 @@ namespace PaperWings.UI
         {
             int n = director.RoomCount;
             if (n < 2) return;
-            roomSelected = (roomSelected + dir + n) % n;
+            // Step past empty slots (a removed room keeps its number, Stage 42).
+            for (int i = 0; i < n; i++)
+            {
+                roomSelected = (roomSelected + dir + n) % n;
+                if (director.HasRoom(roomSelected)) break;
+            }
             Audio.AudioFx.PlayUi(Audio.Sfx.UiMove);
         }
 

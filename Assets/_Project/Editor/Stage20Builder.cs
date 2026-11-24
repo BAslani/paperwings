@@ -12,7 +12,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 20: options and a playable build.
-    /// Menu: PaperWings > Build Stage 20 (Options, Brighter Office)
+    /// Menu: PaperWings > Stage Builders > Stage 20 (Options, Brighter Office)
     ///
     ///  - Brightens the night office: stronger moon and lamp, lighter ambient, a soft ceiling fill
     ///    light and more exposure. (Brightness is also an in-game option now.)
@@ -26,7 +26,7 @@ namespace PaperWings.EditorTools
         const string NightProfile = "Assets/_Project/Art/PostFX_Night.asset";
         const string BuildPath = "Builds/Windows/PaperWings.exe";
 
-        [MenuItem("PaperWings/Build Stage 20 (Options, Brighter Office)", priority = 120)]
+        [MenuItem("PaperWings/Stage Builders/Stage 20 (Options, Brighter Office)", priority = 120)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(DeskScene) == null)

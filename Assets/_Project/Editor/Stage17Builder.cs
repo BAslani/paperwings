@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 17: progression and unlocks.
-    /// Menu: PaperWings > Build Stage 17 (Progression)
+    /// Menu: PaperWings > Stage Builders > Stage 17 (Progression)
     ///
     ///  - Settings/Progression: unlock shop, rewards, medal times.
     ///  - Tags the folds with unlock ids (Glider/Stunt/Canard folds).
@@ -23,7 +23,7 @@ namespace PaperWings.EditorTools
         const string SettingsPath = S + "Progression.asset";
         static readonly string[] Scenes = { "Assets/_Project/Scenes/FlightTest.unity", "Assets/_Project/Scenes/DeskPrototype.unity" };
 
-        [MenuItem("PaperWings/Build Stage 17 (Progression)", priority = 117)]
+        [MenuItem("PaperWings/Stage Builders/Stage 17 (Progression)", priority = 117)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

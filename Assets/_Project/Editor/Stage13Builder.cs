@@ -8,7 +8,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 13: sound.
-    /// Menu: PaperWings > Build Stage 13 (Sound)
+    /// Menu: PaperWings > Stage Builders > Stage 13 (Sound)
     ///
     /// All sounds are synthesized in code (SoundBank), so this only wires things up:
     ///  - Settings/Audio (volume mix)
@@ -22,7 +22,7 @@ namespace PaperWings.EditorTools
         const string PlanePrefabPath = "Assets/_Project/Prefabs/PaperDart.prefab";
         static readonly string[] Scenes = { "Assets/_Project/Scenes/FlightTest.unity", "Assets/_Project/Scenes/DeskPrototype.unity" };
 
-        [MenuItem("PaperWings/Build Stage 13 (Sound)", priority = 113)]
+        [MenuItem("PaperWings/Stage Builders/Stage 13 (Sound)", priority = 113)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

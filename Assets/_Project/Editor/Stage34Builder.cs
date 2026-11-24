@@ -8,7 +8,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 34: bolder pencil missiles, an easier office party.
-    /// Menu: PaperWings > Build Stage 34 (Pencil Trails, Easier Party)
+    /// Menu: PaperWings > Stage Builders > Stage 34 (Pencil Trails, Easier Party)
     ///
     ///  - Pencil missiles: a thick, long-lingering smoke trail, a short hot flame trail, sparks and a
     ///    small glow, all lit when the pencil ignites. When it hits, the trails stay behind and fade.
@@ -24,7 +24,7 @@ namespace PaperWings.EditorTools
         const string Root = "Assets/_Project/";
         const string PencilPrefab = Root + "Prefabs/PencilMissile.prefab";
 
-        [MenuItem("PaperWings/Build Stage 34 (Pencil Trails, Easier Party)", priority = 146)]
+        [MenuItem("PaperWings/Stage Builders/Stage 34 (Pencil Trails, Easier Party)", priority = 146)]
         public static void Build()
         {
             bool pencil = BolderPencil();

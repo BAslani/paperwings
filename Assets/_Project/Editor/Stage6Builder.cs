@@ -5,7 +5,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 6: paper damage and sogginess.
-    /// Menu: PaperWings > Build Stage 6 (Paper Damage)
+    /// Menu: PaperWings > Stage Builders > Stage 6 (Paper Damage)
     ///
     /// Adds a PaperDamage component and a "TearBits" particle burst to the PaperDart prefab,
     /// and creates Settings/Paper_Dart. Every scene uses the prefab, so they all pick it up;
@@ -15,7 +15,7 @@ namespace PaperWings.EditorTools
     {
         const string PlanePrefabPath = "Assets/_Project/Prefabs/PaperDart.prefab";
 
-        [MenuItem("PaperWings/Build Stage 6 (Paper Damage)", priority = 106)]
+        [MenuItem("PaperWings/Stage Builders/Stage 6 (Paper Damage)", priority = 106)]
         public static void Build()
         {
             // UNITY NOTE: LoadPrefabContents opens the prefab in a hidden scene for editing;

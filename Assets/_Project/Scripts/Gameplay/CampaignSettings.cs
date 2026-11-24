@@ -25,7 +25,7 @@ namespace PaperWings.Gameplay
         [TextArea(2, 4)] public string memo = "";
         [Tooltip("Which mode this night is built on. Free Flight nights are won by staying in the air (Air Time Target).")]
         public GameMode mode = GameMode.RingRun;
-        [Tooltip("Which room: 0 office, 1 break room, 2 server room, 3 stairwell, 4 rooftop, 5 kitchen (Tiny War).")]
+        [Tooltip("Which room: 0 office, 1 break room, 2 server room, (3 was the stairwell, removed), 4 rooftop, 5 kitchen (Tiny War).")]
         public int room = 0;
         [Tooltip("Where in the room, shown on the campaign screen (e.g. 'Office: the window row').")]
         public string place = "";
@@ -131,7 +131,7 @@ namespace PaperWings.Gameplay
         ///   Server room a squadron battle, an ace duel in the dark, The Mainframe
         ///   Rooftop     a dogfight in the wind, The Condenser
         /// Nights pay paper clips and unlock BLUEPRINTS (what the hangar is allowed to sell); the
-        /// upgrades themselves are bought. Rooms: 0 office, 1 break room, 2 server room, 3 stairwell, 4 rooftop.
+        /// upgrades themselves are bought. Rooms: 0 office, 1 break room, 2 server room, (3: removed stairwell), 4 rooftop.
         /// </summary>
         public static CampaignNight[] NightShift() => new[]
         {

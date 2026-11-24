@@ -8,7 +8,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 39: Break Room look pass, the second room in the "animated film" style (after the
-    /// office in Stage 38). Menu: PaperWings > Build Stage 39 (Break Room Look Pass)
+    /// office in Stage 38). Menu: PaperWings > Room Looks > Break Room (Stage 39)
     ///
     ///  - Colour: a 1950s diner palette (mint, salmon, butter yellow, cherry red, chrome) on the break
     ///    room's own copies of its materials ("M_BR_..."), so the other rooms don't change.
@@ -46,19 +46,30 @@ namespace PaperWings.EditorTools
         static Vector3 origin;
         static Vector3 A(float x, float y, float z) => origin + new Vector3(x, y, z);
 
-        [MenuItem("PaperWings/Build Stage 39 (Break Room Look Pass)", priority = 151)]
+        [MenuItem("PaperWings/Room Looks/Break Room (Stage 39)", priority = 52)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out var scene)) return;
-            var room = StageKit.RoomAt(StageKit.BreakRoom);
-            if (room == null)
+            string report;
+            try { report = Run(scene); }
+            finally { EditorUtility.ClearProgressBar(); }
+            if (report == null)
             {
                 EditorUtility.DisplayDialog("PaperWings", "No break room. Run Build Stage 21/22 (and 30 for the party) first.", "OK");
                 return;
             }
+            StageKit.Save(scene);
+            EditorUtility.DisplayDialog("PaperWings", "Stage 39 built: Break Room look pass.\n\n" + report +
+                "\n\nLook at it in the Game view: Free Flight in the Break Room.", "Lovely");
+        }
+
+        /// <summary>Builds the pass into the open scene (no save, no dialog). Returns a short report, or null if there's no break room.</summary>
+        internal static string Run(UnityEngine.SceneManagement.Scene scene)
+        {
+            var room = StageKit.RoomAt(StageKit.BreakRoom);
+            if (room == null) return null;
             origin = room.transform.position;
 
-            try
             {
                 EditorUtility.DisplayProgressBar("PaperWings", "Mixing the diner palette...", 0.1f);
                 var map = Palette(out var pal);
@@ -89,20 +100,11 @@ namespace PaperWings.EditorTools
                 Lights(room.transform, StageKit.Group(look, "Lights"));
                 Grade(look);
 
-                StageKit.Save(scene);
-                EditorUtility.ClearProgressBar();
-                EditorUtility.DisplayDialog("PaperWings",
-                    "Stage 39 built: Break Room look pass.\n\n" +
-                    $"- {rounded} boxes now have rounded edges.\n" +
-                    "- Diner palette: mint, salmon, butter yellow, cherry, chrome; checkerboard floor.\n" +
-                    "- Subway tiles, night window, starburst clock, neon mug, pendant lamp, fairy lights, porthole door.\n" +
-                    "- Pendant key light with shadows, window moonlight, neon and bounce glows.\n" +
-                    "- Break room colour grade (its own volume).\n\n" +
-                    "Look at it in the Game view: Free Flight in the Break Room.", "Lovely");
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
+                return $"- {rounded} boxes now have rounded edges.\n" +
+                       "- Diner palette: mint, salmon, butter yellow, cherry, chrome; checkerboard floor.\n" +
+                       "- Subway tiles, night window, starburst clock, neon mug, pendant lamp, fairy lights, porthole door.\n" +
+                       "- Pendant key light with shadows, window moonlight, neon and bounce glows.\n" +
+                       "- Break room colour grade (its own volume).";
             }
         }
 

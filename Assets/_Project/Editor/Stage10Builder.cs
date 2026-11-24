@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 10: the first boss, THE STAPLER.
-    /// Menu: PaperWings > Build Stage 10 (Stapler Boss)
+    /// Menu: PaperWings > Stage Builders > Stage 10 (Stapler Boss)
     ///
     ///  - Adds CombatTarget markers to the player and rival plane prefabs (needed for lock-on/markers).
     ///  - Builds the StaplerBoss prefab (model, jaw, weak-spot glow, slam air, effects, reinforcements).
@@ -24,7 +24,7 @@ namespace PaperWings.EditorTools
         const string BossPrefabPath = P + "StaplerBoss.prefab";
         const string DeskScene = "Assets/_Project/Scenes/DeskPrototype.unity";
 
-        [MenuItem("PaperWings/Build Stage 10 (Stapler Boss)", priority = 110)]
+        [MenuItem("PaperWings/Stage Builders/Stage 10 (Stapler Boss)", priority = 110)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<GameObject>(P + "RivalDart.prefab") == null)

@@ -8,7 +8,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 23: scale, air colours, faction looks.
-    /// Menu: PaperWings > Build Stage 23 (Scale, Air Colours, Factions)
+    /// Menu: PaperWings > Stage Builders > Stage 23 (Scale, Air Colours, Factions)
     ///
     ///  - WORLD SCALE: props are built at about 1 unit = 2.3 cm (the desk is 70 units = 160 cm), so the
     ///    dart (2 units) reads as a ~5 cm plane in a big office. This stage fixes the outliers at that
@@ -26,7 +26,7 @@ namespace PaperWings.EditorTools
     {
         const string Root = StageKit.Root;
 
-        [MenuItem("PaperWings/Build Stage 23 (Scale, Air Colours, Factions)", priority = 123)]
+        [MenuItem("PaperWings/Stage Builders/Stage 23 (Scale, Air Colours, Factions)", priority = 123)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

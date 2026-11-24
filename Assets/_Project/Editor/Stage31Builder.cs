@@ -10,7 +10,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 31: the server room comes alive.
-    /// Menu: PaperWings > Build Stage 31 (Server Room Machinery)
+    /// Menu: PaperWings > Stage Builders > Stage 31 (Server Room Machinery)
     ///
     ///  - FLOOR WAVES: the cold-aisle floor vents pulse in sequence, a wave of lift travelling down
     ///    each aisle. Surf it.
@@ -30,7 +30,7 @@ namespace PaperWings.EditorTools
         static Vector3 origin;
         static Vector3 A(float x, float y, float z) => origin + new Vector3(x, y, z);
 
-        [MenuItem("PaperWings/Build Stage 31 (Server Room Machinery)", priority = 142)]
+        [MenuItem("PaperWings/Stage Builders/Stage 31 (Server Room Machinery)", priority = 142)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

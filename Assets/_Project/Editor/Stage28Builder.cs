@@ -8,7 +8,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 28: the hangar, a 3D preview of your plane.
-    /// Menu: PaperWings > Build Stage 28 (Hangar Preview)
+    /// Menu: PaperWings > Stage Builders > Stage 28 (Hangar Preview)
     ///
     /// Adds a PlanePreview (a turntable filmed into a texture) next to the mode menu in both scenes.
     /// The Unlocks screen becomes the HANGAR: the fold you're looking at turns on its stand with every
@@ -23,7 +23,7 @@ namespace PaperWings.EditorTools
     {
         static readonly string[] Scenes = { StageKit.DeskScene, StageKit.Root + "Scenes/FlightTest.unity" };
 
-        [MenuItem("PaperWings/Build Stage 28 (Hangar Preview)", priority = 128)]
+        [MenuItem("PaperWings/Stage Builders/Stage 28 (Hangar Preview)", priority = 128)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -32,7 +32,7 @@ namespace PaperWings.EditorTools
                 $"Stage 28 built: the hangar preview is in {n} scene(s).\n\nOpen the menu and press U (or Y) for the HANGAR, or hold the plane and press Q / E.", "Show me");
         }
 
-        [MenuItem("PaperWings/Build Stages 23-28 (All New)", priority = 129)]
+        [MenuItem("PaperWings/Stage Builders/Stages 23-28 (All New)", priority = 129)]
         public static void BuildAll()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

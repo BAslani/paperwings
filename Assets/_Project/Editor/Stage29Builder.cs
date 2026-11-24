@@ -10,7 +10,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 29: fixes, a harder economy, the air-combat campaign, and new plane models.
-    /// Menu: PaperWings > Build Stage 29 (Economy, Campaign, Plane Models)
+    /// Menu: PaperWings > Stage Builders > Stage 29 (Economy, Campaign, Plane Models)
     ///
     ///  - FIX: every cylinder with a capsule collider gets a real cylinder collider. A wide flat
     ///    cylinder's capsule is a huge invisible sphere (the Squall throw point was inside one).
@@ -27,7 +27,7 @@ namespace PaperWings.EditorTools
     {
         const string Art = StageKit.Root + "Art/";
 
-        [MenuItem("PaperWings/Build Stage 29 (Economy, Campaign, Plane Models)", priority = 140)]
+        [MenuItem("PaperWings/Stage Builders/Stage 29 (Economy, Campaign, Plane Models)", priority = 140)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

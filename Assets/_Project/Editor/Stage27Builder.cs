@@ -8,7 +8,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 27: the campaign, rebuilt so every night is a new place.
-    /// Menu: PaperWings > Build Stage 27 (Campaign: One Place per Night)
+    /// Menu: PaperWings > Stage Builders > Stage 27 (Campaign: One Place per Night)
     ///
     /// Twelve nights climbing the building: four in the office (the lounge, the window row, the
     /// coworker's corner, your desk for The Stapler), two in the break room, two in the server room
@@ -22,7 +22,7 @@ namespace PaperWings.EditorTools
     /// </summary>
     public static class Stage27Builder
     {
-        [MenuItem("PaperWings/Build Stage 27 (Campaign: One Place per Night)", priority = 127)]
+        [MenuItem("PaperWings/Stage Builders/Stage 27 (Campaign: One Place per Night)", priority = 127)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

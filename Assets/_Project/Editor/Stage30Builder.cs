@@ -10,7 +10,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 30: the break room is throwing an office party, and the appliances have opinions.
-    /// Menu: PaperWings > Build Stage 30 (Break Room Party, The Auditor)
+    /// Menu: PaperWings > Stage Builders > Stage 30 (Break Room Party, The Auditor)
     ///
     ///  - PARTY: balloon bunches tied to the table, the couch and the counter (shoot them to pop
     ///    them: confetti and a puff of warm air), bunting across the ceiling, a birthday cake whose
@@ -28,7 +28,7 @@ namespace PaperWings.EditorTools
         static Vector3 origin;
         static Vector3 A(float x, float y, float z) => origin + new Vector3(x, y, z);
 
-        [MenuItem("PaperWings/Build Stage 30 (Break Room Party, The Auditor)", priority = 141)]
+        [MenuItem("PaperWings/Stage Builders/Stage 30 (Break Room Party, The Auditor)", priority = 141)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

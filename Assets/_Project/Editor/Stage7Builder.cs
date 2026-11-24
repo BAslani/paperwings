@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 7: the folding system.
-    /// Menu: PaperWings > Build Stage 7 (Folds)
+    /// Menu: PaperWings > Stage Builders > Stage 7 (Folds)
     ///
     ///  - Creates the global Controls asset and moves your Invert Pitch choice into it.
     ///  - Creates Glider and Stunt folds: meshes, FlightSettings and PaperSettings (copied from
@@ -25,7 +25,7 @@ namespace PaperWings.EditorTools
         const string PlanePrefabPath = "Assets/_Project/Prefabs/PaperDart.prefab";
         static readonly string[] Scenes = { "Assets/_Project/Scenes/FlightTest.unity", "Assets/_Project/Scenes/DeskPrototype.unity" };
 
-        [MenuItem("PaperWings/Build Stage 7 (Folds)", priority = 107)]
+        [MenuItem("PaperWings/Stage Builders/Stage 7 (Folds)", priority = 107)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

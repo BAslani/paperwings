@@ -8,7 +8,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 19: upgrades per fold.
-    /// Menu: PaperWings > Build Stage 19 (Per-Fold Upgrades)
+    /// Menu: PaperWings > Stage Builders > Stage 19 (Per-Fold Upgrades)
     ///
     ///  - Every fold gets an upgrade id ("dart", "glider", ...) and a propeller mount on its tail.
     ///  - The propeller becomes a shared part any fold can buy (no longer built into the Canard),
@@ -36,7 +36,7 @@ namespace PaperWings.EditorTools
         /// <summary>The Canard's prop sits here (hand-placed in Stage 16); other folds sit the same distance behind their tails.</summary>
         static readonly Vector3 CanardMount = new Vector3(0f, 0f, -0.92f);
 
-        [MenuItem("PaperWings/Build Stage 19 (Per-Fold Upgrades)", priority = 119)]
+        [MenuItem("PaperWings/Stage Builders/Stage 19 (Per-Fold Upgrades)", priority = 119)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

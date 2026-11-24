@@ -10,7 +10,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 33: Flight School, THE PRINTER, and a round of fixes.
-    /// Menu: PaperWings > Build Stage 33 (Flight School, The Printer)
+    /// Menu: PaperWings > Stage Builders > Stage 33 (Flight School, The Printer)
     ///
     ///  - FLIGHT SCHOOL: a seven-lesson tutorial in the office on a fully upgraded plane (practice
     ///    drones and a gentle training rival live in the office's FlightSchool group).
@@ -26,7 +26,7 @@ namespace PaperWings.EditorTools
         const string P = StageKit.Root + "Prefabs/";
         const string S = StageKit.Root + "Settings/";
 
-        [MenuItem("PaperWings/Build Stage 33 (Flight School, The Printer)", priority = 145)]
+        [MenuItem("PaperWings/Stage Builders/Stage 33 (Flight School, The Printer)", priority = 145)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

@@ -14,7 +14,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Builds the Stage 1 flight test scene, the paper dart prefab, and the assets they need.
-    /// Menu: PaperWings > Build Stage 1 (Flight Test Scene)
+    /// Menu: PaperWings > Stage Builders > Stage 1 (Flight Test Scene)
     ///
     /// Safe to run again: meshes, materials, prefab and scene are regenerated, but an existing
     /// FlightSettings asset is NEVER overwritten, so your tuning survives.
@@ -30,7 +30,7 @@ namespace PaperWings.EditorTools
         const string PrefabPath = Root + "/Prefabs/PaperDart.prefab";
         const string ScenePath = Root + "/Scenes/FlightTest.unity";
 
-        [MenuItem("PaperWings/Build Stage 1 (Flight Test Scene)", priority = 101)]
+        [MenuItem("PaperWings/Stage Builders/Stage 1 (Flight Test Scene)", priority = 101)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

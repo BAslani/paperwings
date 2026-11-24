@@ -10,7 +10,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 15: visual art pass.
-    /// Menu: PaperWings > Build Stage 15 (Art Pass)
+    /// Menu: PaperWings > Stage Builders > Stage 15 (Art Pass)
     ///
     /// Everything is procedural and applied IN PLACE (earlier stages stay intact):
     ///  - Paper stocks for every plane (lined, graph, cardstock, construction, sticky) + UVs on the meshes.
@@ -27,7 +27,7 @@ namespace PaperWings.EditorTools
         const string DeskScene = "Assets/_Project/Scenes/DeskPrototype.unity";
         const string TestScene = "Assets/_Project/Scenes/FlightTest.unity";
 
-        [MenuItem("PaperWings/Build Stage 15 (Art Pass)", priority = 115)]
+        [MenuItem("PaperWings/Stage Builders/Stage 15 (Art Pass)", priority = 115)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

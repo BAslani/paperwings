@@ -7,16 +7,14 @@ using PaperWings.Gameplay;
 namespace PaperWings.EditorTools
 {
     /// <summary>
-    /// Stage 25: three new places to fly.
-    /// Menu: PaperWings > Build Stage 25 (Server Room, Stairwell, Rooftop)
+    /// Stage 25: new places to fly (the stairwell it once built was removed in Stage 42).
+    /// Menu: PaperWings > Stage Builders > Stage 25 (Server Room, Rooftop)
     ///
     ///  SERVER ROOM (room 2, 750 west): four rows of racks with alternating aisles. Cold aisles blow
     ///    straight up from the floor (green), the hot aisle rises warm (orange), and cooling units on
     ///    the walls blow along the aisles (cyan), so the air circulates in a loop you can ride.
     ///    The open east end is the Mainframe's arena (Stage 26).
-    ///  STAIRWELL (room 3, 750 north): a tall shaft with a square spiral of stairs round the walls and
-    ///    an open well in the middle: a chimney of warm air you circle up. Each floor's door gusts
-    ///    open every few seconds and shoves you across the well.
+    ///  (Room 3 was the stairwell: removed in Stage 42. Its slot stays empty so room numbers don't move.)
     ///  ROOFTOP (room 4, 900 south): outdoors at last. Gusting wind across the whole roof, exhaust
     ///    stacks to climb, an updraft along the windward edge, a water tower to fly under, a billboard
     ///    with a gap in it, and the city around you. The Condenser's spot is in the middle (Stage 26).
@@ -27,19 +25,17 @@ namespace PaperWings.EditorTools
     public static class Stage25Builder
     {
         public static readonly Vector3 ServerOrigin = new Vector3(-750f, 0f, 0f);
-        public static readonly Vector3 StairOrigin = new Vector3(0f, 0f, 750f);
         public static readonly Vector3 RoofOrigin = new Vector3(0f, 0f, -900f);
 
-        [MenuItem("PaperWings/Build Stage 25 (Server Room, Stairwell, Rooftop)", priority = 125)]
+        [MenuItem("PaperWings/Stage Builders/Stage 25 (Server Room, Rooftop)", priority = 125)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;
             if (!Run(scene)) return;
             StageKit.Save(scene);
             EditorUtility.DisplayDialog("PaperWings",
-                "Stage 25 built: three new rooms.\n\n" +
+                "Stage 25 built: two new rooms.\n\n" +
                 "- Server Room: hot and cold aisles, cooling units. Free Flight, Ring Run, Dogfight.\n" +
-                "- Stairwell: a chimney of warm air, gusting doors. Free Flight, Ring Run.\n" +
                 "- Rooftop: gusting wind, exhaust stacks, a ridge updraft, water tower, billboard. Free Flight, Ring Run, Dogfight.\n\n" +
                 "Pick them with Left/Right on the main menu. Run Stage 26 for their bosses.", "Explore");
         }
@@ -58,7 +54,6 @@ namespace PaperWings.EditorTools
                 return false;
             }
             StageKit.SetRoom(StageKit.ServerRoom, BuildServerRoom(scene));
-            StageKit.SetRoom(StageKit.Stairwell, BuildStairwell(scene));
             StageKit.SetRoom(StageKit.Rooftop, BuildRooftop(scene));
             return true;
         }
@@ -179,111 +174,6 @@ namespace PaperWings.EditorTools
             room.ringRunMedals = new Vector3(70f, 52f, 40f);
             return room;
         }
-
-        // ================================================================== STAIRWELL
-
-        static Room BuildStairwell(Scene scene)
-        {
-            Vector3 o = StairOrigin;
-            Vector3 A(float x, float y, float z) => o + new Vector3(x, y, z);
-            const float Half = 60f, H = 500f, FloorH = 120f, StairW = 18f;
-            float c = Half - StairW * 0.5f;          // stair centre line, 51 from the middle
-            float e = Half - StairW;                 // inner edge of the stairs, 42 from the middle
-
-            var root = StageKit.FreshRoot(scene, "Stairwell", o);
-
-            var wall = StageKit.Mat("M_StairWall", new Color(0.62f, 0.66f, 0.6f));
-            var concrete = StageKit.Textured("M_Concrete", Color.white, TextureFactory.Concrete(), new Vector2(4f, 4f));
-            var rail = StageKit.Mat("M_Handrail", new Color(0.85f, 0.75f, 0.2f), 0.5f, 0.5f);
-            var door = StageKit.Mat("M_FireDoor", new Color(0.55f, 0.15f, 0.12f), 0.35f, 0.3f);
-            var exit = StageKit.Emissive("M_ExitSign", new Color(0.2f, 0.8f, 0.3f), new Color(0.3f, 2f, 0.5f));
-            var skylight = StageKit.Emissive("M_Skylight", new Color(0.5f, 0.6f, 0.8f), new Color(0.4f, 0.55f, 0.9f));
-
-            var shell = StageKit.Group(root, "Shell");
-            StageKit.Slab("Floor", shell, A(0f, 0f, 0f), Half * 2f, Half * 2f, concrete, true);
-            StageKit.Slab("Ceiling", shell, A(0f, H, 0f), Half * 2f, Half * 2f, concrete, false);
-            StageKit.Wall("WestWall", shell, A(-Half, H * 0.5f, 0f), Vector3.right, Half * 2f, H, wall);
-            StageKit.Wall("EastWall", shell, A(Half, H * 0.5f, 0f), Vector3.left, Half * 2f, H, wall);
-            StageKit.Wall("NorthWall", shell, A(0f, H * 0.5f, Half), Vector3.back, Half * 2f, H, wall);
-            StageKit.Wall("SouthWall", shell, A(0f, H * 0.5f, -Half), Vector3.forward, Half * 2f, H, wall);
-            StageKit.Box("RoofHatch", shell, A(0f, H - 0.4f, 0f), new Vector3(30f, 0.4f, 30f), skylight, collider: false);
-
-            // ---- Square spiral stairs: four flights per floor round the walls, landings in the corners ----
-            var stairs = StageKit.Group(root, "Stairs");
-            Vector3 SW = new Vector3(-c, 0f, -c), SE = new Vector3(c, 0f, -c), NE = new Vector3(c, 0f, c), NW = new Vector3(-c, 0f, c);
-            for (float f = 0f; f + FloorH <= H - 10f; f += FloorH)
-            {
-                float q = FloorH / 4f;
-                Flight(stairs, o + new Vector3(-e, f, -c), o + new Vector3(e, f + q, -c), StairW, concrete, rail);            // south wall, east-bound
-                Landing(stairs, o + SE + Vector3.up * (f + q), StairW, concrete);
-                Flight(stairs, o + new Vector3(c, f + q, -e), o + new Vector3(c, f + 2 * q, e), StairW, concrete, rail);     // east wall, north-bound
-                Landing(stairs, o + NE + Vector3.up * (f + 2 * q), StairW, concrete);
-                Flight(stairs, o + new Vector3(e, f + 2 * q, c), o + new Vector3(-e, f + 3 * q, c), StairW, concrete, rail); // north wall, west-bound
-                Landing(stairs, o + NW + Vector3.up * (f + 3 * q), StairW, concrete);
-                Flight(stairs, o + new Vector3(-c, f + 3 * q, e), o + new Vector3(-c, f + FloorH, -e), StairW, concrete, rail); // west wall, south-bound
-                Landing(stairs, o + SW + Vector3.up * (f + FloorH), StairW, concrete);
-            }
-
-            // ---- Air: the chimney, and a gusting door on every floor ----
-            var air = StageKit.Group(root, "Air");
-            var chimney = StageKit.ThermalAsset("Thermal_Chimney", 11f, 30f, H - 15f, 40f);
-            chimney.coreFraction = 0.5f;
-            EditorUtility.SetDirty(chimney);
-            StageKit.Thermal("Chimney", air, A(0f, 2f, 0f), chimney);
-
-            var lights = StageKit.Group(root, "Lights");
-            int floorIndex = 0;
-            for (float f = 0f; f + 90f < H; f += FloorH, floorIndex++)
-            {
-                // Fire door on the west wall (between the stairs that pass along it), EXIT sign above.
-                StageKit.Box("FireDoor", air, A(-Half + 0.6f, f + 43f, -10f), new Vector3(1f, 86f, 34f), door, collider: false);
-                StageKit.Box("ExitSign", air, A(-Half + 0.8f, f + 92f, -10f), new Vector3(0.6f, 5f, 14f), exit, collider: false);
-                StageKit.Beam($"DoorGust_{floorIndex}", air, A(-Half + 1.5f, f + 40f, -10f), Quaternion.Euler(0f, 90f, 0f),
-                              new Vector2(34f, 60f), 115f, 14f, onTime: 1.5f, offTime: 5f, offset: floorIndex * 1.6f);
-                StageKit.PointLight($"FloorLight_{floorIndex}", lights, A(0f, f + 100f, 0f), new Color(1f, 0.95f, 0.85f), 3f, 150f);
-            }
-            StageKit.PointLight("TopLight", lights, A(0f, H - 20f, 0f), new Color(0.75f, 0.85f, 1f), 3f, 140f);
-
-            // ---- Throw point: the ground floor, south-west corner, facing the middle ----
-            var spawn = StageKit.Spawn("StairwellSpawn", root, A(-46f, 7f, -46f), 45f);
-
-            // ---- Ring route: up the chimney, rings alternating sides of the well ----
-            var route = StageKit.Route("StairwellRoute", root, "Stairwell");
-            int n = 0;
-            for (float y = 50f; y <= 450f; y += 50f, n++)
-            {
-                float side = n % 2 == 0 ? 12f : -12f;
-                StageKit.Ring(route.transform, $"Ring{n + 1}_Floor{Mathf.FloorToInt(y / FloorH)}", A(side, y, 0f), 0f);
-            }
-            route.gameObject.SetActive(false);
-
-            var room = root.gameObject.AddComponent<Room>();
-            room.displayName = "Stairwell";
-            room.description = "A chimney of warm air. Circle up, and mind the doors.";
-            room.spawnPoint = spawn;
-            room.routeGroup = route.gameObject;
-            room.ringRunMedals = new Vector3(95f, 72f, 58f);
-            return room;
-        }
-
-        /// <summary>A stair flight from a (bottom centre) to b (top centre), as a sloped slab with a handrail on the inner edge.</summary>
-        static void Flight(Transform parent, Vector3 a, Vector3 b, float width, Material mat, Material railMat)
-        {
-            Vector3 d = b - a;
-            Vector3 mid = (a + b) * 0.5f;
-            var rot = Quaternion.LookRotation(d.normalized, Vector3.up);
-            var slab = StageKit.Box("Flight", parent, mid, new Vector3(width, 1.5f, d.magnitude), mat);
-            slab.transform.rotation = rot;
-            // Handrail on the side facing the open well.
-            Vector3 right = rot * Vector3.right;
-            Vector3 toCentre = new Vector3(-mid.x, 0f, -mid.z);
-            Vector3 inner = Vector3.Dot(right, toCentre) > 0f ? right : -right;
-            var r = StageKit.Box("Handrail", parent, mid + inner * (width * 0.5f - 0.5f) + Vector3.up * 8f, new Vector3(0.6f, 0.6f, d.magnitude), railMat, collider: false);
-            r.transform.rotation = rot;
-        }
-
-        static void Landing(Transform parent, Vector3 centre, float size, Material mat)
-            => StageKit.Box("Landing", parent, centre + Vector3.down * 0.75f, new Vector3(size, 1.5f, size), mat);
 
         // ================================================================== ROOFTOP
 

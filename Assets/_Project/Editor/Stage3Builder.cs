@@ -12,7 +12,7 @@ namespace PaperWings.EditorTools
     /// <summary>
     /// Builds the DeskPrototype scene: a graybox night-shift desk with a laptop thermal,
     /// desk fan, obstacles, and the coffee mug landing target on a book stack.
-    /// Menu: PaperWings > Build Stage 3 (Desk Prototype Scene)
+    /// Menu: PaperWings > Stage Builders > Stage 3 (Desk Prototype Scene)
     ///
     /// The desk is deliberately oversized (70 x 34 units, 30 units above the floor) so a
     /// full-bank turn (~21 units across) fits over it. Props stay roughly at 10x scale,
@@ -32,7 +32,7 @@ namespace PaperWings.EditorTools
 
         const float DeskTop = 30f;
 
-        [MenuItem("PaperWings/Build Stage 3 (Desk Prototype Scene)", priority = 103)]
+        [MenuItem("PaperWings/Stage Builders/Stage 3 (Desk Prototype Scene)", priority = 103)]
         public static void Build()
         {
             var planePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlanePrefabPath);

@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 11: mouse-aim controls.
-    /// Menu: PaperWings > Build Stage 11 (Mouse Aim Controls)
+    /// Menu: PaperWings > Stage Builders > Stage 11 (Mouse Aim Controls)
     ///
     /// Adds a MouseAimCamera to the chase camera in FlightTest and DeskPrototype (only the
     /// camera object changes). The controls themselves live in PlaneInput + the Controls asset,
@@ -19,7 +19,7 @@ namespace PaperWings.EditorTools
     {
         static readonly string[] Scenes = { "Assets/_Project/Scenes/FlightTest.unity", "Assets/_Project/Scenes/DeskPrototype.unity" };
 
-        [MenuItem("PaperWings/Build Stage 11 (Mouse Aim Controls)", priority = 111)]
+        [MenuItem("PaperWings/Stage Builders/Stage 11 (Mouse Aim Controls)", priority = 111)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

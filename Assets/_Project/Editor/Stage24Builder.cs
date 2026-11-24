@@ -7,7 +7,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 24: the office's furniture becomes air and geometry.
-    /// Menu: PaperWings > Build Stage 24 (Office Air)
+    /// Menu: PaperWings > Stage Builders > Stage 24 (Office Air)
     ///
     /// Until now the room around the desk was scenery. Now it is a level, in three height bands:
     ///   FLOOR (0-30):    a space heater by the lounge (rescue lift from near the floor) and a PC
@@ -26,7 +26,7 @@ namespace PaperWings.EditorTools
     {
         const float Left = -170f, Right = 170f, Back = 90f, Front = -150f, Ceiling = StageKit.CeilingY;
 
-        [MenuItem("PaperWings/Build Stage 24 (Office Air)", priority = 124)]
+        [MenuItem("PaperWings/Stage Builders/Stage 24 (Office Air)", priority = 124)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 8: first combat.
-    /// Menu: PaperWings > Build Stage 8 (Combat)
+    /// Menu: PaperWings > Stage Builders > Stage 8 (Combat)
     ///
     ///  - Settings: player and rival staple guns, rival AI pilot, rival flight + paper.
     ///  - Prefabs: Staple (projectile) and RivalDart (AI plane). Adds a staple gun to PaperDart.
@@ -31,7 +31,7 @@ namespace PaperWings.EditorTools
         const string RivalPrefabPath = P + "RivalDart.prefab";
         const string PlanePrefabPath = P + "PaperDart.prefab";
 
-        [MenuItem("PaperWings/Build Stage 8 (Combat)", priority = 108)]
+        [MenuItem("PaperWings/Stage Builders/Stage 8 (Combat)", priority = 108)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

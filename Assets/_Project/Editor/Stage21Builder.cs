@@ -12,7 +12,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 21: the Break Room, a second place to fly.
-    /// Menu: PaperWings > Build Stage 21 (Break Room)
+    /// Menu: PaperWings > Stage Builders > Stage 21 (Break Room)
     ///
     /// Built inside DeskPrototype, 600 units east of the desk (past the fog, so neither room can see
     /// the other). The ModeDirector moves your hand between rooms.
@@ -33,7 +33,7 @@ namespace PaperWings.EditorTools
         const float Counter = 30f;     // counter-top height (same as the office desk)
         const float CeilingY = 125f;
 
-        [MenuItem("PaperWings/Build Stage 21 (Break Room)", priority = 121)]
+        [MenuItem("PaperWings/Stage Builders/Stage 21 (Break Room)", priority = 121)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(DeskScene) == null)

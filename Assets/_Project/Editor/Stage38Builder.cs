@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 38: Office look pass, the first room in the "animated film" style.
-    /// Menu: PaperWings > Build Stage 38 (Office Look Pass)
+    /// Menu: PaperWings > Room Looks > Office (Stage 38)
     ///
     ///  - Shape: every plain box in the office gets soft rounded edges (same size and collider).
     ///  - Colour: a mid-century palette (walnut, teal, burnt orange, mustard, cream, olive) on the
@@ -40,12 +40,21 @@ namespace PaperWings.EditorTools
         static readonly Color Mustard = new Color(0.88f, 0.64f, 0.16f);
         static readonly Color Cream = new Color(0.90f, 0.85f, 0.72f);
 
-        [MenuItem("PaperWings/Build Stage 38 (Office Look Pass)", priority = 150)]
+        [MenuItem("PaperWings/Room Looks/Office (Stage 38)", priority = 51)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out var scene)) return;
+            string report;
+            try { report = Run(scene); }
+            finally { EditorUtility.ClearProgressBar(); }
+            StageKit.Save(scene);
+            EditorUtility.DisplayDialog("PaperWings", "Stage 38 built: Office look pass.\n\n" + report +
+                "\n\nLook at it in the Game view, Ring Run or Free Flight in the Office.", "Lovely");
+        }
 
-            try
+        /// <summary>Builds the pass into the open scene (no save, no dialog). Returns a short report.</summary>
+        internal static string Run(Scene scene)
+        {
             {
                 EditorUtility.DisplayProgressBar("PaperWings", "Mixing the office palette...", 0.1f);
                 var map = Palette(out var pal);
@@ -68,20 +77,11 @@ namespace PaperWings.EditorTools
                 Grade(look);
                 ProjectRendering();
 
-                StageKit.Save(scene);
-                EditorUtility.ClearProgressBar();
-                EditorUtility.DisplayDialog("PaperWings",
-                    "Stage 38 built: Office look pass.\n\n" +
-                    $"- {rounded} boxes now have rounded edges.\n" +
-                    "- Mid-century palette, wainscot, patterned rug, banker's lamp, light under the door.\n" +
-                    "- Window-shaped moonlight on the floor, shadowed floor lamp, warm bounce light.\n" +
-                    "- Office colour grade (its own volume).\n" +
-                    "- All rooms: longer shadow distance and ambient occlusion sized for the scene.\n\n" +
-                    "Look at it in the Game view, Ring Run or Free Flight in the Office.", "Lovely");
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
+                return $"- {rounded} boxes now have rounded edges.\n" +
+                       "- Mid-century palette, wainscot, patterned rug, banker's lamp, light under the door.\n" +
+                       "- Window-shaped moonlight on the floor, shadowed floor lamp, warm bounce light.\n" +
+                       "- Office colour grade (its own volume).\n" +
+                       "- All rooms: longer shadow distance and ambient occlusion sized for the scene.";
             }
         }
 

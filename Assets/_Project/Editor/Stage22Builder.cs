@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 22: walls, no landings, a friendlier break room.
-    /// Menu: PaperWings > Build Stage 22 (Walls, No Landing)
+    /// Menu: PaperWings > Stage Builders > Stage 22 (Walls, No Landing)
     ///
     ///  - Landing is gone: the coffee mugs are just props (no landing zone, beam or glow), Ring Run
     ///    ends at the last ring, and the two landing nights became "stay in the air" nights.
@@ -28,7 +28,7 @@ namespace PaperWings.EditorTools
         // Office walls: x -170..170, z -150..90 (the desk is at the centre, 70 x 34).
         const float Left = -170f, Right = 170f, Back = 90f, Front = -150f;
 
-        [MenuItem("PaperWings/Build Stage 22 (Walls, No Landing)", priority = 122)]
+        [MenuItem("PaperWings/Stage Builders/Stage 22 (Walls, No Landing)", priority = 122)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(DeskScene) == null)

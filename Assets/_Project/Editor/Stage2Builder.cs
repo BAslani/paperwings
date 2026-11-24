@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
     /// <summary>
     /// Builds the DeskFan and LaptopThermal prefabs (with particle cues) and their settings assets,
     /// then places them in the FlightTest scene under an "AirTest" object.
-    /// Menu: PaperWings > Build Stage 2 (Air Sources in Flight Test)
+    /// Menu: PaperWings > Stage Builders > Stage 2 (Air Sources in Flight Test)
     ///
     /// Safe to re-run: only the "AirTest" object in the scene is replaced, and existing
     /// Fan/Thermal settings assets are never overwritten.
@@ -23,7 +23,7 @@ namespace PaperWings.EditorTools
         const string ThermalPrefabPath = Root + "/Prefabs/LaptopThermal.prefab";
         const string FlightTestScene = Root + "/Scenes/FlightTest.unity";
 
-        [MenuItem("PaperWings/Build Stage 2 (Air Sources in Flight Test)", priority = 102)]
+        [MenuItem("PaperWings/Stage Builders/Stage 2 (Air Sources in Flight Test)", priority = 102)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(FlightTestScene) == null)

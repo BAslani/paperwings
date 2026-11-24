@@ -10,7 +10,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 12: game modes.
-    /// Menu: PaperWings > Build Stage 12 (Game Modes)
+    /// Menu: PaperWings > Stage Builders > Stage 12 (Game Modes)
     ///
     /// Adds a "GameModes" object to DeskPrototype with a ModeDirector (switches the ring route,
     /// rivals and boss on/off per mode, tracks objectives and best times) and a ModeMenu
@@ -20,7 +20,7 @@ namespace PaperWings.EditorTools
     {
         const string DeskScene = "Assets/_Project/Scenes/DeskPrototype.unity";
 
-        [MenuItem("PaperWings/Build Stage 12 (Game Modes)", priority = 112)]
+        [MenuItem("PaperWings/Stage Builders/Stage 12 (Game Modes)", priority = 112)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<SceneAsset>(DeskScene) == null)

@@ -10,7 +10,7 @@ namespace PaperWings.EditorTools
     /// <summary>
     /// Stage 16: the Canard fold. A plane with a small extra wing at the nose that glides further,
     /// climbs more cheaply, rides air better, and gets a lifting boost.
-    /// Menu: PaperWings > Build Stage 16 (Canard Fold)
+    /// Menu: PaperWings > Stage Builders > Stage 16 (Canard Fold)
     ///
     /// Creates the mesh, dot-grid paper, FlightSettings_Canard, Paper_Canard and Fold_Canard,
     /// then adds the fold to the fold picker in both scenes. Existing assets are never overwritten.
@@ -22,7 +22,7 @@ namespace PaperWings.EditorTools
         const string FoldPath = S + "Fold_Canard.asset";
         static readonly string[] Scenes = { "Assets/_Project/Scenes/FlightTest.unity", "Assets/_Project/Scenes/DeskPrototype.unity" };
 
-        [MenuItem("PaperWings/Build Stage 16 (Canard Fold)", priority = 116)]
+        [MenuItem("PaperWings/Stage Builders/Stage 16 (Canard Fold)", priority = 116)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;

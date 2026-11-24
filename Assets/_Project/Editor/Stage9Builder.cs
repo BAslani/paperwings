@@ -8,7 +8,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 9: pencil missiles.
-    /// Menu: PaperWings > Build Stage 9 (Pencil Missiles)
+    /// Menu: PaperWings > Stage Builders > Stage 9 (Pencil Missiles)
     ///
     /// Builds the PencilMissile prefab and Settings/Pencils, then mounts four pencils under the
     /// PaperDart's wings with a PencilLauncher. Prefab-only: every scene picks it up.
@@ -33,7 +33,7 @@ namespace PaperWings.EditorTools
             new Vector3( 0.26f, -0.12f, -0.2f),
         };
 
-        [MenuItem("PaperWings/Build Stage 9 (Pencil Missiles)", priority = 109)]
+        [MenuItem("PaperWings/Stage Builders/Stage 9 (Pencil Missiles)", priority = 109)]
         public static void Build()
         {
             var settings = Stage2Builder.LoadOrCreate<PencilSettings>(SettingsPath);

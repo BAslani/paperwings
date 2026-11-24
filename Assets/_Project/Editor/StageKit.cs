@@ -21,6 +21,7 @@ namespace PaperWings.EditorTools
         public const float CeilingY = 125f;
 
         // Room indices (campaign nights refer to rooms by number).
+        // Slot 3 was the stairwell: removed in Stage 42, the slot stays empty so later rooms keep their numbers.
         public const int Office = 0, BreakRoom = 1, ServerRoom = 2, Stairwell = 3, Rooftop = 4, Kitchen = 5;
 
         // ------------------------------------------------------------------ scene

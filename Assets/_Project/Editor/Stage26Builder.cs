@@ -9,7 +9,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 26: bosses built on air.
-    /// Menu: PaperWings > Build Stage 26 (Air Bosses)
+    /// Menu: PaperWings > Stage Builders > Stage 26 (Air Bosses)
     ///
     /// Each boss is built around one kind of air, so beating it is about reading and using the air:
     ///   THE STAPLER    (office desk, Stage 10): downdraft slams.
@@ -25,7 +25,7 @@ namespace PaperWings.EditorTools
         const string P = StageKit.Root + "Prefabs/";
         const string S = StageKit.Root + "Settings/";
 
-        [MenuItem("PaperWings/Build Stage 26 (Air Bosses)", priority = 126)]
+        [MenuItem("PaperWings/Stage Builders/Stage 26 (Air Bosses)", priority = 126)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;

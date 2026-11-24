@@ -10,7 +10,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 14: factions and wingmen.
-    /// Menu: PaperWings > Build Stage 14 (Factions & Wingmen)
+    /// Menu: PaperWings > Stage Builders > Stage 14 (Factions & Wingmen)
     ///
     ///  - Sets factions: the player = Marketing; rivals and The Stapler = Accounting.
     ///  - Builds a blue WingmanDart prefab (Marketing AI) with its own pilot/flight/gun settings.
@@ -25,7 +25,7 @@ namespace PaperWings.EditorTools
         const string DeskScene = "Assets/_Project/Scenes/DeskPrototype.unity";
         const string WingmanPrefabPath = P + "WingmanDart.prefab";
 
-        [MenuItem("PaperWings/Build Stage 14 (Factions & Wingmen)", priority = 114)]
+        [MenuItem("PaperWings/Stage Builders/Stage 14 (Factions & Wingmen)", priority = 114)]
         public static void Build()
         {
             if (AssetDatabase.LoadAssetAtPath<GameObject>(P + "RivalDart.prefab") == null)

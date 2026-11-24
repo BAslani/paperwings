@@ -8,12 +8,10 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 32: the missions' flying parts, and the bosses rebuilt with parts and drones.
-    /// Menu: PaperWings > Build Stage 32 (Missions, Boss Parts)
+    /// Menu: PaperWings > Stage Builders > Stage 32 (Missions, Boss Parts)
     ///
     ///  - OFFICE: practice drones circling the lounge (Target Practice), Accounting couriers flying
     ///    the window row to the door (Paper Trail).
-    ///  - STAIRWELL: couriers spiralling up the chimney (Fire Escape), plus a rival spawner so the
-    ///    stairwell can host dogfight-based nights.
     ///  - BOSSES: The Mainframe (shootable fans, firewall drones) and The Condenser (coolant tanks,
     ///    maintenance drones) rebuilt (Stage 26).
     ///  - Checks every campaign night's room, group and throw point.
@@ -22,7 +20,7 @@ namespace PaperWings.EditorTools
     /// </summary>
     public static class Stage32Builder
     {
-        [MenuItem("PaperWings/Build Stage 32 (Missions, Boss Parts)", priority = 143)]
+        [MenuItem("PaperWings/Stage Builders/Stage 32 (Missions, Boss Parts)", priority = 143)]
         public static void Build()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;
@@ -31,7 +29,7 @@ namespace PaperWings.EditorTools
             EditorUtility.DisplayDialog("PaperWings", "Stage 32 built.\n\n" + report, "Fly");
         }
 
-        [MenuItem("PaperWings/Build Stages 29-33 (Air Combat Update)", priority = 144)]
+        [MenuItem("PaperWings/Stage Builders/Stages 29-33 (Air Combat Update)", priority = 144)]
         public static void BuildAll()
         {
             if (!StageKit.OpenDesk(out Scene scene)) return;
@@ -50,7 +48,6 @@ namespace PaperWings.EditorTools
         internal static string Run(Scene scene)
         {
             Office();
-            Stairwell();
             RaiseTowerSpawn();
             Stage26Builder.Run(scene);   // bosses with parts and drones
             return Stage27Builder.Run(scene);
@@ -93,35 +90,6 @@ namespace PaperWings.EditorTools
             };
             StageKit29.Convoy(couriers, "WindowConvoy", ConvoySpawner.Kind.Intercept, Prefab("CourierRed"), trail, 12, 2, 7f, 9f, 45f, "Courier", 4f);
             StageKit29.AddExtraGroup(room, couriers.gameObject);
-            EditorUtility.SetDirty(room);
-        }
-
-        static void Stairwell()
-        {
-            var room = StageKit.RoomAt(StageKit.Stairwell);
-            if (room == null) return;
-            Vector3 o = room.transform.position;
-
-            // Fire Escape: couriers spiral up the warm chimney to the roof door.
-            var g = StageKit29.FreshGroup(room.transform, "StairCouriers");
-            const int perTurn = 8;
-            const float turns = 3.5f, r = 19f, y0 = 20f, y1 = 465f;
-            int n = Mathf.RoundToInt(perTurn * turns);
-            var pts = new Vector3[n + 1];
-            for (int i = 0; i <= n; i++)
-            {
-                float t = i / (float)n;
-                float a = t * turns * Mathf.PI * 2f;
-                pts[i] = o + new Vector3(Mathf.Cos(a) * r, Mathf.Lerp(y0, y1, t), Mathf.Sin(a) * r);
-            }
-            StageKit29.Convoy(g, "ChimneyConvoy", ConvoySpawner.Kind.Intercept, Prefab("CourierRed"), pts, 12, 3, 8f, 10f, 45f, "Courier", 4f);
-            StageKit29.AddExtraGroup(room, g.gameObject);
-
-            // A rival spawner, so dogfight-based nights can run here.
-            var combat = StageKit29.FreshGroup(room.transform, "StairCombat");
-            StageKit.RivalSpawner("RivalSpawner_1", combat, o + new Vector3(0f, 160f, 0f), 0f, 5f);
-            combat.gameObject.SetActive(false);
-            room.combatGroup = combat.gameObject;
             EditorUtility.SetDirty(room);
         }
     }

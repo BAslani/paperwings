@@ -7,7 +7,7 @@ namespace PaperWings.EditorTools
 {
     /// <summary>
     /// Stage 18: the Night Shift campaign.
-    /// Menu: PaperWings > Build Stage 18 (Campaign)
+    /// Menu: PaperWings > Stage Builders > Stage 18 (Campaign)
     ///
     ///  - Settings/Campaign: ten nights, each a mode plus a twist, a memo and a reward.
     ///  - Hooks the campaign into the ModeDirector in both scenes (the menu gets a Campaign card).
@@ -18,7 +18,7 @@ namespace PaperWings.EditorTools
         const string CampaignPath = "Assets/_Project/Settings/Campaign.asset";
         static readonly string[] Scenes = { "Assets/_Project/Scenes/FlightTest.unity", "Assets/_Project/Scenes/DeskPrototype.unity" };
 
-        [MenuItem("PaperWings/Build Stage 18 (Campaign)", priority = 118)]
+        [MenuItem("PaperWings/Stage Builders/Stage 18 (Campaign)", priority = 118)]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
