@@ -30,7 +30,9 @@ namespace PaperWings.Combat
         public bool Broken => health <= 0f;
         /// <summary>Only takes hits while its boss is awake (and not beaten).</summary>
         public bool IsAlive => !Broken && (boss == null || (boss.IsAwake && !boss.IsDefeated));
-        public float Health01 => maxHealth > 0f ? health / maxHealth : 0f;
+        public float Health01 => maxHealth > 0f ? health / ScaledMax : 0f;
+        /// <summary>Health at this difficulty (Options): the serialized value is Normal.</summary>
+        float ScaledMax => maxHealth * Gameplay.Difficulty.BossHealth;
         public float BossDamageFraction => bossDamageOnDestroy;
 
         float health, flash;
@@ -47,7 +49,7 @@ namespace PaperWings.Combat
 
         public void ResetPart()
         {
-            health = maxHealth;
+            health = ScaledMax;
             if (hideWhenDestroyed != null) foreach (var g in hideWhenDestroyed) if (g != null) g.SetActive(true);
             if (smoke != null) smoke.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }

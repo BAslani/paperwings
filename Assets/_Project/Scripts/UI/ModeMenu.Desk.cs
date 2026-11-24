@@ -319,8 +319,9 @@ namespace PaperWings.UI
             {
                 Sheet(800f, 400f, 190f, 150f, StickyPink, 9f);
                 Text(820f, 414f, 160f, 42f, "Options", handStyle, 34f, Ink, TextAnchor.UpperLeft, FontStyle.Bold);
-                Text(820f, 460f, 160f, 60f, "sound, controls, brightness", handStyle, 20f, Ink);
-                Text(820f, 524f, 160f, 20f, "press O", typeStyle, 13f, new Color32(0x6a, 0x2a, 0x40, 0xff));
+                Text(820f, 456f, 160f, 50f, "sound, controls, brightness", handStyle, 18f, Ink);
+                Text(820f, 502f, 160f, 24f, $"difficulty: {Difficulty.Name(Difficulty.Current).ToLower()}", handStyle, 17f, RedPen);
+                Text(820f, 528f, 160f, 18f, "press O", typeStyle, 12f, new Color32(0x6a, 0x2a, 0x40, 0xff));
                 if (Hit(800f, 400f, 190f, 150f)) OpenOptions();
             });
         }

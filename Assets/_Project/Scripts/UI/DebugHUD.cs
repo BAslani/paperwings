@@ -131,9 +131,23 @@ namespace PaperWings.UI
                 DrawRoutePanel();
                 DrawNextTargetPointer();
             }
+            DrawLessonTarget();
             DrawCombat();
             DrawControlsHint();
             DrawCenter();
+        }
+
+        /// <summary>Flight School air lessons: a marker on the warm air / fan / vent / steam being taught.</summary>
+        void DrawLessonTarget()
+        {
+            var md = ModeDirector.Current;
+            var lesson = md != null && md.InTraining ? md.Training : null;
+            if (lesson == null || !lesson.HasTarget || lesson.TargetLabel.Length == 0) return;
+            if (plane.State != PlaneState.Flying && plane.State != PlaneState.Held) return;
+            Camera cam = Camera.main;
+            if (cam == null) return;
+            float dist = Vector3.Distance(plane.transform.position, lesson.TargetPoint);
+            DrawWorldMarker(cam, lesson.TargetPoint, "#80D8FF", $"<b>{lesson.TargetLabel}</b>  {dist:0}", $"{lesson.TargetLabel}  {dist:0}");
         }
 
         // ------------------------------------------------------------------ route

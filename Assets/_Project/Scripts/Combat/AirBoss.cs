@@ -35,7 +35,9 @@ namespace PaperWings.Combat
         public override float Phase2At => settings != null ? settings.phase2At : 0.6f;
         public override float Phase3At => settings != null ? settings.phase3At : 0.3f;
         public override float WeakSpotMultiplier => settings != null ? settings.weakSpotMultiplier : 2f;
-        public override float Health01 => settings != null ? health / settings.maxHealth : 0f;
+        public override float Health01 => settings != null ? health / MaxHealth : 0f;
+        /// <summary>Health at this difficulty (Options): the settings asset is Normal.</summary>
+        protected float MaxHealth => settings.maxHealth * Gameplay.Difficulty.BossHealth;
         public override bool IsDefeated => defeated;
         public override bool IsAwake => awake;
         public override bool Waking => waking;
@@ -98,7 +100,7 @@ namespace PaperWings.Combat
 
         void ResetBoss()
         {
-            health = settings != null ? settings.maxHealth : 1f;
+            health = settings != null ? MaxHealth : 1f;
             defeated = false;
             weakOpen = warning = waking = false;
             if (reinforcements != null) reinforcements.SetActive(false);
@@ -210,7 +212,7 @@ namespace PaperWings.Combat
         public void PartDestroyed(BossPart part)
         {
             if (defeated || settings == null) return;
-            float dealt = settings.maxHealth * part.BossDamageFraction;
+            float dealt = MaxHealth * part.BossDamageFraction;
             health = Mathf.Max(0f, health - dealt);
             flash = 1f;
             RaiseDamaged(dealt, true);

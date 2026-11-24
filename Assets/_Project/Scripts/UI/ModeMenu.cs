@@ -425,7 +425,7 @@ namespace PaperWings.UI
 
         // ------------------------------------------------------------------ options
 
-        enum Opt { Master, Effects, Ambience, Scheme, Invert, MouseSens, Brightness, Quality, Window, Resolution, Back, Quit }
+        enum Opt { Difficulty, Master, Effects, Ambience, Scheme, Invert, MouseSens, Brightness, Quality, Window, Resolution, Back, Quit }
         static readonly Opt[] OptRows = (Opt[])System.Enum.GetValues(typeof(Opt));
 
         void OpenOptions()
@@ -460,6 +460,7 @@ namespace PaperWings.UI
             var c = GameOptions.Controls;
             switch (o)
             {
+                case Opt.Difficulty: Difficulty.Current = (Difficulty.Level)(((int)Difficulty.Current + dir + 3) % 3); break;
                 case Opt.Master: GameOptions.SetVolume("Master", Step(GameOptions.GetVolume("Master"), 0.1f * dir)); break;
                 case Opt.Effects: GameOptions.SetVolume("Effects", Step(GameOptions.GetVolume("Effects"), 0.1f * dir)); break;
                 case Opt.Ambience: GameOptions.SetVolume("Ambience", Step(GameOptions.GetVolume("Ambience"), 0.1f * dir)); break;
@@ -487,6 +488,7 @@ namespace PaperWings.UI
 
         string OptLabel(Opt o) => o switch
         {
+            Opt.Difficulty => "Difficulty",
             Opt.Master => "Master volume",
             Opt.Effects => "Effects volume",
             Opt.Ambience => "Wind & ambience volume",
@@ -507,6 +509,7 @@ namespace PaperWings.UI
             string Bar(float v) => $"{new string('|', Mathf.RoundToInt(v * 10f))}<color=#444444>{new string('|', 10 - Mathf.RoundToInt(v * 10f))}</color>  {Mathf.RoundToInt(v * 100f)}%";
             return o switch
             {
+                Opt.Difficulty => Difficulty.Name(Difficulty.Current),
                 Opt.Master => Bar(GameOptions.GetVolume("Master")),
                 Opt.Effects => Bar(GameOptions.GetVolume("Effects")),
                 Opt.Ambience => Bar(GameOptions.GetVolume("Ambience")),
@@ -572,7 +575,7 @@ namespace PaperWings.UI
             var t = director.InTraining ? director.Training : null;
             if (t == null || director.RunComplete || t.Current == Tutorial.Step.Done) return;
             float fade = Mathf.Clamp01((Time.time - t.StepStarted) * 3f);
-            float w = 900 * scale, h = 132 * scale;
+            float w = 900 * scale, h = 150 * scale;   // room for the air lessons' longer text
             Rect r = new Rect((UnityEngine.Screen.width - w) * 0.5f, 24 * scale, w, h);
             GUI.color = new Color(0.05f, 0.12f, 0.2f, 0.78f * fade);
             GUI.DrawTexture(r, Texture2D.whiteTexture);

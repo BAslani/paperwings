@@ -42,6 +42,8 @@ namespace PaperWings.Combat
 
         PlaneController plane;
         Faction faction;
+        /// <summary>An Accounting plane (difficulty applies), not one of your wingmen.</summary>
+        bool Hostile => faction != CombatTarget.PlayerFaction;
         float burstShotsLeft;
         float burstReadyTime;
         float patrolAngle;
@@ -133,7 +135,7 @@ namespace PaperWings.Combat
 
         void SteerToward(Vector3 target, bool urgent)
         {
-            float stick = urgent ? 1f : settings.aggressiveness;
+            float stick = urgent ? 1f : Mathf.Clamp01(settings.aggressiveness * (Hostile ? Gameplay.Difficulty.RivalTenacity : 1f));
             Vector3 to = target - transform.position;
             Vector3 flat = new Vector3(to.x, 0f, to.z);
 
@@ -152,13 +154,16 @@ namespace PaperWings.Combat
         {
             if (gun == null || enemy == null || !enemy.IsAlive) return;
             Vector3 to = enemy.Position - transform.position;
-            if (to.magnitude > settings.fireRange || Vector3.Angle(transform.forward, to) > settings.fireAngle) return;
+            // Difficulty (Options) scales Accounting's pilots; your wingmen always fly as tuned.
+            float range = settings.fireRange * (Hostile ? Gameplay.Difficulty.RivalFireRange : 1f);
+            float cone = settings.fireAngle * (Hostile ? Gameplay.Difficulty.RivalFireAngle : 1f);
+            if (to.magnitude > range || Vector3.Angle(transform.forward, to) > cone) return;
             if (Time.time < burstReadyTime) return;
 
             if (gun.TryFire() && --burstShotsLeft <= 0)
             {
-                burstShotsLeft = settings.burstLength;
-                burstReadyTime = Time.time + settings.burstPause;
+                burstShotsLeft = Mathf.Max(1, settings.burstLength + (Hostile ? Gameplay.Difficulty.RivalBurstExtra : 0));
+                burstReadyTime = Time.time + settings.burstPause * (Hostile ? Gameplay.Difficulty.RivalBurstPause : 1f);
             }
         }
 

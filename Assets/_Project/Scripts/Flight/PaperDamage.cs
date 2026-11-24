@@ -111,6 +111,8 @@ namespace PaperWings.Flight
         public void ApplyDamage(float amount, PlaneController source = null)
         {
             if (settings == null || plane.State != PlaneState.Flying || amount <= 0f) return;
+            // Difficulty (Options): the player's paper takes more or less from rivals, bosses and bumps.
+            if (plane.IsPlayer && (source == null || !source.IsPlayer)) amount *= Gameplay.Difficulty.DamageToPlayer;
 
             if (source != null)
             {
