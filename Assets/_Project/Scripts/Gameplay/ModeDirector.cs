@@ -350,6 +350,7 @@ namespace PaperWings.Gameplay
             activeExtraGroup = night != null && CurrentRoom != null ? CurrentRoom.GroupNamed(night.group) : null;
             Toggle(activeExtraGroup, true);
             if (night != null && mode == GameMode.Dogfight && night.objective == NightObjective.Ace) MakeAce(night);
+            if (night != null && night.rivalPilot != null) SetRivalPilots(night.rivalPilot);
             AirField.WindScale = night != null ? Mathf.Max(0f, night.windScale) : 1f;
             if (applier != null) applier.PencilsBanned = night != null && night.noPencils;
 
@@ -381,6 +382,15 @@ namespace PaperWings.Gameplay
             var spawners = group.GetComponentsInChildren<EnemySpawner>(true);
             for (int i = 0; i < spawners.Length; i++)
                 spawners[i].enabled = max == 0 || (max > 0 && i < max);   // disabling a spawner removes its rival
+        }
+
+        /// <summary>Tonight's rivals (the room's regulars and the mission group's) fly with other pilot settings.</summary>
+        void SetRivalPilots(RivalPilotSettings pilot)
+        {
+            foreach (var group in new[] { CombatGroupOf(RoomIndex), activeExtraGroup })
+                if (group != null)
+                    foreach (var sp in group.GetComponentsInChildren<EnemySpawner>(false))
+                        if (sp.enabled) sp.PilotOverride = pilot;
         }
 
         /// <summary>Ace night: the first running rival spawner sends a named ace instead.</summary>

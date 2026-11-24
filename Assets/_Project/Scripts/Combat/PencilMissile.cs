@@ -15,6 +15,12 @@ namespace PaperWings.Combat
         public enum Phase { Mounted, Dropping, Homing }
 
         [SerializeField] TrailRenderer smokeTrail;
+        [Tooltip("More trails lit on ignition (e.g. a short hot flame trail). Stage 34.")]
+        [SerializeField] TrailRenderer[] extraTrails;
+        [Tooltip("Sparks / embers spat out while homing.")]
+        [SerializeField] ParticleSystem exhaust;
+        [Tooltip("A small light that makes the pencil easy to spot in the dark office.")]
+        [SerializeField] Light glow;
 
         public Phase CurrentPhase { get; private set; } = Phase.Mounted;
         public CombatTarget Target { get; private set; }
@@ -29,7 +35,48 @@ namespace PaperWings.Combat
 
         void Awake()
         {
+            // Mounted under the wing: nothing lit yet.
             if (smokeTrail != null) smokeTrail.emitting = false;
+            if (extraTrails != null) foreach (var t in extraTrails) if (t != null) t.emitting = false;
+            if (exhaust != null) { var em = exhaust.emission; em.enabled = false; }
+            if (glow != null) glow.enabled = false;
+        }
+
+        /// <summary>The pencil lights up: smoke, flame, sparks and glow.</summary>
+        void Ignite()
+        {
+            if (smokeTrail != null) { smokeTrail.Clear(); smokeTrail.emitting = true; }
+            if (extraTrails != null) foreach (var t in extraTrails) if (t != null) { t.Clear(); t.emitting = true; }
+            if (exhaust != null) { var em = exhaust.emission; em.enabled = true; exhaust.Play(); }
+            if (glow != null) glow.enabled = true;
+        }
+
+        /// <summary>
+        /// Gone (hit something or burned out). The trails and sparks are left behind to fade out
+        /// on their own, so the path stays readable instead of vanishing with the pencil.
+        /// </summary>
+        void Die()
+        {
+            if (CurrentPhase == Phase.Homing)
+            {
+                Leave(smokeTrail);
+                if (extraTrails != null) foreach (var t in extraTrails) Leave(t);
+                if (exhaust != null)
+                {
+                    exhaust.transform.SetParent(null, true);
+                    exhaust.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                    Destroy(exhaust.gameObject, exhaust.main.startLifetime.constantMax + 0.2f);
+                }
+            }
+            Destroy(gameObject);
+        }
+
+        static void Leave(TrailRenderer t)
+        {
+            if (t == null) return;
+            t.transform.SetParent(null, true);
+            t.emitting = false;
+            Destroy(t.gameObject, t.time + 0.1f);
         }
 
         /// <summary>Detach from the wing and go after 'target'.</summary>
@@ -51,7 +98,7 @@ namespace PaperWings.Combat
         {
             if (CurrentPhase == Phase.Mounted) return;
             float dt = Time.deltaTime;
-            if (Time.time >= dieTime) { Destroy(gameObject); return; }
+            if (Time.time >= dieTime) { Die(); return; }
 
             if (CurrentPhase == Phase.Dropping)
             {
@@ -62,7 +109,7 @@ namespace PaperWings.Combat
                     CurrentPhase = Phase.Homing;
                     Audio.AudioFx.PlayAt(Audio.Sfx.PencilLaunch, transform.position, 1f);   // ignition whoosh
                     speed = velocity.magnitude;
-                    if (smokeTrail != null) { smokeTrail.Clear(); smokeTrail.emitting = true; }
+                    Ignite();
                 }
             }
             else
@@ -83,7 +130,7 @@ namespace PaperWings.Combat
                     if (Vector3.Distance(transform.position, Target.Position) < settings.proximityFuse)
                     {
                         Projectiles.ApplyHit(Target, settings.damage, owner, ownerFaction, Audio.Sfx.PencilImpact);
-                        Destroy(gameObject);
+                        Die();
                         return;
                     }
                 }
@@ -96,7 +143,7 @@ namespace PaperWings.Combat
             {
                 if (!Projectiles.ApplyHit(hit.collider, settings.damage, owner, ownerFaction, Audio.Sfx.PencilImpact))
                     Audio.AudioFx.PlayAt(Audio.Sfx.PencilImpact, hit.point, 0.6f, 0.85f);   // thudded into the scenery
-                Destroy(gameObject);
+                Die();
                 return;
             }
             transform.position += step;

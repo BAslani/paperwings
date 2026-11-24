@@ -56,6 +56,8 @@ namespace PaperWings.Gameplay
         public float windScale = 1f;
         [Tooltip("Pencils stay in the drawer tonight, even if unlocked.")]
         public bool noPencils = false;
+        [Tooltip("Fly tonight's rivals with these pilot settings (e.g. Pilot_Trainee for an early night). Empty = their usual pilot.")]
+        public PaperWings.Combat.RivalPilotSettings rivalPilot;
 
         [Header("Stars (1 for clearing, 2 and 3 for speed)")]
         [Tooltip("Clear at or under this time for 2 stars. 0 = no time stars.")]
@@ -164,23 +166,23 @@ namespace PaperWings.Gameplay
             // ---------------- Act 2: the break room ----------------
             new CampaignNight
             {
-                title = "Office Party", mode = GameMode.Dogfight, room = 1, spawn = "CouchSpawn", killTarget = 4,
-                place = "Break room: the party", twoStarTime = 100f, threeStarTime = 70f, rewardClips = 70,
-                memo = "MEMO: Somebody's leaving do, and Accounting crashed it. Four kills among the balloons (shoot them to clear a lane). " +
+                title = "Office Party", mode = GameMode.Dogfight, room = 1, spawn = "CouchSpawn", killTarget = 3, maxRivals = 2,
+                place = "Break room: the party", twoStarTime = 120f, threeStarTime = 85f, rewardClips = 70,
+                memo = "MEMO: Somebody's leaving do, and Accounting crashed it with a pair of trainees. Three kills among the balloons (shoot them to clear a lane). " +
                        "Watch the appliances: the microwave dumps heat when it dings, the fridge door swings open, and the vending machine has gone haywire."
             },
             new CampaignNight
             {
                 title = "Coffee Run", mode = GameMode.Dogfight, objective = NightObjective.Escort, room = 1,
-                group = "CoffeeCourier", killTarget = 2, allowedLosses = 2, maxRivals = 2,
-                place = "Break room: the coffee machine", twoStarTime = 110f, threeStarTime = 80f, rewardClips = 80,
-                memo = "MEMO: Two of our couriers (blue) are flying the morning coffee orders from the machine to the door. Rivals will hunt them. " +
+                group = "CoffeeCourier", killTarget = 2, allowedLosses = 2, maxRivals = 1,
+                place = "Break room: the coffee machine", twoStarTime = 130f, threeStarTime = 95f, rewardClips = 80,
+                memo = "MEMO: Two of our couriers (blue) are flying the morning coffee orders from the machine to the door. A rookie rival will hunt them. " +
                        "Stay close and shoot whatever gets on their tail. We can lose one, not two."
             },
             new CampaignNight
             {
                 title = "The Auditor", mode = GameMode.BossFight, room = 1,
-                place = "Break room: under the ceiling", twoStarTime = 170f, threeStarTime = 120f, rewardClips = 160,
+                place = "Break room: under the ceiling", twoStarTime = 200f, threeStarTime = 140f, rewardClips = 160,
                 memo = "MEMO: Accounting folded a bomber out of a whole ledger and it's circling the break room. Shoot off its wing turrets, dodge its " +
                        "clip bombs, and when its engine stalls get on its tail: the glowing engine is the weak spot."
             },

@@ -37,6 +37,24 @@ namespace PaperWings.Combat
             public Color trail = new Color(1f, 0.8f, 0.2f);
         }
 
+        RivalPilotSettings pilotOverride;
+        /// <summary>
+        /// Flies this spawner's rival (and every respawn) with other pilot settings, e.g. rookies on an
+        /// early campaign night. Null = the spawner's own pilot. Cleared when the spawner is switched off.
+        /// </summary>
+        public RivalPilotSettings PilotOverride
+        {
+            get => pilotOverride;
+            set { pilotOverride = value; ApplyPilot(); }
+        }
+
+        void ApplyPilot()
+        {
+            if (Current == null || ace != null) return;   // an ace keeps its own pilot
+            var pilot = Current.GetComponent<RivalPilot>();
+            if (pilot != null && (pilotOverride != null || pilotSettings != null)) pilot.Settings = pilotOverride != null ? pilotOverride : pilotSettings;
+        }
+
         /// <summary>Turns this spawner's rival (and every respawn) into an ace until the spawner is switched off.</summary>
         public void MakeAce(AceStyle style)
         {
@@ -77,6 +95,7 @@ namespace PaperWings.Combat
         void OnDisable()
         {
             ace = null;
+            pilotOverride = null;
             // Take our rival with us (it's a separate object in the scene, not a child).
             if (Current != null)
             {

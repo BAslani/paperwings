@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c76c223785d99bc49b49dc0b2e2e7602, type: 3}
   m_Name: Pilot_Printed
   m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Combat.RivalPilotSettings
-  engageRange: 80
-  disengageRange: 128
+  engageRange: 320
+  disengageRange: 512
   fireRange: 28
   fireAngle: 8
   burstLength: 2

@@ -149,10 +149,12 @@ namespace PaperWings.EditorTools
             night.EnableKeyword("_EMISSION");
             night.SetColor("_EmissionColor", new Color(0.06f, 0.1f, 0.25f));
             night.SetFloat("_Smoothness", 0.9f);
+            night.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;   // tells Unity it glows (otherwise it strips the glow on re-save)
             EditorUtility.SetDirty(night);
             var city = BuilderUtil.CreateMaterial("M_CityLights", new Color(1f, 0.85f, 0.5f));
             city.EnableKeyword("_EMISSION");
             city.SetColor("_EmissionColor", new Color(1.6f, 1.2f, 0.6f));
+            city.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;   // tells Unity it glows (otherwise it strips the glow on re-save)
             EditorUtility.SetDirty(city);
 
             float midZ = (Back + Front) * 0.5f, depth = Back - Front, width = Right - Left, y = CeilingY * 0.5f;
@@ -256,10 +258,12 @@ namespace PaperWings.EditorTools
             var shade = BuilderUtil.CreateMaterial("M_LampShadeWarm", new Color(1f, 0.9f, 0.7f));
             shade.EnableKeyword("_EMISSION");
             shade.SetColor("_EmissionColor", new Color(0.9f, 0.7f, 0.4f));
+            shade.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;   // tells Unity it glows (otherwise it strips the glow on re-save)
             EditorUtility.SetDirty(shade);
             var screen = BuilderUtil.CreateMaterial("M_SleepScreen", new Color(0.05f, 0.08f, 0.15f));
             screen.EnableKeyword("_EMISSION");
             screen.SetColor("_EmissionColor", new Color(0.05f, 0.12f, 0.3f));
+            screen.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;   // tells Unity it glows (otherwise it strips the glow on re-save)
             EditorUtility.SetDirty(screen);
             Material[] bookColors =
             {

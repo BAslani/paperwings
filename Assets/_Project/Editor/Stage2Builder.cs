@@ -112,6 +112,7 @@ namespace PaperWings.EditorTools
             var screenMat = BuilderUtil.CreateMaterial("M_LaptopScreen", new Color(0.55f, 0.75f, 1f));
             screenMat.EnableKeyword("_EMISSION");
             screenMat.SetColor("_EmissionColor", new Color(0.25f, 0.4f, 0.7f));
+            screenMat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;   // tells Unity it glows (otherwise it strips the glow on re-save)
             var heatMat = BuilderUtil.CreateMaterial("M_HeatVent", new Color(1f, 0.45f, 0.15f));
 
             var root = new GameObject("LaptopThermal");

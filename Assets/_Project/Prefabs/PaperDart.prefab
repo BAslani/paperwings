@@ -236,6 +236,7 @@ MonoBehaviour:
   faction: 0
   isBoss: 0
   aimPoint: {fileID: 0}
+  aiTarget: 0
 --- !u!114 &5677555291010095027
 MonoBehaviour:
   m_ObjectHideFlags: 0

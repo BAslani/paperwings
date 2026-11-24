@@ -124,6 +124,7 @@ namespace PaperWings.EditorTools
             var m = BuilderUtil.CreateMaterial(name, baseColor);
             m.EnableKeyword("_EMISSION");
             m.SetColor("_EmissionColor", emission);
+            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;   // tells Unity it glows (otherwise it strips the glow on re-save)
             EditorUtility.SetDirty(m);
             return m;
         }

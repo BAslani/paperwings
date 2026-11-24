@@ -36,6 +36,7 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
+    rivalPilot: {fileID: 0}
     twoStarTime: 60
     threeStarTime: 35
     rewardClips: 60
@@ -59,16 +60,17 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
+    rivalPilot: {fileID: 0}
     twoStarTime: 90
     threeStarTime: 60
     rewardClips: 60
     rewardUnlockId: 
   - title: The Printer
-    memo: 'MEMO: The big printer in the corner has gone rogue: it''s flying on paper
-      wings and PRINTING Accounting fighters. While its print job is out it''s shielded:
-      shoot the fighters down. Shoot off its paper trays and it prints fewer. When
-      it jams, get behind it: the hot fuser is the weak spot, and its heat lifts
-      you.'
+    memo: 'MEMO: The big printer in the corner has gone rogue: it''s PRINTING Accounting
+      fighters that hunt you, and firing paper at you. While its print job is out
+      it''s shielded: shoot the fighters down. Shoot off its paper trays and it prints
+      fewer. When it jams, its lid pops open: ride the heat up and shoot the glowing
+      fuser inside.'
     mode: 3
     room: 0
     place: 'Office: the printer corner'
@@ -84,15 +86,16 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
+    rivalPilot: {fileID: 0}
     twoStarTime: 170
     threeStarTime: 115
     rewardClips: 140
     rewardUnlockId: 
   - title: Office Party
-    memo: 'MEMO: Somebody''s leaving do, and Accounting crashed it. Four kills among
-      the balloons (shoot them to clear a lane). Watch the appliances: the microwave
-      dumps heat when it dings, the fridge door swings open, and the vending machine
-      has gone haywire.'
+    memo: 'MEMO: Somebody''s leaving do, and Accounting crashed it with a pair of
+      trainees. Three kills among the balloons (shoot them to clear a lane). Watch
+      the appliances: the microwave dumps heat when it dings, the fridge door swings
+      open, and the vending machine has gone haywire.'
     mode: 2
     room: 1
     place: 'Break room: the party'
@@ -102,20 +105,21 @@ MonoBehaviour:
     group: 
     allowedLosses: 2
     aceName: 
-    killTarget: 4
-    maxRivals: 0
+    killTarget: 3
+    maxRivals: 2
     timeLimit: 0
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
-    twoStarTime: 100
-    threeStarTime: 70
+    rivalPilot: {fileID: 11400000, guid: 37c685f5b371eab4db52229046fe13b1, type: 2}
+    twoStarTime: 120
+    threeStarTime: 85
     rewardClips: 70
     rewardUnlockId: 
   - title: Coffee Run
     memo: 'MEMO: Two of our couriers (blue) are flying the morning coffee orders
-      from the machine to the door. Rivals will hunt them. Stay close and shoot whatever
-      gets on their tail. We can lose one, not two.'
+      from the machine to the door. A rookie rival will hunt them. Stay close and
+      shoot whatever gets on their tail. We can lose one, not two.'
     mode: 2
     room: 1
     place: 'Break room: the coffee machine'
@@ -126,13 +130,14 @@ MonoBehaviour:
     allowedLosses: 2
     aceName: 
     killTarget: 2
-    maxRivals: 2
+    maxRivals: 1
     timeLimit: 0
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
-    twoStarTime: 110
-    threeStarTime: 80
+    rivalPilot: {fileID: 11400000, guid: 37c685f5b371eab4db52229046fe13b1, type: 2}
+    twoStarTime: 130
+    threeStarTime: 95
     rewardClips: 80
     rewardUnlockId: 
   - title: The Auditor
@@ -154,8 +159,9 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
-    twoStarTime: 170
-    threeStarTime: 120
+    rivalPilot: {fileID: 0}
+    twoStarTime: 200
+    threeStarTime: 140
     rewardClips: 160
     rewardUnlockId: 
   - title: Cold Boot
@@ -177,6 +183,7 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
+    rivalPilot: {fileID: 0}
     twoStarTime: 150
     threeStarTime: 105
     rewardClips: 90
@@ -200,6 +207,7 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
+    rivalPilot: {fileID: 0}
     twoStarTime: 120
     threeStarTime: 80
     rewardClips: 100
@@ -223,6 +231,7 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
+    rivalPilot: {fileID: 0}
     twoStarTime: 170
     threeStarTime: 120
     rewardClips: 200
@@ -247,6 +256,7 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
+    rivalPilot: {fileID: 0}
     twoStarTime: 110
     threeStarTime: 75
     rewardClips: 110
@@ -269,6 +279,7 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
+    rivalPilot: {fileID: 0}
     twoStarTime: 130
     threeStarTime: 90
     rewardClips: 120
@@ -293,6 +304,7 @@ MonoBehaviour:
     airTimeTarget: 0
     windScale: 1
     noPencils: 0
+    rivalPilot: {fileID: 0}
     twoStarTime: 200
     threeStarTime: 140
     rewardClips: 300
