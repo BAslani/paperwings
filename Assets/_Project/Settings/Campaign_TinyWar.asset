@@ -20,15 +20,13 @@ MonoBehaviour:
   levelWord: Level
   briefingWord: WAR DIARY
   comingSoon:
-  - Bathtub Landing Day
-  - Soap Convoy
-  - The Typhoon
   - Lights Out
   - Pillow Fort
   - The Top Bunk
   - Ceasefire
   - The Cleanup
   - The Kaiju
+  completeLine: 'TO BE CONTINUED... (Saturday night: the bunk bed)'
   starBonus: 0a00000019000000
   nights:
   - title: Ration Run
@@ -133,4 +131,103 @@ MonoBehaviour:
       Tonight, the kitchen floor belongs to the machine.'
     catAwake: 0
     rewardClips: 200
+    rewardUnlockId: 
+  - title: Bathtub Landing Day
+    memo: 'WAR DIARY, Saturday, early. Sam''s Green Gang took the bathroom while
+      we slept. Today we land. Fly the rings: through the shower steam, over the
+      bath and the rubber-duck navy, up the extractor fan and round the hot towel
+      rail. Steam lifts you but makes your paper soggy. The fan sucks you UP: use
+      it.'
+    mode: 1
+    room: 6
+    place: 'Bathroom: the beachhead'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 60
+    threeStarTime: 44
+    when: "SATURDAY \xB7 0700"
+    newsreel: 'Saturday, oh-seven-hundred hours. Fog over the bathtub.
+
+
+      Somewhere
+      in the steam, the rubber-duck navy lies in wait. The Blue Wing goes in at dawn.'
+    catAwake: 0
+    rewardClips: 90
+    rewardUnlockId: 
+  - title: Soap Convoy
+    memo: 'WAR DIARY, Saturday, breakfast. Sam''s couriers (green) are flying soap-bar
+      ammo from the bath along the towel rail to his toilet-roll castle on the sink.
+      Shoot down five before three get through. One of his crayon planes flies cover.
+      Mind the taps: they DRIP, and wet paper flies like a wet sock.'
+    mode: 2
+    room: 6
+    place: 'Bathroom: the towel rail'
+    area: 
+    spawn: 
+    objective: 1
+    group: SoapConvoy
+    allowedLosses: 3
+    aceName: 
+    killTarget: 5
+    maxRivals: 1
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 100
+    threeStarTime: 70
+    when: "SATURDAY \xB7 0830"
+    newsreel: 'Oh-eight-thirty. A supply line runs along the towel rail.
+
+
+      Soap.
+      Enough soap to hold the bathroom for a week. It must not reach the castle.'
+    catAwake: 0
+    rewardClips: 110
+    rewardUnlockId: 
+  - title: The Typhoon
+    memo: 'WAR DIARY, Saturday, 10 o''clock. Sam has a SECRET WEAPON. He taped Mum''s
+      hairdryer to his monster truck. Hot blasts throw you up, cold blasts shove
+      you back, and it fires soap bubbles. Shoot the tape straps off so it can''t
+      aim. When it overheats it cuts out: shoot the SWITCH on the handle. Don''t
+      tell Mum.'
+    mode: 3
+    room: 6
+    place: 'Bathroom: the floor'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 190
+    threeStarTime: 130
+    when: "SATURDAY \xB7 1000"
+    newsreel: 'Ten hundred hours. A roar from the bathroom.
+
+
+      The Green Gang
+      has unleashed the Typhoon: hot wind, cold wind, and bubbles. Nothing can stand
+      in its path. The Blue Wing must try.'
+    catAwake: 0
+    rewardClips: 220
     rewardUnlockId: 

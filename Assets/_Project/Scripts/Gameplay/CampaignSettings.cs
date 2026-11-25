@@ -140,6 +140,8 @@ namespace PaperWings.Gameplay
         public string briefingWord = "MEMO";
         [Tooltip("Level slots the story has but that aren't built yet (shown as 'coming soon' rows).")]
         public string[] comingSoon = new string[0];
+        [Tooltip("Stamped on the results when its last level is cleared for the first time.")]
+        public string completeLine = "THE NIGHT SHIFT WAR IS WON!";
 
         [Tooltip("Extra paper clips for each NEW star beyond the first (2nd star, 3rd star).")]
         public int[] starBonus = { 10, 25 };
@@ -252,9 +254,9 @@ namespace PaperWings.Gameplay
 
         /// <summary>
         /// Tiny War (Stage 46): a war film in a house over one weekend. Theo's Blue Wing (you) against
-        /// Maya's Red Squadron and Sam's Green Gang, narrated by Grandad like a 1940s newsreel. Act 1, the
-        /// Kitchen Front (Friday night), is built; the other nine levels are in <see cref="comingSoon"/>.
-        /// Room 5 is the kitchen.
+        /// Maya's Red Squadron and Sam's Green Gang, narrated by Grandad like a 1940s newsreel. Acts 1 and 2 are
+        /// built (Friday night in the kitchen, Saturday morning in the bathroom); the rest are in <see cref="comingSoon"/>.
+        /// Room 5 is the kitchen, room 6 the bathroom.
         /// </summary>
         public static CampaignNight[] TinyWar() => new[]
         {
@@ -297,12 +299,50 @@ namespace PaperWings.Gameplay
                            "It answers to no one. It devours everything in its path. " +
                            "Tonight, the kitchen floor belongs to the machine."
             },
+
+            // ---------------- Act 2: the Waterworks (Saturday morning, the bathroom, room 6) ----------------
+            new CampaignNight
+            {
+                title = "Bathtub Landing Day", mode = GameMode.RingRun, room = 6,
+                place = "Bathroom: the beachhead", when = "SATURDAY · 0700",
+                twoStarTime = 60f, threeStarTime = 44f, rewardClips = 90,
+                memo = "WAR DIARY, Saturday, early. Sam's Green Gang took the bathroom while we slept. Today we land. " +
+                       "Fly the rings: through the shower steam, over the bath and the rubber-duck navy, up the extractor fan " +
+                       "and round the hot towel rail. Steam lifts you but makes your paper soggy. The fan sucks you UP: use it.",
+                newsreel = "Saturday, oh-seven-hundred hours. Fog over the bathtub.\n\n" +
+                           "Somewhere in the steam, the rubber-duck navy lies in wait. " +
+                           "The Blue Wing goes in at dawn."
+            },
+            new CampaignNight
+            {
+                title = "Soap Convoy", mode = GameMode.Dogfight, objective = NightObjective.Intercept, room = 6,
+                group = "SoapConvoy", killTarget = 5, allowedLosses = 3, maxRivals = 1,
+                place = "Bathroom: the towel rail", when = "SATURDAY · 0830",
+                twoStarTime = 100f, threeStarTime = 70f, rewardClips = 110,
+                memo = "WAR DIARY, Saturday, breakfast. Sam's couriers (green) are flying soap-bar ammo from the bath along the towel rail " +
+                       "to his toilet-roll castle on the sink. Shoot down five before three get through. One of his crayon planes flies cover. " +
+                       "Mind the taps: they DRIP, and wet paper flies like a wet sock.",
+                newsreel = "Oh-eight-thirty. A supply line runs along the towel rail.\n\n" +
+                           "Soap. Enough soap to hold the bathroom for a week. " +
+                           "It must not reach the castle."
+            },
+            new CampaignNight
+            {
+                title = "The Typhoon", mode = GameMode.BossFight, room = 6,
+                place = "Bathroom: the floor", when = "SATURDAY · 1000",
+                twoStarTime = 190f, threeStarTime = 130f, rewardClips = 220,
+                memo = "WAR DIARY, Saturday, 10 o'clock. Sam has a SECRET WEAPON. He taped Mum's hairdryer to his monster truck. " +
+                       "Hot blasts throw you up, cold blasts shove you back, and it fires soap bubbles. Shoot the tape straps off so it " +
+                       "can't aim. When it overheats it cuts out: shoot the SWITCH on the handle. Don't tell Mum.",
+                newsreel = "Ten hundred hours. A roar from the bathroom.\n\n" +
+                           "The Green Gang has unleashed the Typhoon: hot wind, cold wind, and bubbles. " +
+                           "Nothing can stand in its path. The Blue Wing must try."
+            },
         };
 
-        /// <summary>Tiny War's levels after Act 1, shown as 'coming soon' on the roster.</summary>
+        /// <summary>Tiny War's levels after Act 2, shown as 'coming soon' on the roster.</summary>
         public static string[] TinyWarComingSoon() => new[]
         {
-            "Bathtub Landing Day", "Soap Convoy", "The Typhoon",
             "Lights Out", "Pillow Fort", "The Top Bunk",
             "Ceasefire", "The Cleanup", "The Kaiju"
         };

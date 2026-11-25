@@ -10,10 +10,10 @@ public static class BossTest
     static Vector3 hoverAt;
 
     /// <summary>Keeps the player's plane flying in a slow circle at a kitchen-local point (radius r).</summary>
-    public static string Hover(float x, float y, float z, float r)
+    public static string Hover(float x, float y, float z, float r, float ox = 800f)
     {
         Unhover();
-        hoverAt = new Vector3(800f + x, y, 800f + z);
+        hoverAt = new Vector3(ox + x, y, 800f + z);
         float start = Time.time;
         tick = () =>
         {

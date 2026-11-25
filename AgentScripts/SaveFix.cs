@@ -4,6 +4,8 @@ using PaperWings.Gameplay;
 public static class SaveFix
 {
     /// <summary>Removes test progress: Tiny War stars and the clips earned while testing.</summary>
+    public static string To(int clips) { return Run(Progression.PaperClips - clips); }
+
     public static string Run(int clipsToRemove)
     {
         var t = typeof(Progression);

@@ -457,7 +457,7 @@ namespace PaperWings.UI
                     Text(410f, y, 460f, 54f, InkStars(r.stars), typeStyle, 44f, Ink, TextAnchor.MiddleCenter); y += 56f;
                     if (r.newStars && r.stars > 1) { Text(410f, y, 460f, 28f, "new best!", handStyle, 22f, RedPen, TextAnchor.MiddleCenter); y += 30f; }
                     if (!string.IsNullOrEmpty(r.reward)) { Text(410f, y, 460f, 28f, r.reward, typeStyle, 15f, GreenInk, TextAnchor.MiddleCenter, FontStyle.Bold); y += 30f; }
-                    if (r.campaignComplete) { Text(410f, y, 460f, 30f, story ? "THE KITCHEN FRONT IS HELD!" : "THE NIGHT SHIFT WAR IS WON!", typeStyle, 17f, BrownNote, TextAnchor.MiddleCenter, FontStyle.Bold); y += 32f; }
+                    if (r.campaignComplete) { Text(410f, y, 460f, 30f, string.IsNullOrEmpty(Campaign.completeLine) ? "CAMPAIGN COMPLETE!" : Campaign.completeLine, typeStyle, 17f, BrownNote, TextAnchor.MiddleCenter, FontStyle.Bold); y += 32f; }
                 }
                 if (r.medal > 0)
                 {
