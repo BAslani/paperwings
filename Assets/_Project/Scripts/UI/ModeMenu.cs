@@ -21,7 +21,7 @@ namespace PaperWings.UI
 
         public static bool IsOpen { get; private set; }
 
-        enum Screen { Menu, Results, None, Unlocks, Campaign, Options }
+        enum Screen { Menu, Results, None, Unlocks, Campaign, Options, Newsreel }
         int roomSelected;   // free-play room picked on the main menu
         int optSelected;
         int shopSelected;
@@ -36,14 +36,38 @@ namespace PaperWings.UI
         static readonly GameMode[] Modes = { GameMode.FreeFlight, GameMode.RingRun, GameMode.Dogfight, GameMode.Squadron };
 
         CampaignSettings Campaign => director != null ? director.Campaign : null;
-        /// <summary>1 if the menu starts with the Campaign card, else 0. Mode cards come after it.</summary>
         /// <summary>Index of the Flight School card (0), or -1 if the scene has no Flight School.</summary>
         int TrainingEntry => director != null && director.HasTraining ? 0 : -1;
-        /// <summary>Index of the campaign card, or -1.</summary>
-        int CampaignEntry => Campaign != null && Campaign.Count > 0 ? (TrainingEntry + 1) : -1;
-        /// <summary>Cards before the free-play modes (Flight School, Campaign).</summary>
-        int Offset => (TrainingEntry >= 0 ? 1 : 0) + (CampaignEntry >= 0 ? 1 : 0);
+        /// <summary>How many campaign cards (Night Shift, Tiny War...) follow Flight School.</summary>
+        int CampaignCards
+        {
+            get
+            {
+                if (director == null) return 0;
+                int n = 0;
+                for (int i = 0; i < director.CampaignCount; i++) if (director.CampaignAt(i) != null && director.CampaignAt(i).Count > 0) n++;
+                return n;
+            }
+        }
+        /// <summary>Index of the first campaign card, or -1.</summary>
+        int CampaignEntry => CampaignCards > 0 ? (TrainingEntry + 1) : -1;
+        /// <summary>The campaign a menu card opens, or null if it isn't a campaign card.</summary>
+        CampaignSettings CampaignOfEntry(int entry)
+        {
+            if (CampaignEntry < 0 || entry < CampaignEntry || entry >= CampaignEntry + CampaignCards) return null;
+            int k = entry - CampaignEntry;
+            for (int i = 0; i < director.CampaignCount; i++)
+            {
+                var c = director.CampaignAt(i);
+                if (c == null || c.Count == 0) continue;
+                if (k-- == 0) return c;
+            }
+            return null;
+        }
+        /// <summary>Cards before the free-play modes (Flight School, the campaigns).</summary>
+        int Offset => (TrainingEntry >= 0 ? 1 : 0) + CampaignCards;
         int EntryCount => Modes.Length + Offset;
+        string LevelWord => Campaign != null && !string.IsNullOrEmpty(Campaign.levelWord) ? Campaign.levelWord : "Night";
 
         void Start()
         {
@@ -96,9 +120,11 @@ namespace PaperWings.UI
                 Show(Screen.None);
                 return;
             }
-            if (index == CampaignEntry)
+            var campaignCard = CampaignOfEntry(index);
+            if (campaignCard != null)
             {
                 Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
+                director.SelectCampaign(campaignCard);
                 nightSelected = FirstUnclearedNight();
                 Show(Screen.Campaign);
                 return;
@@ -116,8 +142,13 @@ namespace PaperWings.UI
             nightSelected = index;
             Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
             director.StartNight(index);
-            Show(Screen.None);
+            // Tiny War: Grandad's newsreel card first (the game waits, paused, until you carry on).
+            var n = Campaign != null ? Campaign.Get(index) : null;
+            if (n != null && !string.IsNullOrEmpty(n.newsreel)) { newsreelStart = Time.unscaledTime; Show(Screen.Newsreel); }
+            else Show(Screen.None);
         }
+
+        float newsreelStart;
 
         /// <summary>The first night not yet cleared (or the last one if they're all done).</summary>
         int FirstUnclearedNight()
@@ -185,6 +216,16 @@ namespace PaperWings.UI
                 case Screen.Unlocks:
                     UpdateUnlocks(up, down, left, right, confirm, menuKey || back || unlocksKey);
                     break;
+
+                case Screen.Newsreel:
+                    // Enter, Space, Esc or (A)/(B) rolls on into the level (after a moment, so a held key doesn't skip it).
+                    bool mouse = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+                    if ((confirm || menuKey || back || mouse) && Time.unscaledTime - newsreelStart > 0.6f)
+                    {
+                        Audio.AudioFx.PlayUi(Audio.Sfx.UiConfirm);
+                        Show(Screen.None);
+                    }
+                    break;
             }
         }
 
@@ -228,7 +269,11 @@ namespace PaperWings.UI
             if (r.training)
             {
                 if (retry) Choose(TrainingEntry);
-                else if (confirm && Campaign != null && Campaign.Count > 0) PlayNight(FirstUnclearedNight());
+                else if (confirm && director.CampaignAt(0) != null && director.CampaignAt(0).Count > 0)
+                {
+                    director.SelectCampaign(director.CampaignAt(0));   // Flight School leads into the Night Shift
+                    PlayNight(FirstUnclearedNight());
+                }
                 else if (confirm || leave) Show(Screen.Menu);
                 return;
             }
@@ -410,6 +455,7 @@ namespace PaperWings.UI
                 case Screen.Unlocks: DrawUnlocks(); break;
                 case Screen.Campaign: DrawCampaign(); break;
                 case Screen.Options: DrawOptions(); break;
+                case Screen.Newsreel: DrawNewsreel(); break;
             }
         }
 
@@ -557,7 +603,7 @@ namespace PaperWings.UI
             if (director.InTraining) { label = "FLIGHT SCHOOL"; timer = ""; bestText = ""; }
             if (night != null)
             {
-                label = $"NIGHT {director.NightIndex + 1}: {night.title.ToUpper()}";
+                label = $"{LevelWord.ToUpper()} {director.NightIndex + 1}: {night.title.ToUpper()}";
                 float left = director.TimeLeft;
                 if (left >= 0f) timer = $"    Time left <b><color={(left < 10f ? "#FF6050" : "#FFFFFF")}>{left:0.0}s</color></b>";
                 if (night.noPencils) obj += "  <color=#FF9050>No pencils</color>";
@@ -569,7 +615,16 @@ namespace PaperWings.UI
             GUI.color = new Color(0f, 0f, 0f, 0.5f);
             GUI.DrawTexture(r, Texture2D.whiteTexture);
             GUI.color = Color.white;
-            GUI.Label(r, $"<color=#FFD040>{label}</color>    {obj}{timer}{bestText}    <color=#888888>Esc: menu</color>", small);
+            // Biscuit, when she's in this room: what she's up to (asleep is safe, hunting is not).
+            string cat = "";
+            foreach (var c in CatBrain.All)
+                if (c != null && director.CurrentRoom != null && c.transform.IsChildOf(director.CurrentRoom.transform))
+                {
+                    string col = c.Asleep ? "#9FB8D8" : c.Mood == "hunting" || c.Mood == "stalking" || c.Mood == "POUNCING" ? "#FF8060" : "#E8D8A8";
+                    cat = $"    <color={col}>Biscuit: {c.Mood}</color>";
+                    break;
+                }
+            GUI.Label(r, $"<color=#FFD040>{label}</color>    {obj}{timer}{bestText}{cat}    <color=#888888>Esc: menu</color>", small);
             DrawEventBanner();
             DrawLesson();
         }

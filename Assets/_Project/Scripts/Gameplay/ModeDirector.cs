@@ -83,7 +83,29 @@ namespace PaperWings.Gameplay
 
         [Tooltip("The Night Shift campaign. Leave empty to hide the campaign.")]
         [SerializeField] CampaignSettings campaign;
+        [Tooltip("Stage 46: more story campaigns (Tiny War...). Each has its own save id and stars.")]
+        [SerializeField] CampaignSettings[] moreCampaigns = new CampaignSettings[0];
+        CampaignSettings nightShift;
+        /// <summary>The campaign being played or browsed (the Night Shift unless another was picked).</summary>
         public CampaignSettings Campaign => campaign;
+
+        /// <summary>Every campaign: the Night Shift first, then the others.</summary>
+        public int CampaignCount => (nightShift != null ? 1 : 0) + (moreCampaigns != null ? moreCampaigns.Length : 0);
+        public CampaignSettings CampaignAt(int i)
+        {
+            if (nightShift != null) { if (i == 0) return nightShift; i--; }
+            return moreCampaigns != null && i >= 0 && i < moreCampaigns.Length ? moreCampaigns[i] : null;
+        }
+
+        /// <summary>Makes a campaign the current one (its nights, its stars). Not during a run.</summary>
+        public void SelectCampaign(CampaignSettings c)
+        {
+            if (c == null || c == campaign) return;
+            campaign = c;
+            NightIndex = -1;
+            Gameplay.Progression.Scope = c.id ?? "";
+            Gameplay.Progression.SyncCampaign(c.id ?? "", c.version);
+        }
 
         [Header("Missions (Stage 29)")]
         [Tooltip("Pilot settings for an Ace night's rival (sharper, more aggressive).")]
@@ -200,7 +222,9 @@ namespace PaperWings.Gameplay
             }
             RoomIndex = Mathf.Clamp(PlayerPrefs.GetInt("PaperWings.LastRoom", 0), 0, RoomCount - 1);
             if (!HasRoom(RoomIndex)) RoomIndex = 0;   // last flown in a room that's been removed
+            nightShift = campaign;
             if (campaign != null) Gameplay.Progression.SyncCampaign(campaign.version);
+            Gameplay.Progression.Scope = campaign != null ? campaign.id ?? "" : "";
             if (launcher != null) applier = launcher.GetComponent<ProgressionApplier>();
             // Until a mode is chosen, nothing hostile is running.
             AllGroupsOff();
@@ -362,6 +386,11 @@ namespace PaperWings.Gameplay
 
             if (mode == GameMode.BossFight && Boss != null) Boss.ResetFight();
             if (mode == GameMode.RingRun && Route != null) Route.ResetRoute();
+
+            // The room's cat starts her day again: asleep on her nap spot, or awake if tonight says so (Stage 45).
+            if (CurrentRoom != null)
+                foreach (var cat in CatBrain.All.ToArray())
+                    if (cat != null && cat.transform.IsChildOf(CurrentRoom.transform)) cat.Restart(night != null && night.catAwake);
 
             killBaseline = CombatScore.Kills;
             teamKillBaseline = CombatScore.TeamKills;
@@ -619,7 +648,8 @@ namespace PaperWings.Gameplay
             if (firstClear)
             {
                 clips += night.rewardClips;
-                var blueprints = progression != null ? progression.BlueprintsFor(NightIndex) : null;
+                // Hangar blueprints belong to the Night Shift's nights.
+                var blueprints = progression != null && string.IsNullOrEmpty(campaign.id) ? progression.BlueprintsFor(NightIndex) : null;
                 if (blueprints != null && blueprints.Count > 0)
                     result.reward = $"New in the hangar: {string.Join(", ", blueprints)}";
                 if (!string.IsNullOrEmpty(night.rewardUnlockId))

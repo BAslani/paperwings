@@ -48,9 +48,9 @@ namespace PaperWings.UI
 
         void EnsureDeskAssets()
         {
-            if (typewriter == null) typewriter = Font.CreateDynamicFontFromOSFont(new[] { "Courier New", "Consolas", "Lucida Console" }, 24);
-            if (handwriting == null) handwriting = Font.CreateDynamicFontFromOSFont(new[] { "Ink Free", "Segoe Print", "Bradley Hand", "Comic Sans MS" }, 32);
-            if (heavy == null) heavy = Font.CreateDynamicFontFromOSFont(new[] { "Arial Black", "Impact", "Arial" }, 48);
+            if (typewriter == null) typewriter = OsFont(new[] { "Courier New", "Consolas", "Lucida Console" }, 24);
+            if (handwriting == null) handwriting = OsFont(new[] { "Ink Free", "Segoe Print", "Bradley Hand", "Comic Sans MS" }, 32);
+            if (heavy == null) heavy = OsFont(new[] { "Arial Black", "Impact", "Arial Bold", "Arial" }, 48);
             if (softDot == null) softDot = MakeCircle(128, ringWidth: 0f);
             if (ring == null) ring = MakeCircle(128, ringWidth: 0.05f);
             if (typeStyle == null)
@@ -59,6 +59,18 @@ namespace PaperWings.UI
                 handStyle = new GUIStyle(GUI.skin.label) { font = handwriting, richText = true, wordWrap = true, padding = new RectOffset() };
                 heavyStyle = new GUIStyle(GUI.skin.label) { font = heavy, richText = true, wordWrap = false, padding = new RectOffset() };
             }
+        }
+
+        /// <summary>
+        /// The first of these fonts that is actually installed. (Handing Unity a list whose first name is
+        /// missing gives a font that draws the wrong text: on a PC without Arial Black every bold heading
+        /// showed the line drawn before it.)
+        /// </summary>
+        static Font OsFont(string[] names, int size)
+        {
+            var installed = new System.Collections.Generic.HashSet<string>(Font.GetOSInstalledFontNames());
+            foreach (var n in names) if (installed.Contains(n)) return Font.CreateDynamicFontFromOSFont(n, size);
+            return Font.CreateDynamicFontFromOSFont(names, size);
         }
 
         /// <summary>A white disc (soft-edged) or ring texture, for the lamp's light and the coffee stain.</summary>
@@ -242,15 +254,21 @@ namespace PaperWings.UI
                 note = done ? "passed" : "start here";
                 return;
             }
-            if (i == CampaignEntry)
+            var c = CampaignOfEntry(i);
+            if (c != null)
             {
-                int next = FirstUnclearedNight();
-                var night = Campaign.Get(next);
-                bool allDone = Progression.NightCleared(Campaign.Count - 1);
-                label = "Campaign";
-                detail = allDone ? "Every night cleared. Go back for three stars."
-                       : night != null ? $"Next: Night {next + 1} · {night.title} ({director.RoomName(night.room).ToLower()})" : "";
-                note = $"★ {Progression.TotalStars()}/{Campaign.Count * 3}";
+                // Each campaign keeps its own stars (Progression scope = its id).
+                string scope = c.id ?? "";
+                int next = 0;
+                while (next < c.Count - 1 && Progression.NightCleared(next, scope)) next++;
+                var night = c.Get(next);
+                bool allDone = Progression.NightCleared(c.Count - 1, scope);
+                string word = string.IsNullOrEmpty(c.levelWord) ? "Night" : c.levelWord;
+                label = scope.Length == 0 ? "Campaign" : c.displayName;
+                detail = allDone ? (c.comingSoon != null && c.comingSoon.Length > 0 ? "All built levels cleared. More coming soon." : $"Every {word.ToLower()} cleared. Go back for three stars.")
+                       : night != null ? $"Next: {word} {next + 1} · {night.title} ({director.RoomName(night.room).ToLower()})" : c.tagline;
+                note = $"★ {Progression.TotalStars(scope)}/{c.Count * 3}";
+                if (scope.Length > 0 && Progression.TotalStars(scope) == 0) note = "NEW";
                 return;
             }
 
@@ -328,11 +346,20 @@ namespace PaperWings.UI
 
         void DrawStarsScrap()
         {
-            if (Campaign == null || Campaign.Count == 0) return;
+            // All campaigns' stars together.
+            int stars = 0, max = 0;
+            for (int i = 0; i < director.CampaignCount; i++)
+            {
+                var c = director.CampaignAt(i);
+                if (c == null || c.Count == 0) continue;
+                stars += Progression.TotalStars(c.id ?? "");
+                max += c.Count * 3;
+            }
+            if (max == 0) return;
             Tilted(5f, 1120f, 442f, () =>
             {
                 Sheet(1040f, 420f, 170f, 44f, Paper, 7f);
-                Text(1040f, 420f, 170f, 44f, $"★ {Progression.TotalStars()} / {Campaign.Count * 3} stars", typeStyle, 17f, Ink, TextAnchor.MiddleCenter);
+                Text(1040f, 420f, 170f, 44f, $"★ {stars} / {max} stars", typeStyle, 17f, Ink, TextAnchor.MiddleCenter);
             });
         }
 

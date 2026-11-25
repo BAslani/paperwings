@@ -65,6 +65,14 @@ namespace PaperWings.Gameplay
         [Tooltip("Clear at or under this time for 3 stars.")]
         public float threeStarTime = 0f;
 
+        [Header("Story (Stage 46, Tiny War)")]
+        [Tooltip("When it happens, stamped on the newsreel card and the briefing (e.g. 'FRIDAY · 1900').")]
+        public string when = "";
+        [Tooltip("Grandad's newsreel narration, shown on a black-and-white title card before the level. Empty = no card.")]
+        [TextArea(2, 5)] public string newsreel = "";
+        [Tooltip("Biscuit the cat starts this level awake (else asleep on her nap spot).")]
+        public bool catAwake = false;
+
         [Header("Reward (first clear only)")]
         [Tooltip("Paper clips for the first clear.")]
         public int rewardClips = 30;
@@ -90,7 +98,7 @@ namespace PaperWings.Gameplay
                 GameMode.Dogfight => objective switch
                 {
                     NightObjective.Intercept => $"Shoot down {Target(defaultKillTarget)} couriers before {allowedLosses} get away.",
-                    NightObjective.Escort => $"Keep your courier alive: {Target(1)} must get through. Lose {allowedLosses} and it's over.",
+                    NightObjective.Escort => Target(1) > 1 ? $"Escort: {Target(1)} couriers must get through. Lose {allowedLosses} and it's over." : $"Keep your courier alive. Lose {allowedLosses} and it's over.",
                     NightObjective.Practice => $"Shoot down {Target(defaultKillTarget)} practice drones.",
                     NightObjective.Ace => $"Shoot down {(string.IsNullOrEmpty(aceName) ? "the ace" : aceName)}{(Target(1) > 1 ? $" {Target(1)} times" : "")}.",
                     _ => $"Shoot down {Target(defaultKillTarget)} rivals."
@@ -117,6 +125,21 @@ namespace PaperWings.Gameplay
         [Tooltip("Bump this when the nights change: saved stars from another version are cleared (clips and unlocks stay).")]
         public int version = CurrentVersion;
         public const int CurrentVersion = 5;   // 5: Fire Escape removed (Stage 36)
+
+        [Header("Which campaign (Stage 46)")]
+        [Tooltip("Save id: empty for the Night Shift (its stars use the original save slots), e.g. 'tinywar' for others.")]
+        public string id = "";
+        public string displayName = "Night Shift";
+        [Tooltip("One line under its name on the main menu.")]
+        public string tagline = "Climb the office building, one night at a time.";
+        [Tooltip("Heading of the roster clipboard.")]
+        public string rosterTitle = "THE NIGHT SHIFT · ROSTER";
+        [Tooltip("What one mission is called: 'Night' or 'Level'.")]
+        public string levelWord = "Night";
+        [Tooltip("What the briefing sheet is called: 'MEMO' or 'WAR DIARY'.")]
+        public string briefingWord = "MEMO";
+        [Tooltip("Level slots the story has but that aren't built yet (shown as 'coming soon' rows).")]
+        public string[] comingSoon = new string[0];
 
         [Tooltip("Extra paper clips for each NEW star beyond the first (2nd star, 3rd star).")]
         public int[] starBonus = { 10, 25 };
@@ -225,6 +248,63 @@ namespace PaperWings.Gameplay
                 memo = "FINAL MEMO: The building's giant AC unit is Accounting's last weapon. Its fan blows you sky-high and throws rings of debris, " +
                        "then reverses and sucks you into the grille. Shoot off its coolant tanks, hit the hub when the fan stalls. End the Night Shift War."
             },
+        };
+
+        /// <summary>
+        /// Tiny War (Stage 46): a war film in a house over one weekend. Theo's Blue Wing (you) against
+        /// Maya's Red Squadron and Sam's Green Gang, narrated by Grandad like a 1940s newsreel. Act 1, the
+        /// Kitchen Front (Friday night), is built; the other nine levels are in <see cref="comingSoon"/>.
+        /// Room 5 is the kitchen.
+        /// </summary>
+        public static CampaignNight[] TinyWar() => new[]
+        {
+            new CampaignNight
+            {
+                title = "Ration Run", mode = GameMode.Dogfight, objective = NightObjective.Escort, room = 5,
+                group = "CookieRun", killTarget = 2, allowedLosses = 2, maxRivals = 1, spawn = "FridgeSpawn",
+                place = "Kitchen: the cookie jar to the fort", when = "FRIDAY · 1900",
+                twoStarTime = 120f, threeStarTime = 85f, rewardClips = 70,
+                memo = "WAR DIARY, Friday. Mum and Dad are gone till Sunday. Grandad is in charge (asleep in his chair). " +
+                       "The fort under the table needs supplies. Three of my couriers are flying cookies from the jar to the fort, one at a time. " +
+                       "Maya's Red raiders will try to shoot them down. Stay close. Two have to get through. We can lose one cookie, NOT two. " +
+                       "Biscuit is asleep on the window seat. Do NOT wake her up.",
+                newsreel = "Friday night. The grown-ups have gone. The house falls silent... " +
+                           "and in the kitchen, the Blue Wing prepares for war.\n\n" +
+                           "Supplies must get through to the fort. Every cookie counts."
+            },
+            new CampaignNight
+            {
+                title = "Battle of the Kitchen", mode = GameMode.Dogfight, room = 5, killTarget = 4, maxRivals = 2, spawn = "TableSpawn",
+                place = "Kitchen: over the counter", when = "FRIDAY · 2030", catAwake = true,
+                twoStarTime = 110f, threeStarTime = 75f, rewardClips = 90,
+                memo = "WAR DIARY, Friday, later. Maya wants the kitchen. She's sent her whole Red Squadron in. " +
+                       "Shoot down four. Hide behind the cereal boxes, climb in the toaster heat and the kettle steam. " +
+                       "Biscuit is AWAKE and in a playful mood. She goes for anything flying low, Red or Blue. Stay high.",
+                newsreel = "Twenty-thirty hours. Red Squadron crosses the counter in force.\n\n" +
+                           "Above the toaster, the skies fill with paper. Below, a cat watches. " +
+                           "She has chosen no side. She never will."
+            },
+            new CampaignNight
+            {
+                title = "The Dreadnought", mode = GameMode.BossFight, room = 5, spawn = "TableSpawn",
+                place = "Kitchen: the floor", when = "FRIDAY · 2200",
+                twoStarTime = 190f, threeStarTime = 130f, rewardClips = 200,
+                memo = "WAR DIARY, Friday, 10 o'clock. The robot vacuum WOKE UP. It's on a timer, and Maya taped a cardboard " +
+                       "turret on it. Now it patrols the floor sucking in anything low and firing crumbs. We call it THE DREADNOUGHT. " +
+                       "Shoot off its side brushes so it can't suck as hard. When its battery runs low it goes home to charge: " +
+                       "its dust bin pops open. HIT THE DUST BIN. Biscuit is terrified of it. So am I.",
+                newsreel = "Twenty-two hundred hours. Without warning, the Dreadnought leaves its dock.\n\n" +
+                           "It answers to no one. It devours everything in its path. " +
+                           "Tonight, the kitchen floor belongs to the machine."
+            },
+        };
+
+        /// <summary>Tiny War's levels after Act 1, shown as 'coming soon' on the roster.</summary>
+        public static string[] TinyWarComingSoon() => new[]
+        {
+            "Bathtub Landing Day", "Soap Convoy", "The Typhoon",
+            "Lights Out", "Pillow Fort", "The Top Bunk",
+            "Ceasefire", "The Cleanup", "The Kaiju"
         };
 
         /// <summary>Kept for old builders (Stage 21): the break-room nights are part of <see cref="NightShift"/> now.</summary>

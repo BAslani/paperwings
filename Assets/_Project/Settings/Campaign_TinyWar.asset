@@ -1,0 +1,136 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a3b65f9e03152942904a7929e282231, type: 3}
+  m_Name: Campaign_TinyWar
+  m_EditorClassIdentifier: Assembly-CSharp::PaperWings.Gameplay.CampaignSettings
+  version: 1
+  id: tinywar
+  displayName: Tiny War
+  tagline: A war film. In a house. Over one weekend.
+  rosterTitle: "TINY WAR \xB7 ORDER OF BATTLE"
+  levelWord: Level
+  briefingWord: WAR DIARY
+  comingSoon:
+  - Bathtub Landing Day
+  - Soap Convoy
+  - The Typhoon
+  - Lights Out
+  - Pillow Fort
+  - The Top Bunk
+  - Ceasefire
+  - The Cleanup
+  - The Kaiju
+  starBonus: 0a00000019000000
+  nights:
+  - title: Ration Run
+    memo: WAR DIARY, Friday. Mum and Dad are gone till Sunday. Grandad is in charge
+      (asleep in his chair). The fort under the table needs supplies. Three of my
+      couriers are flying cookies from the jar to the fort, one at a time. Maya's
+      Red raiders will try to shoot them down. Stay close. Two have to get through.
+      We can lose one cookie, NOT two. Biscuit is asleep on the window seat. Do NOT
+      wake her up.
+    mode: 2
+    room: 5
+    place: 'Kitchen: the cookie jar to the fort'
+    area: 
+    spawn: FridgeSpawn
+    objective: 2
+    group: CookieRun
+    allowedLosses: 2
+    aceName: 
+    killTarget: 2
+    maxRivals: 1
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 120
+    threeStarTime: 85
+    when: "FRIDAY \xB7 1900"
+    newsreel: 'Friday night. The grown-ups have gone. The house falls silent... and
+      in the kitchen, the Blue Wing prepares for war.
+
+
+      Supplies must get through
+      to the fort. Every cookie counts.'
+    catAwake: 0
+    rewardClips: 70
+    rewardUnlockId: 
+  - title: Battle of the Kitchen
+    memo: WAR DIARY, Friday, later. Maya wants the kitchen. She's sent her whole
+      Red Squadron in. Shoot down four. Hide behind the cereal boxes, climb in the
+      toaster heat and the kettle steam. Biscuit is AWAKE and in a playful mood.
+      She goes for anything flying low, Red or Blue. Stay high.
+    mode: 2
+    room: 5
+    place: 'Kitchen: over the counter'
+    area: 
+    spawn: TableSpawn
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 4
+    maxRivals: 2
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 110
+    threeStarTime: 75
+    when: "FRIDAY \xB7 2030"
+    newsreel: 'Twenty-thirty hours. Red Squadron crosses the counter in force.
+
+
+      Above
+      the toaster, the skies fill with paper. Below, a cat watches. She has chosen
+      no side. She never will.'
+    catAwake: 1
+    rewardClips: 90
+    rewardUnlockId: 
+  - title: The Dreadnought
+    memo: 'WAR DIARY, Friday, 10 o''clock. The robot vacuum WOKE UP. It''s on a timer,
+      and Maya taped a cardboard turret on it. Now it patrols the floor sucking in
+      anything low and firing crumbs. We call it THE DREADNOUGHT. Shoot off its side
+      brushes so it can''t suck as hard. When its battery runs low it goes home to
+      charge: its dust bin pops open. HIT THE DUST BIN. Biscuit is terrified of it.
+      So am I.'
+    mode: 3
+    room: 5
+    place: 'Kitchen: the floor'
+    area: 
+    spawn: TableSpawn
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 190
+    threeStarTime: 130
+    when: "FRIDAY \xB7 2200"
+    newsreel: 'Twenty-two hundred hours. Without warning, the Dreadnought leaves
+      its dock.
+
+
+      It answers to no one. It devours everything in its path.
+      Tonight, the kitchen floor belongs to the machine.'
+    catAwake: 0
+    rewardClips: 200
+    rewardUnlockId: 

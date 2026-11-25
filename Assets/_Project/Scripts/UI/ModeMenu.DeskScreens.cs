@@ -69,13 +69,15 @@ namespace PaperWings.UI
             Tilted(-0.8f, 360f, 380f, () =>
             {
                 ClipboardAt(50f, 50f, 620f, 640f, MemoPaper);
-                Text(92f, 96f, 360f, 30f, "THE NIGHT SHIFT · ROSTER", typeStyle, 20f, Ink, TextAnchor.UpperLeft, FontStyle.Bold);
+                Text(92f, 96f, 360f, 30f, string.IsNullOrEmpty(c.rosterTitle) ? "ROSTER" : c.rosterTitle, typeStyle, 20f, Ink, TextAnchor.UpperLeft, FontStyle.Bold);
                 Text(400f, 98f, 230f, 26f, $"{InkStars(Progression.TotalStars())} {Progression.TotalStars()}/{c.Count * 3}   {Progression.PaperClips} clips",
                      typeStyle, 14f, InkSoft, TextAnchor.UpperRight);
                 Fill(R(92f, 128f, 538f, 2f), Ink);
 
                 const float top = 140f, bottom = 668f;
-                float rowH = Mathf.Min(44f, (bottom - top) / Mathf.Max(1, c.Count));
+                int soon = c.comingSoon != null ? c.comingSoon.Length : 0;
+                float rowH = Mathf.Min(44f, (bottom - top) / Mathf.Max(1, c.Count + soon));
+
                 for (int i = 0; i < c.Count; i++)
                 {
                     var night = c.Get(i);
@@ -88,7 +90,8 @@ namespace PaperWings.UI
                     Color ink = open ? Ink : Pencil;
                     Text(96f, y + 4f, 40f, rowH - 6f, $"{i + 1}.", typeStyle, 16f, ink, TextAnchor.MiddleLeft);
                     Text(136f, y + 4f, 300f, rowH - 6f, night.title, typeStyle, 18f, ink, TextAnchor.MiddleLeft, sel ? FontStyle.Bold : FontStyle.Normal);
-                    Text(380f, y + 4f, 150f, rowH - 6f, director.RoomName(night.room).ToLower(), handStyle, 16f, open ? BluePen : Pencil, TextAnchor.MiddleLeft);
+                    if (night.title.Length <= 16)   // long titles take the room column
+                        Text(380f, y + 4f, 150f, rowH - 6f, director.RoomName(night.room).ToLower(), handStyle, 16f, open ? BluePen : Pencil, TextAnchor.MiddleLeft);
                     string right = !open ? "<color=#8b8175>locked</color>" : stars > 0 ? InkStars(stars) : "<color=#a3321f><b>NEW</b></color>";
                     Text(520f, y + 4f, 110f, rowH - 6f, right, typeStyle, 17f, Ink, TextAnchor.MiddleRight);
                     if (i < c.Count - 1) Fill(R(92f, y + rowH - 1f, 538f, 1f), new Color(0f, 0f, 0f, 0.08f));
@@ -98,6 +101,14 @@ namespace PaperWings.UI
                         if (sel) PlayNight(i);   // click to pick, click again to fly
                         else { nightSelected = i; Audio.AudioFx.PlayUi(Audio.Sfx.UiMove); }
                     }
+                }
+                // The story's levels that aren't built yet, pencilled in.
+                for (int j = 0; j < soon; j++)
+                {
+                    float y = top + (c.Count + j) * rowH;
+                    Text(96f, y + 4f, 40f, rowH - 6f, $"{c.Count + j + 1}.", typeStyle, 16f, Pencil, TextAnchor.MiddleLeft);
+                    Text(136f, y + 4f, 300f, rowH - 6f, c.comingSoon[j], typeStyle, 18f, Pencil, TextAnchor.MiddleLeft);
+                    Text(520f, y + 4f, 110f, rowH - 6f, "coming soon", handStyle, 15f, Pencil, TextAnchor.MiddleRight);
                 }
             });
 
@@ -109,20 +120,26 @@ namespace PaperWings.UI
                 Tilted(1.5f, 970f, 340f, () =>
                 {
                     Sheet(730f, 60f, 480f, 560f, MemoYellow, 14f);
-                    Text(760f, 82f, 420f, 22f, $"MEMO · NIGHT {nightSelected + 1}", typeStyle, 13f, new Color32(0x6d, 0x60, 0x4b, 0xff));
+                    string brief = string.IsNullOrEmpty(c.briefingWord) ? "MEMO" : c.briefingWord;
+                    string stamp = string.IsNullOrEmpty(selNight.when) ? "" : $" · {selNight.when}";
+                    Text(760f, 82f, 420f, 22f, $"{brief} · {LevelWord.ToUpper()} {nightSelected + 1}{stamp}", typeStyle, 13f, new Color32(0x6d, 0x60, 0x4b, 0xff));
                     string where = !string.IsNullOrEmpty(selNight.place) ? selNight.place : director.RoomName(selNight.room);
+                    if (stamp.Length > 0) where = director.RoomName(selNight.room);   // the long place name won't fit beside the time
                     Text(760f, 82f, 420f, 22f, where.ToUpper(), typeStyle, 13f, new Color32(0x6d, 0x60, 0x4b, 0xff), TextAnchor.UpperRight);
                     heavyStyle.wordWrap = true;
                     Text(760f, 110f, 420f, 56f, selNight.title.ToUpper(), heavyStyle, 34f, Ink);
                     heavyStyle.wordWrap = false;
-                    Text(760f, 170f, 420f, 220f, open ? selNight.memo : "Clear the previous night to read this memo.", typeStyle, 14f, Ink);
+                    Text(760f, 170f, 420f, 220f, open ? selNight.memo : $"Clear the previous {LevelWord.ToLower()} to read this {brief.ToLower()}.",
+                         typeStyle, selNight.memo.Length > 420 ? 12.5f : 14f, Ink);
 
                     // dotted rule, then the facts
                     for (float dx = 0f; dx < 420f; dx += 8f) Fill(R(760f + dx, 400f, 4f, 1.5f), new Color32(0x8a, 0x7a, 0x5e, 0xff));
                     float fy = 412f;
                     if (open)
                     {
-                        Text(760f, fy, 420f, 22f, $"GOAL ....... {selNight.Goal(director.DefaultDogfightTarget, director.DefaultSquadronTarget)}", typeStyle, 13f, Ink); fy += 26f;
+                        string goal = selNight.Goal(director.DefaultDogfightTarget, director.DefaultSquadronTarget);
+                        bool longGoal = goal.Length > 44;
+                        Text(760f, fy, 420f, longGoal ? 40f : 22f, $"GOAL ....... {goal}", typeStyle, 13f, Ink); fy += longGoal ? 42f : 26f;
                         if (selNight.threeStarTime > 0f)
                         {
                             Text(760f, fy, 420f, 22f, $"★★ ......... under {selNight.twoStarTime:0} s", typeStyle, 13f, Ink); fy += 22f;
@@ -141,7 +158,67 @@ namespace PaperWings.UI
                 });
             }
 
-            HintStrip(730f, 656f, 480f, "↑↓ night · Enter fly (or click twice) · U hangar · Esc back");
+            HintStrip(730f, 656f, 480f, $"↑↓ {LevelWord.ToLower()} · Enter fly (or click twice) · U hangar · Esc back");
+        }
+
+        // ------------------------------------------------------------------ newsreel (Tiny War)
+
+        /// <summary>
+        /// Grandad's newsreel title card before a Tiny War level: black and white film with a flickering
+        /// frame, grain and scratches, the time stamp, the level's title and his narration typed out.
+        /// The game waits behind it (paused) until you carry on.
+        /// </summary>
+        void DrawNewsreel()
+        {
+            var night = director.Night;
+            if (night == null) { Show(Screen.None); return; }
+            BeginDesk();
+            float sw = UnityEngine.Screen.width, sh = UnityEngine.Screen.height;
+            float t = Time.unscaledTime - newsreelStart;
+            float flicker = 0.9f + 0.1f * Mathf.PerlinNoise(Time.unscaledTime * 9f, 0.3f);
+
+            Fill(new Rect(0, 0, sw, sh), new Color(0.05f, 0.05f, 0.05f, 1f));
+            // The projected frame: a soft grey screen, brighter in the middle, a dark rounded vignette.
+            Tex(R(-120f, -260f, 1520f, 1240f), softDot, new Color(0.62f, 0.6f, 0.56f, 0.5f * flicker));
+            Fill(R(140f, 70f, 1000f, 580f), new Color(0.14f, 0.14f, 0.13f, 0.9f));
+            Tex(R(180f, -40f, 920f, 800f), softDot, new Color(0.9f, 0.88f, 0.84f, 0.16f * flicker));
+            // Grain and scratches (redrawn at the film's 18 frames a second).
+            var rnd = new System.Random(Mathf.FloorToInt(Time.unscaledTime * 18f));
+            for (int i = 0; i < 70; i++)
+            {
+                float gx = 140f + (float)rnd.NextDouble() * 1000f, gy = 70f + (float)rnd.NextDouble() * 580f;
+                Fill(R(gx, gy, 2.5f, 2.5f), new Color(1f, 1f, 1f, 0.08f + 0.1f * (float)rnd.NextDouble()));
+            }
+            for (int i = 0; i < 2; i++)
+            {
+                float sx = 160f + (float)rnd.NextDouble() * 960f;
+                Fill(R(sx, 70f, 1.4f, 580f), new Color(1f, 1f, 1f, 0.12f * (float)rnd.NextDouble()));
+            }
+            // Frame edge and a sprocket strip down each side.
+            Fill(R(140f, 70f, 1000f, 3f), new Color(0.85f, 0.83f, 0.78f, 0.6f)); Fill(R(140f, 647f, 1000f, 3f), new Color(0.85f, 0.83f, 0.78f, 0.6f));
+            for (float y = 80f; y < 640f; y += 38f) { Fill(R(108f, y, 18f, 22f), new Color(0.75f, 0.73f, 0.68f, 0.35f)); Fill(R(1154f, y, 18f, 22f), new Color(0.75f, 0.73f, 0.68f, 0.35f)); }
+
+            Color film = new Color(0.94f, 0.92f, 0.86f, flicker);
+            Color dim = new Color(0.8f, 0.78f, 0.72f, 0.85f * flicker);
+            string reel = $"TINY WAR NEWSREEL  ·  REEL {director.NightIndex + 1}";
+            Text(180f, 96f, 920f, 26f, reel, typeStyle, 16f, dim, TextAnchor.UpperCenter);
+            Fill(R(440f, 128f, 400f, 2f), dim);
+            Text(180f, 140f, 920f, 26f, string.IsNullOrEmpty(night.when) ? "" : night.when, typeStyle, 18f, film, TextAnchor.UpperCenter);
+            heavyStyle.wordWrap = true;
+            Text(180f, 176f, 920f, 80f, night.title.ToUpper(), heavyStyle, 52f, film, TextAnchor.UpperCenter);
+            heavyStyle.wordWrap = false;
+
+            // The narration types itself out (about 38 characters a second).
+            string text = night.newsreel;
+            int shown = Mathf.Clamp(Mathf.FloorToInt((t - 0.5f) * 38f), 0, text.Length);
+            Text(260f, 286f, 760f, 260f, text.Substring(0, shown), typeStyle, 21f, film, TextAnchor.UpperCenter);
+            if (shown >= text.Length)
+            {
+                Text(260f, 552f, 760f, 30f, "(Grandad, narrating)", handStyle, 22f, dim, TextAnchor.UpperCenter);
+                float blink = Mathf.PingPong(Time.unscaledTime * 1.5f, 1f);
+                Text(180f, 600f, 920f, 26f, "ENTER · FLY", typeStyle, 15f, new Color(film.r, film.g, film.b, 0.35f + 0.65f * blink), TextAnchor.UpperCenter);
+            }
+            if (Hit(140f, 70f, 1000f, 580f) && t > 0.6f) Show(Screen.None);
         }
 
         // ------------------------------------------------------------------ hangar
@@ -363,9 +440,10 @@ namespace PaperWings.UI
             Tilted(-1f, 640f, 360f, () =>
             {
                 Sheet(380f, 70f, 520f, 580f, MemoPaper, 16f);
-                Text(410f, 92f, 460f, 22f, "SHIFT REPORT", typeStyle, 14f, InkSoft);
+                bool story = Campaign != null && !string.IsNullOrEmpty(Campaign.id);
+                Text(410f, 92f, 460f, 22f, story && night ? "AFTER-ACTION REPORT" : "SHIFT REPORT", typeStyle, 14f, InkSoft);
                 if (night && Campaign != null && Campaign.Get(r.night) != null)
-                    Text(410f, 92f, 460f, 22f, $"NIGHT {r.night + 1} · {Campaign.Get(r.night).title.ToUpper()}", typeStyle, 14f, InkSoft, TextAnchor.UpperRight);
+                    Text(410f, 92f, 460f, 22f, $"{LevelWord.ToUpper()} {r.night + 1} · {Campaign.Get(r.night).title.ToUpper()}", typeStyle, 14f, InkSoft, TextAnchor.UpperRight);
                 Fill(R(410f, 118f, 460f, 2f), Ink);
 
                 heavyStyle.wordWrap = true;   // long titles ("THE AUDITOR IS DEFEATED!") wrap to two lines
@@ -379,7 +457,7 @@ namespace PaperWings.UI
                     Text(410f, y, 460f, 54f, InkStars(r.stars), typeStyle, 44f, Ink, TextAnchor.MiddleCenter); y += 56f;
                     if (r.newStars && r.stars > 1) { Text(410f, y, 460f, 28f, "new best!", handStyle, 22f, RedPen, TextAnchor.MiddleCenter); y += 30f; }
                     if (!string.IsNullOrEmpty(r.reward)) { Text(410f, y, 460f, 28f, r.reward, typeStyle, 15f, GreenInk, TextAnchor.MiddleCenter, FontStyle.Bold); y += 30f; }
-                    if (r.campaignComplete) { Text(410f, y, 460f, 30f, "THE NIGHT SHIFT WAR IS WON!", typeStyle, 17f, BrownNote, TextAnchor.MiddleCenter, FontStyle.Bold); y += 32f; }
+                    if (r.campaignComplete) { Text(410f, y, 460f, 30f, story ? "THE KITCHEN FRONT IS HELD!" : "THE NIGHT SHIFT WAR IS WON!", typeStyle, 17f, BrownNote, TextAnchor.MiddleCenter, FontStyle.Bold); y += 32f; }
                 }
                 if (r.medal > 0)
                 {
@@ -402,7 +480,7 @@ namespace PaperWings.UI
                 if (r.training) hint = "Enter: start the Night Shift · R: fly it again · Esc: menu";
                 else if (!night) hint = "Enter: retry · Esc: change mode";
                 else if (r.failed) hint = "Enter: try again · Esc: campaign";
-                else if (NextNightAfter(r) != r.night) hint = $"Enter: Night {r.night + 2} · R: replay · Esc: campaign";
+                else if (NextNightAfter(r) != r.night) hint = $"Enter: {LevelWord} {r.night + 2} · R: replay · Esc: campaign";
                 else hint = "Enter: replay · Esc: campaign";
                 Fill(R(410f, 592f, 460f, 1f), new Color(0f, 0f, 0f, 0.25f));
                 Text(410f, 600f, 460f, 32f, hint, typeStyle, 13f, InkSoft, TextAnchor.MiddleCenter);

@@ -27,6 +27,31 @@ namespace PaperWings.Gameplay
             public List<int> medals = new List<int>();
             public List<int> nightStars = new List<int>();   // campaign: stars per night index (0 = not cleared)
             public int campaignVersion;                       // which campaign layout the stars belong to
+            public List<CampaignSave> campaigns = new List<CampaignSave>();   // Stage 46: other campaigns (Tiny War)
+        }
+
+        /// <summary>Stars for a campaign other than the Night Shift (which keeps the original slots).</summary>
+        [Serializable]
+        class CampaignSave
+        {
+            public string id;
+            public int version;
+            public List<int> stars = new List<int>();
+        }
+
+        /// <summary>
+        /// Which campaign the night functions below talk about (Stage 46): "" = the Night Shift,
+        /// "tinywar" = Tiny War. The ModeDirector sets it when a campaign is picked.
+        /// </summary>
+        public static string Scope { get; set; } = "";
+
+        static List<int> Stars(string scope)
+        {
+            if (string.IsNullOrEmpty(scope)) return Data.nightStars;
+            foreach (var c in Data.campaigns) if (c.id == scope) return c.stars;
+            var made = new CampaignSave { id = scope };
+            Data.campaigns.Add(made);
+            return made.stars;
         }
 
         static SaveData data;
@@ -70,10 +95,16 @@ namespace PaperWings.Gameplay
         // ------------------------------------------------------------------ campaign
 
         /// <summary>Stars earned on a campaign night (0 = not cleared yet).</summary>
-        public static int GetNightStars(int night)
-            => night >= 0 && night < Data.nightStars.Count ? Data.nightStars[night] : 0;
+        public static int GetNightStars(int night) => GetNightStars(night, Scope);
+
+        public static int GetNightStars(int night, string scope)
+        {
+            var list = Stars(scope);
+            return night >= 0 && night < list.Count ? list[night] : 0;
+        }
 
         public static bool NightCleared(int night) => GetNightStars(night) > 0;
+        public static bool NightCleared(int night, string scope) => GetNightStars(night, scope) > 0;
 
         /// <summary>Night 0 is always open; every other night opens once the one before it is cleared.</summary>
         public static bool NightOpen(int night) => night == 0 || NightCleared(night - 1);
@@ -82,17 +113,34 @@ namespace PaperWings.Gameplay
         public static bool RecordNightStars(int night, int stars)
         {
             if (night < 0 || stars <= GetNightStars(night)) return false;
-            while (Data.nightStars.Count <= night) Data.nightStars.Add(0);
-            Data.nightStars[night] = stars;
+            var list = Stars(Scope);
+            while (list.Count <= night) list.Add(0);
+            list[night] = stars;
             SaveAndNotify();
             return true;
         }
 
-        public static int TotalStars()
+        public static int TotalStars() => TotalStars(Scope);
+
+        public static int TotalStars(string scope)
         {
             int n = 0;
-            foreach (int s in Data.nightStars) n += s;
+            foreach (int s in Stars(scope)) n += s;
             return n;
+        }
+
+        /// <summary>A campaign other than the Night Shift changed its levels: its stars start over (Stage 46).</summary>
+        public static void SyncCampaign(string scope, int version)
+        {
+            if (string.IsNullOrEmpty(scope)) { SyncCampaign(version); return; }
+            Stars(scope);
+            foreach (var c in Data.campaigns)
+                if (c.id == scope && c.version != version)
+                {
+                    c.stars.Clear();
+                    c.version = version;
+                    SaveAndNotify();
+                }
         }
 
         /// <summary>Gives an unlock for free (a campaign reward). False if it was already owned.</summary>
@@ -120,7 +168,7 @@ namespace PaperWings.Gameplay
         public static BuyResult CanBuy(UnlockItem item)
         {
             if (IsUnlocked(item.id)) return BuyResult.AlreadyOwned;
-            if (item.requiresNight >= 0 && !NightCleared(item.requiresNight)) return BuyResult.NeedsBlueprint;
+            if (item.requiresNight >= 0 && !NightCleared(item.requiresNight, "")) return BuyResult.NeedsBlueprint;   // blueprints come from the Night Shift
             if (!IsUnlocked(item.requires)) return BuyResult.NeedsRequirement;
             if (Data.paperClips < item.cost) return BuyResult.TooExpensive;
             return BuyResult.Bought;
@@ -181,8 +229,9 @@ namespace PaperWings.Gameplay
         /// <summary>Marks the first <paramref name="count"/> nights cleared (1 star) so every night is open.</summary>
         public static void ClearNights(int count)
         {
-            while (Data.nightStars.Count < count) Data.nightStars.Add(0);
-            for (int i = 0; i < count; i++) Data.nightStars[i] = Mathf.Max(1, Data.nightStars[i]);
+            var list = Stars(Scope);
+            while (list.Count < count) list.Add(0);
+            for (int i = 0; i < count; i++) list[i] = Mathf.Max(1, list[i]);
             SaveAndNotify();
         }
 
@@ -202,6 +251,7 @@ namespace PaperWings.Gameplay
             data ??= new SaveData();
             data.nightStars ??= new List<int>();   // saves from before the campaign existed
             data.unlocked ??= new List<string>();
+            data.campaigns ??= new List<CampaignSave>();
             if (data.version < 2) MigrateToPerFoldUpgrades();
         }
 
@@ -232,6 +282,7 @@ namespace PaperWings.Gameplay
         static void ResetStatics()
         {
             data = null;   // re-read from disk each Play session
+            Scope = "";
             Changed = null;
             ClipsEarned = null;
         }
