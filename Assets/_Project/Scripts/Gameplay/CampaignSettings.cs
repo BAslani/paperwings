@@ -25,7 +25,7 @@ namespace PaperWings.Gameplay
         [TextArea(2, 4)] public string memo = "";
         [Tooltip("Which mode this night is built on. Free Flight nights are won by staying in the air (Air Time Target).")]
         public GameMode mode = GameMode.RingRun;
-        [Tooltip("Which room: 0 office, 1 break room, 2 server room, (3 was the stairwell, removed), 4 rooftop, 5 kitchen (Tiny War).")]
+        [Tooltip("Which room: 0 office, 1 break room, 2 server room, (3 was the stairwell, removed), 4 rooftop, 5 kitchen, 6 bathroom, 7 bedroom (Tiny War).")]
         public int room = 0;
         [Tooltip("Where in the room, shown on the campaign screen (e.g. 'Office: the window row').")]
         public string place = "";
@@ -338,12 +338,50 @@ namespace PaperWings.Gameplay
                            "The Green Gang has unleashed the Typhoon: hot wind, cold wind, and bubbles. " +
                            "Nothing can stand in its path. The Blue Wing must try."
             },
+
+            // ---------------- Act 3: Lights Out (Saturday night, the bedroom, room 7) ----------------
+            new CampaignNight
+            {
+                title = "Lights Out", mode = GameMode.RingRun, room = 7,
+                place = "Bedroom: under the fairy lights", when = "SATURDAY · 2100",
+                twoStarTime = 62f, threeStarTime = 46f, rewardClips = 110,
+                memo = "WAR DIARY, Saturday night. Mum said lights out and Sam's Green Gang took the bedroom in the dark. " +
+                       "We fly by the glow of the fairy lights. The LAVA LAMP is a fat warm thermal, the radiator under the window " +
+                       "lifts you, and the ceiling fan chops down on whatever flies under it. Learn where the shadows are: you'll need them.",
+                newsreel = "Saturday, twenty-one hundred hours. The house goes quiet.\n\n" +
+                           "Somewhere upstairs a nightlight clicks on. " +
+                           "The Blue Wing flies by fairy light."
+            },
+            new CampaignNight
+            {
+                title = "Pillow Fort", mode = GameMode.Dogfight, objective = NightObjective.Escort, room = 7,
+                group = "FortConvoy", killTarget = 3, allowedLosses = 2, maxRivals = 2,
+                place = "Bedroom: the toy box to the fort", when = "SATURDAY · 2200",
+                twoStarTime = 125f, threeStarTime = 90f, rewardClips = 140,
+                memo = "WAR DIARY, Saturday, late. Our medics (blue) have to get from the toy box to the pillow fort under the window. " +
+                       "Sam's crayon planes will hunt them down wherever they fly, so don't wait for the fight to come to you: " +
+                       "fly the route with them and shoot whatever chases. Three through, and we hold the fort.",
+                newsreel = "Twenty-two hundred hours. Under the window, a fort of pillows and a duvet.\n\n" +
+                           "It is all that stands between the Blue Wing and a long night. " +
+                           "The medics fly at midnight."
+            },
+            new CampaignNight
+            {
+                title = "The Top Bunk", mode = GameMode.BossFight, room = 7,
+                place = "Bedroom: Sam's bunk", when = "SATURDAY · 2359",
+                twoStarTime = 200f, threeStarTime = 140f, rewardClips = 260,
+                memo = "WAR DIARY, Saturday, midnight. Sam has bolted his gooseneck desk lamp to the top bunk and turned it into a SEARCHLIGHT. " +
+                       "If the beam finds you it shoots, and when it locks on it shoots a lot. Hide behind the pillow fort, the wardrobe " +
+                       "and the bed frame. Shoot off the three hinge bolts to slow its head. When it overheats, the shade flips up: shoot the BULB.",
+                newsreel = "Midnight. One light is still on.\n\n" +
+                           "Sam's Night Watch sweeps the bedroom, and nothing that flies is safe in its beam. " +
+                           "The Blue Wing will have to fight in the dark."
+            },
         };
 
         /// <summary>Tiny War's levels after Act 2, shown as 'coming soon' on the roster.</summary>
         public static string[] TinyWarComingSoon() => new[]
         {
-            "Lights Out", "Pillow Fort", "The Top Bunk",
             "Ceasefire", "The Cleanup", "The Kaiju"
         };
 

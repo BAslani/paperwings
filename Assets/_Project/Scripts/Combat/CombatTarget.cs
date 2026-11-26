@@ -78,13 +78,13 @@ namespace PaperWings.Combat
         }
 
         /// <summary>The nearest living enemy plane (or AI target: courier, bomber) of 'shooter' within range (used by AI pilots).</summary>
-        public static CombatTarget FindNearestEnemyPlane(Vector3 origin, Faction shooter, float range)
+        public static CombatTarget FindNearestEnemyPlane(Vector3 origin, Faction shooter, float range, bool flyersOnly = false)
         {
             CombatTarget best = null;
             float bestDist = range;
             foreach (var t in All)
             {
-                if (t.faction == shooter || t.faction == Faction.Neutral || (t.Plane == null && !t.aiTarget) || !t.IsAlive) continue;
+                if (t.faction == shooter || t.faction == Faction.Neutral || (t.Plane == null && !t.aiTarget) || (flyersOnly && t.Plane != null) || !t.IsAlive) continue;
                 float d = Vector3.Distance(origin, t.Position);
                 if (d < bestDist) { bestDist = d; best = t; }
             }

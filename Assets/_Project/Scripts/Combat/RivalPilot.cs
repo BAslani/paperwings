@@ -67,6 +67,7 @@ namespace PaperWings.Combat
 
             CurrentEnemy = FindEnemy();
             Vector3 target = ChooseTarget(CurrentEnemy);
+            target = KeepClear(target);
             target = AvoidObstacles(target, out bool avoiding);
             if (avoiding) CurrentGoal = Goal.Avoid;
             SteerToward(target, avoiding);
@@ -79,7 +80,15 @@ namespace PaperWings.Combat
             if (CurrentEnemy != null && CurrentEnemy.IsAlive &&
                 Vector3.Distance(transform.position, CurrentEnemy.Position) < settings.disengageRange)
                 return CurrentEnemy;
-            return CombatTarget.FindNearestEnemyPlane(transform.position, faction, settings.engageRange);
+            var near = CombatTarget.FindNearestEnemyPlane(transform.position, faction, settings.engageRange);
+            // Accounting rivals hunt friendly couriers (escort nights) from anywhere in the room, and
+            // go for them before the player: protecting the delivery is the whole point of the night.
+            if (Hostile)
+            {
+                var courier = CombatTarget.FindNearestEnemyPlane(transform.position, faction, float.MaxValue, flyersOnly: true);
+                if (courier != null) return courier;
+            }
+            return near;
         }
 
         // ------------------------------------------------------------------ decisions
@@ -135,7 +144,8 @@ namespace PaperWings.Combat
 
         void SteerToward(Vector3 target, bool urgent)
         {
-            float stick = urgent ? 1f : Mathf.Clamp01(settings.aggressiveness * (Hostile ? Gameplay.Difficulty.RivalTenacity : 1f));
+            bool hunting = CurrentGoal == Goal.Chase && CurrentEnemy != null && CurrentEnemy.Plane == null;
+            float stick = urgent || hunting ? 1f : Mathf.Clamp01(settings.aggressiveness * (Hostile ? Gameplay.Difficulty.RivalTenacity : 1f));
             Vector3 to = target - transform.position;
             Vector3 flat = new Vector3(to.x, 0f, to.z);
 
@@ -157,6 +167,7 @@ namespace PaperWings.Combat
             // Difficulty (Options) scales Accounting's pilots; your wingmen always fly as tuned.
             float range = settings.fireRange * (Hostile ? Gameplay.Difficulty.RivalFireRange : 1f);
             float cone = settings.fireAngle * (Hostile ? Gameplay.Difficulty.RivalFireAngle : 1f);
+            if (enemy.Plane == null) { range *= 1.3f; cone *= 1.6f; }   // a courier flies a straight line: easier to hit
             if (to.magnitude > range || Vector3.Angle(transform.forward, to) > cone) return;
             if (Time.time < burstReadyTime) return;
 
@@ -169,6 +180,37 @@ namespace PaperWings.Combat
 
         // ------------------------------------------------------------------ sensing
 
+        // ---- Clearance: a soft push away from anything close, on every side ----
+        // Feelers only look where it's heading. A scrape along a wall or ceiling kills a paper plane
+        // just as dead, so this also senses to the sides, above and below and leans the aim away.
+        static readonly Vector3[] SenseDirs =
+        {
+            Vector3.forward, new Vector3(1f, 0f, 1f), Vector3.right, new Vector3(1f, 0f, -1f),
+            Vector3.back, new Vector3(-1f, 0f, -1f), Vector3.left, new Vector3(-1f, 0f, 1f),
+            Vector3.up, Vector3.down, new Vector3(0f, 1f, 1f), new Vector3(0f, -1f, 1f)
+        };
+
+        Vector3 KeepClear(Vector3 target)
+        {
+            Vector3 pos = transform.position;
+            float range = Mathf.Max(16f, plane.Speed * 1.1f);
+            Quaternion heading = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+            Vector3 push = Vector3.zero;
+            foreach (var local in SenseDirs)
+            {
+                Vector3 dir = heading * local.normalized;
+                if (!Physics.Raycast(pos, dir, out RaycastHit hit, range, ~0, QueryTriggerInteraction.Ignore)) continue;
+                float closeness = 1f - hit.distance / range;
+                push -= dir * (closeness * closeness);
+            }
+            if (push.sqrMagnitude < 0.01f) return target;
+
+            Vector3 want = target - pos;
+            want = want.sqrMagnitude > 0.01f ? want.normalized : transform.forward;
+            Vector3 steer = (want + push * 1.6f).normalized;
+            return pos + steer * 25f;
+        }
+
         // ---- Obstacle avoidance: "feelers" ----
         // Probes the way it wants to go and the way it's pointing, far enough ahead for its
         // current speed. If either is blocked, it tries a fan of headings (left/right, up/down)
@@ -177,7 +219,10 @@ namespace PaperWings.Combat
         static readonly float[] YawFan = { 0f, 25f, -25f, 50f, -50f, 80f, -80f, 115f, -115f, 150f, -150f };
         static readonly float[] PitchFan = { 0f, 22f, -18f, 40f };
 
-        float Lookahead => Mathf.Max(settings.avoidDistance, plane.Speed * 1.4f + 6f);
+        float Lookahead => Mathf.Max(settings.avoidDistance, plane.Speed * 2.2f + 8f);
+
+        Vector3 avoidDir;
+        float avoidUntil;
 
         Vector3 AvoidObstacles(Vector3 target, out bool avoiding)
         {
@@ -187,13 +232,21 @@ namespace PaperWings.Combat
             desired.Normalize();
             float look = Lookahead;
 
-            avoiding = false;
-            if (FreeDistance(transform.forward, look) >= look && FreeDistance(desired, look) >= look) return target;
+            // Keep a committed escape heading for a moment, so it doesn't dither between two walls.
+            bool committed = Time.time < avoidUntil;
+            Vector3 fwd = transform.forward;
+            Vector3 left = Quaternion.AngleAxis(-22f, Vector3.up) * fwd;
+            Vector3 right = Quaternion.AngleAxis(22f, Vector3.up) * fwd;
+            bool clear = FreeDistance(fwd, look) >= look
+                      && FreeDistance(desired, look) >= look
+                      && FreeDistance(left, look * 0.6f) >= look * 0.6f
+                      && FreeDistance(right, look * 0.6f) >= look * 0.6f;
+            if (clear) { avoiding = false; return target; }
 
             avoiding = true;
             float heading = transform.eulerAngles.y;
             float climb = plane.PitchAngle;
-            Vector3 best = transform.forward;
+            Vector3 best = fwd;
             float bestScore = float.MinValue;
             foreach (float dp in PitchFan)
             {
@@ -206,24 +259,29 @@ namespace PaperWings.Combat
                     // preference for small turns (big ones bleed speed).
                     float score = free / look * 3f + Vector3.Dot(dir, desired) - Mathf.Abs(dy) / 180f - Mathf.Abs(dp) / 120f;
                     if (free >= look) score += 2f;
+                    if (committed && Vector3.Dot(dir, avoidDir) > 0.95f) score += 0.8f;
                     if (score > bestScore) { bestScore = score; best = dir; }
                 }
             }
+            avoidDir = best;
+            avoidUntil = Time.time + 0.7f;
             return pos + best * 20f;
         }
 
         /// <summary>How far it can fly along 'dir' (up to 'max') before hitting scenery. Planes and mission flyers don't count.</summary>
         float FreeDistance(Vector3 dir, float max)
         {
-            const float radius = 1.6f;   // a wingspan and a bit
-            var hits = Physics.SphereCastAll(transform.position, radius, dir, max, ~0, QueryTriggerInteraction.Ignore);
+            const float radius = 2.6f;   // a wingspan plus a safety margin: a scrape is a crash
+            // Start a little behind us so a wall we're already brushing still registers as a hit.
+            Vector3 origin = transform.position - dir * radius;
+            var hits = Physics.SphereCastAll(origin, radius, dir, max + radius, ~0, QueryTriggerInteraction.Ignore);
             float nearest = max;
             foreach (var h in hits)
             {
-                if (h.distance <= 0f) continue;   // started inside it (its own collider, a trigger-ish overlap)
                 if (h.collider.GetComponentInParent<PlaneController>() != null) continue;
                 if (h.collider.GetComponentInParent<PathFlyer>() != null) continue;
-                nearest = Mathf.Min(nearest, h.distance);
+                if (h.distance <= 0f && h.point == Vector3.zero) continue;   // started inside it (overlap): no usable info
+                nearest = Mathf.Min(nearest, Mathf.Max(0f, h.distance - radius));
             }
             return nearest;
         }

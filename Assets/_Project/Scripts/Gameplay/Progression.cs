@@ -168,7 +168,7 @@ namespace PaperWings.Gameplay
         public static BuyResult CanBuy(UnlockItem item)
         {
             if (IsUnlocked(item.id)) return BuyResult.AlreadyOwned;
-            if (item.requiresNight >= 0 && !NightCleared(item.requiresNight, "")) return BuyResult.NeedsBlueprint;   // blueprints come from the Night Shift
+            // Nights no longer gate the shop: with enough clips, anything can be bought (clearing a night still gifts its item free).
             if (!IsUnlocked(item.requires)) return BuyResult.NeedsRequirement;
             if (Data.paperClips < item.cost) return BuyResult.TooExpensive;
             return BuyResult.Bought;

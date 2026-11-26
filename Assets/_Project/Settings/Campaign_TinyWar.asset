@@ -20,13 +20,10 @@ MonoBehaviour:
   levelWord: Level
   briefingWord: WAR DIARY
   comingSoon:
-  - Lights Out
-  - Pillow Fort
-  - The Top Bunk
   - Ceasefire
   - The Cleanup
   - The Kaiju
-  completeLine: 'TO BE CONTINUED... (Saturday night: the bunk bed)'
+  completeLine: 'TO BE CONTINUED: SUNDAY MORNING...'
   starBonus: 0a00000019000000
   nights:
   - title: Ration Run
@@ -230,4 +227,104 @@ MonoBehaviour:
       in its path. The Blue Wing must try.'
     catAwake: 0
     rewardClips: 220
+    rewardUnlockId: 
+  - title: Lights Out
+    memo: 'WAR DIARY, Saturday night. Mum said lights out and Sam''s Green Gang took
+      the bedroom in the dark. We fly by the glow of the fairy lights. The LAVA LAMP
+      is a fat warm thermal, the radiator under the window lifts you, and the ceiling
+      fan chops down on whatever flies under it. Learn where the shadows are: you''ll
+      need them.'
+    mode: 1
+    room: 7
+    place: 'Bedroom: under the fairy lights'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 62
+    threeStarTime: 46
+    when: "SATURDAY \xB7 2100"
+    newsreel: 'Saturday, twenty-one hundred hours. The house goes quiet.
+
+
+      Somewhere
+      upstairs a nightlight clicks on. The Blue Wing flies by fairy light.'
+    catAwake: 0
+    rewardClips: 110
+    rewardUnlockId: 
+  - title: Pillow Fort
+    memo: 'WAR DIARY, Saturday, late. Our medics (blue) have to get from the toy
+      box to the pillow fort under the window. Sam''s crayon planes will hunt them
+      down wherever they fly, so don''t wait for the fight to come to you: fly the
+      route with them and shoot whatever chases. Three through, and we hold the fort.'
+    mode: 2
+    room: 7
+    place: 'Bedroom: the toy box to the fort'
+    area: 
+    spawn: 
+    objective: 2
+    group: FortConvoy
+    allowedLosses: 2
+    aceName: 
+    killTarget: 3
+    maxRivals: 2
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 125
+    threeStarTime: 90
+    when: "SATURDAY \xB7 2200"
+    newsreel: 'Twenty-two hundred hours. Under the window, a fort of pillows and
+      a duvet.
+
+
+      It is all that stands between the Blue Wing and a long night.
+      The medics fly at midnight.'
+    catAwake: 0
+    rewardClips: 140
+    rewardUnlockId: 
+  - title: The Top Bunk
+    memo: 'WAR DIARY, Saturday, midnight. Sam has bolted his gooseneck desk lamp
+      to the top bunk and turned it into a SEARCHLIGHT. If the beam finds you it
+      shoots, and when it locks on it shoots a lot. Hide behind the pillow fort,
+      the wardrobe and the bed frame. Shoot off the three hinge bolts to slow its
+      head. When it overheats, the shade flips up: shoot the BULB.'
+    mode: 3
+    room: 7
+    place: 'Bedroom: Sam''s bunk'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 200
+    threeStarTime: 140
+    when: "SATURDAY \xB7 2359"
+    newsreel: 'Midnight. One light is still on.
+
+
+      Sam''s Night Watch sweeps
+      the bedroom, and nothing that flies is safe in its beam. The Blue Wing will
+      have to fight in the dark.'
+    catAwake: 0
+    rewardClips: 260
     rewardUnlockId: 
