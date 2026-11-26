@@ -377,13 +377,48 @@ namespace PaperWings.Gameplay
                            "Sam's Night Watch sweeps the bedroom, and nothing that flies is safe in its beam. " +
                            "The Blue Wing will have to fight in the dark."
             },
+
+            // ---------------- Act 4: Sunday Morning (the living room, room 8) ----------------
+            new CampaignNight
+            {
+                title = "Ceasefire", mode = GameMode.Squadron, room = 8, killTarget = 9,
+                place = "Living room: the sofa", when = "SUNDAY · 0800",
+                twoStarTime = 140f, threeStarTime = 100f, rewardClips = 150,
+                memo = "WAR DIARY, Sunday morning. Maya came down the stairs and said it out loud: the Green Gang is getting out of hand. " +
+                       "Red and Blue are flying TOGETHER today. Two wingmen fly with you against Sam's whole squadron: nine kills between you. " +
+                       "The fireplace is a thermal as big as a lift. Mum is about to start tidying: when she turns the vacuum on, climb out of its suction.",
+                newsreel = "Sunday, oh-eight-hundred hours. A truce is declared on the sofa.\n\n" +
+                           "Red and Blue, side by side, for the first time since Friday. " +
+                           "Nobody expects it to last."
+            },
+            new CampaignNight
+            {
+                title = "The Cleanup", mode = GameMode.FreeFlight, room = 8, airTimeTarget = 55f, windScale = 1.25f,
+                place = "Living room: Mum's tidy-up", when = "SUNDAY · 1000",
+                twoStarTime = 75f, threeStarTime = 60f, rewardClips = 170,
+                memo = "WAR DIARY, Sunday, mid-morning. Mum says the house is a state and she is going to tidy it. All of it. " +
+                       "Nobody is shooting today: just stay in the AIR for 55 seconds in one flight. Her vacuum sucks everything toward the nozzle, " +
+                       "and the front door gust will push you across the room. Ride the fireplace, hug the ceiling, do not land on the rug.",
+                newsreel = "Ten hundred hours. The hoover comes out of the cupboard.\n\n" +
+                           "It is the one enemy both armies fear. " +
+                           "Stay in the air, or be swept away."
+            },
+            new CampaignNight
+            {
+                title = "The Kaiju", mode = GameMode.BossFight, room = 8,
+                place = "Living room: the rug", when = "SUNDAY · 1200",
+                twoStarTime = 210f, threeStarTime = 150f, rewardClips = 350,
+                memo = "WAR DIARY, Sunday, lunchtime. Maya and Sam stopped shouting long enough to build something together: a giant out of cereal boxes. " +
+                       "It stomps, and every footfall sends a shockwave along the floor, so fly HIGH. Shoot off its shoulder bolts to stop its fists. " +
+                       "When it staggers its chest hatch flaps open: shoot the FUSE. Then everybody has to go and eat their lunch.",
+                newsreel = "Twelve hundred hours. On the living-room rug, something stands up.\n\n" +
+                           "Two armies have built one monster. " +
+                           "Tonight, the Blue Wing must bring it down, and then everyone goes in for tea."
+            },
         };
 
-        /// <summary>Tiny War's levels after Act 2, shown as 'coming soon' on the roster.</summary>
-        public static string[] TinyWarComingSoon() => new[]
-        {
-            "Ceasefire", "The Cleanup", "The Kaiju"
-        };
+        /// <summary>Tiny War's levels still to come, shown as 'coming soon' on the roster (none: all four acts are built).</summary>
+        public static string[] TinyWarComingSoon() => new string[0];
 
         /// <summary>Kept for old builders (Stage 21): the break-room nights are part of <see cref="NightShift"/> now.</summary>
         public static CampaignNight[] OvertimeNights() => new CampaignNight[0];

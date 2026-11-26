@@ -19,11 +19,8 @@ MonoBehaviour:
   rosterTitle: "TINY WAR \xB7 ORDER OF BATTLE"
   levelWord: Level
   briefingWord: WAR DIARY
-  comingSoon:
-  - Ceasefire
-  - The Cleanup
-  - The Kaiju
-  completeLine: 'TO BE CONTINUED: SUNDAY MORNING...'
+  comingSoon: []
+  completeLine: THE WAR IS OVER. TEA?
   starBonus: 0a00000019000000
   nights:
   - title: Ration Run
@@ -327,4 +324,105 @@ MonoBehaviour:
       have to fight in the dark.'
     catAwake: 0
     rewardClips: 260
+    rewardUnlockId: 
+  - title: Ceasefire
+    memo: 'WAR DIARY, Sunday morning. Maya came down the stairs and said it out loud:
+      the Green Gang is getting out of hand. Red and Blue are flying TOGETHER today.
+      Two wingmen fly with you against Sam''s whole squadron: nine kills between
+      you. The fireplace is a thermal as big as a lift. Mum is about to start tidying:
+      when she turns the vacuum on, climb out of its suction.'
+    mode: 4
+    room: 8
+    place: 'Living room: the sofa'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 9
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 140
+    threeStarTime: 100
+    when: "SUNDAY \xB7 0800"
+    newsreel: 'Sunday, oh-eight-hundred hours. A truce is declared on the sofa.
+
+
+      Red
+      and Blue, side by side, for the first time since Friday. Nobody expects it
+      to last.'
+    catAwake: 0
+    rewardClips: 150
+    rewardUnlockId: 
+  - title: The Cleanup
+    memo: 'WAR DIARY, Sunday, mid-morning. Mum says the house is a state and she
+      is going to tidy it. All of it. Nobody is shooting today: just stay in the
+      AIR for 55 seconds in one flight. Her vacuum sucks everything toward the nozzle,
+      and the front door gust will push you across the room. Ride the fireplace,
+      hug the ceiling, do not land on the rug.'
+    mode: 0
+    room: 8
+    place: 'Living room: Mum''s tidy-up'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 55
+    windScale: 1.25
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 75
+    threeStarTime: 60
+    when: "SUNDAY \xB7 1000"
+    newsreel: 'Ten hundred hours. The hoover comes out of the cupboard.
+
+
+      It
+      is the one enemy both armies fear. Stay in the air, or be swept away.'
+    catAwake: 0
+    rewardClips: 170
+    rewardUnlockId: 
+  - title: The Kaiju
+    memo: 'WAR DIARY, Sunday, lunchtime. Maya and Sam stopped shouting long enough
+      to build something together: a giant out of cereal boxes. It stomps, and every
+      footfall sends a shockwave along the floor, so fly HIGH. Shoot off its shoulder
+      bolts to stop its fists. When it staggers its chest hatch flaps open: shoot
+      the FUSE. Then everybody has to go and eat their lunch.'
+    mode: 3
+    room: 8
+    place: 'Living room: the rug'
+    area: 
+    spawn: 
+    objective: 0
+    group: 
+    allowedLosses: 2
+    aceName: 
+    killTarget: 0
+    maxRivals: 0
+    timeLimit: 0
+    airTimeTarget: 0
+    windScale: 1
+    noPencils: 0
+    rivalPilot: {fileID: 0}
+    twoStarTime: 210
+    threeStarTime: 150
+    when: "SUNDAY \xB7 1200"
+    newsreel: 'Twelve hundred hours. On the living-room rug, something stands up.
+
+
+      Two
+      armies have built one monster. Tonight, the Blue Wing must bring it down, and
+      then everyone goes in for tea.'
+    catAwake: 0
+    rewardClips: 350
     rewardUnlockId: 
